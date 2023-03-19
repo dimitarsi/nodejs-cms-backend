@@ -3,9 +3,9 @@ import crud from "../repo/crud";
 
 type ExtendCrud = Parameters<typeof crud>[1]
 
-export default <T>(collectionName: string, extend?: ExtendCrud) => {
+export default <T extends Object>(collectionName: string, extend?: ExtendCrud) => {
   const app = express();
-  const repo = crud(collectionName, extend);
+  const repo = crud<T>(collectionName, extend);
 
   app.get("/", async (req, res) => {
     const page = parseInt(req.query["page"]?.toString() || "1");
