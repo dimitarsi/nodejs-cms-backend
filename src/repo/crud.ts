@@ -33,15 +33,21 @@ const baseCrudMethods = <T>(collection: Collection) => ({
   },
 });
 
+const defaultExtend = (
+  crudMethods: ReturnType<typeof baseCrudMethods>,
+  _collection: Collection
+) => crudMethods;
+
+
+export type BaseRepoMethods<T> = ReturnType<typeof baseCrudMethods<T>>
+
 export default <T extends Object>(
   collectionName: string,
-  extend?: (
-    crudMethods: ReturnType<typeof baseCrudMethods>,
-    collection: Collection
-  ) => Record<string, Function>
-) => {
+  extend = defaultExtend
+): ReturnType<typeof extend> => {
   const collection = db.collection(collectionName);
 
   const crudMethods = baseCrudMethods<T>(collection);
-  return extend ? extend(crudMethods, collection) : crudMethods;
+
+  return extend(crudMethods, collection);
 };

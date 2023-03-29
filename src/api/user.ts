@@ -1,36 +1,18 @@
-import controller from "./controller"
-import bcrypt from "bcrypt"
-import {rounds} from "../config/config"
+import { ObjectId } from 'mongodb';
+import {withDefaultRoutes} from "./controller";
+import users from '../repo/users'
+import express from 'express';
 
-export interface User {
-  firstName: string
-  lastName: string
-  email: string
-  isActive: boolean
-  isAdmin: boolean
-  password: string
-}
+const app = express();
 
-export default controller<User>('users', (crud, _collection) => ({
-  ...crud,
-  create: (data: Partial<User>) => {
-    if(!data.password) {
-      throw "Invalid password"
-    }
+withDefaultRoutes(app, users);
 
-    return crud.create({
-      ...data,
-      password: bcrypt.hashSync(data.password, rounds),
-    });
-  },
-  update: (id: string | number, data: Partial<User>) => {
-    if(!data.password) {
-      return crud.update(id, data)
-    }
+app.post('/:id/activate', async (req, res) => {
+  const {id} = req.params
+  
+  await users.activate(id)
 
-    return crud.update(id, {
-      ...data,
-      password: bcrypt.hashSync(data.password, rounds),
-    });
-  }
-}))
+  res.json({success: true})
+})
+
+export default app
