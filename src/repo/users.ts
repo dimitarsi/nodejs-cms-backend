@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import bcrypt from "bcrypt";
 import { rounds } from "../config/config";
 
-const usersRepo = crud("users", (crud, _collection) => ({
+const usersRepo = crud("users", {softDelete: false}, (crud,  _collection) => ({
   ...crud,
   create: (data: Partial<User>) => {
     if (!data.password) {

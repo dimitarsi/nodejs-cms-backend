@@ -1,9 +1,9 @@
 import express from "express"
 import user from "./api/user"
-import posts from './api/posts'
+import stories from "./api/story";
 import auth from './api/auth'
 import fields from "./api/fields";
-import postConfigs from './api/post_config'
+import storyConfigs from './api/story_config'
 import bodyParser from "body-parser";
 import cors from "cors";
 
@@ -15,8 +15,8 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.use("/users", user);
-app.use('/posts', posts);
-app.use('/post-config', postConfigs)
+app.use('/stories', stories);
+app.use('/stories-config', storyConfigs)
 app.use('/fields', fields)
 app.use(auth)
 

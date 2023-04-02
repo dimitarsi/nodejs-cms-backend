@@ -5,6 +5,6 @@ import express from "express";
 const app = express();
 
 app.use(auth);
-app.use(controller("postConfigs"));
+app.use(controller("storiesConfig"));
 
 export default app;

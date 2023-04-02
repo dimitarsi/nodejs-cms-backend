@@ -7,8 +7,8 @@ router.use(async (req, res, next) => {
   let accessToken = "";
   let activeToken = null;
 
-  if (req.method === "GET" || req.headers["x-accesstoken"]) {
-    const accessTokenHeader = req.headers["x-accesstoken"];
+  if (req.method === "GET" || req.headers["x-access-token"]) {
+    const accessTokenHeader = req.headers["x-access-token"];
     accessToken =
       (Array.isArray(accessTokenHeader)
         ? accessTokenHeader[0]
