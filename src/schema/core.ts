@@ -10,7 +10,7 @@ ajv.addKeyword({
   keyword: "found",
   async: true,
   type: "string",
-  validate: checkIfExists
+  validate: checkIfExists,
 })
 
 export default ajv

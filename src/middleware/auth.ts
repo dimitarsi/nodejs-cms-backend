@@ -1,22 +1,22 @@
-import { Router } from "express";
-import db from "../connect/db";
+import { Router } from "express"
+import db from "../connect/db"
 
-const router = Router();
+const router = Router()
 
 router.use(async (req, res, next) => {
-  let accessToken = "";
-  let activeToken = null;
+  let accessToken = ""
+  let activeToken = null
 
   if (req.method === "GET" || req.headers["x-access-token"]) {
-    const accessTokenHeader = req.headers["x-access-token"];
+    const accessTokenHeader = req.headers["x-access-token"]
     accessToken =
       (Array.isArray(accessTokenHeader)
         ? accessTokenHeader[0]
-        : accessTokenHeader) || "";
+        : accessTokenHeader) || ""
   }
 
   if (!accessToken && req.body.accessToken) {
-    accessToken = `${req.body.accessToken}`;
+    accessToken = `${req.body.accessToken}`
   }
 
   if (accessToken) {
@@ -24,17 +24,17 @@ router.use(async (req, res, next) => {
       token: accessToken,
       expire: { $gt: new Date() },
       isActive: true,
-    });
+    })
   }
 
   if (activeToken) {
-    next();
+    next()
   } else {
-    res.statusCode = 401;
+    res.statusCode = 401
     res.json({
       error: "Unauthorized",
-    });
+    })
   }
-});
+})
 
-export default router;
+export default router

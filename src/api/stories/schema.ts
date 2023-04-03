@@ -58,9 +58,9 @@ const featureDef = {
   },
 };
 
-const avj2 = ajv.addSchema(featureDef);
+ajv.addSchema(featureDef);
 
-const validate = avj2.compile<JSONSchemaType<StoryConfigData>>({
+const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
   type: "object",
   properties: {
     fields: {
@@ -161,6 +161,6 @@ const validate = avj2.compile<JSONSchemaType<StoryConfigData>>({
       },
     },
   },
-});
+})
 
 export default validate;

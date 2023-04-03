@@ -9,15 +9,15 @@ const repo = crud("stories", { softDelete: false }, (crud, _collection) => {
         updatedOn: new Date(),
         isActive: true,
         ...data,
-      });
+      })
     },
     update(id: string, data) {
       return crud.update(id, {
         updatedOn: new Date(),
         ...data,
-      });
+      })
     },
-  };
-});
+  }
+})
 
 export default repo
