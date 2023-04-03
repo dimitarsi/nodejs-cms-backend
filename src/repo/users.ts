@@ -1,8 +1,8 @@
-import { User } from "../models/user"
+import { User } from "~/models/user"
 import crud, { BaseRepoMethods } from "./crud"
 import { ObjectId } from "mongodb"
 import bcrypt from "bcrypt"
-import { rounds } from "../config/config"
+import { rounds } from "@config"
 
 const usersRepo = crud("users", { softDelete: false }, (crud, _collection) => ({
   ...crud,

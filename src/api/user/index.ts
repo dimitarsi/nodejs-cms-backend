@@ -1,5 +1,5 @@
 import { withDefaultRoutes } from "../controller";
-import users from "../../repo/users";
+import users from "~/repo/users";
 import express from "express";
 import validate from "./schema";
 

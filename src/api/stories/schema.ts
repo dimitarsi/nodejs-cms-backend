@@ -65,7 +65,8 @@ const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
   properties: {
     fields: {
       type: "array",
-      items: [
+      minItems: 0,
+      items:
         {
           type: "object",
           properties: {
@@ -75,7 +76,7 @@ const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
             row: {
               type: "array",
               minItems: 0,
-              items: [
+              items:
                 {
                   type: "object",
                   properties: {
@@ -136,11 +137,9 @@ const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
                     },
                   },
                 },
-              ],
             },
           },
         },
-      ],
     },
     name: {
       type: "string",

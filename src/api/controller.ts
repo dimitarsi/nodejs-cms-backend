@@ -1,18 +1,22 @@
 import express, { Application } from "express"
 import crud from "../repo/crud"
-import { AsyncValidateFunction, ErrorObject } from "ajv"
+import { ErrorObject } from "ajv"
 
 type ExtendCrud = Parameters<typeof crud>[1]
 type DefaultRoutes = "getAll" | "getById" | "create" | "update" | "delete"
-type DefaultRoutesValidation = Record<
+export type Validator =
+  | ((req: express.Request) => Promise<ErrorObject[] | null | undefined>)
+  | undefined
+export type DefaultRoutesValidation = Record<
   DefaultRoutes,
-  ((req: express.Request) => ErrorObject) | undefined
->
+  Validator
+  >
+export type PartialDefaultRoutesValidation = Partial<DefaultRoutesValidation>
 
 const validateRequest =
-  (validate?: DefaultRoutesValidation) =>
+  (validate?: PartialDefaultRoutesValidation) =>
   async (route: DefaultRoutes, req: express.Request, res: express.Response) => {
-    const errors = await validate?.[route]?.(req.body)
+    const errors = await validate?.[route]?.(req)
 
     if (errors) {
       res.statusCode = 403
@@ -25,7 +29,7 @@ const validateRequest =
 export const withDefaultRoutes = (
   app: Application,
   repo: Record<string, Function>,
-  validate?: DefaultRoutesValidation
+  validate?: PartialDefaultRoutesValidation
 ) => {
   const guard = validateRequest(validate)
 

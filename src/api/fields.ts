@@ -1,5 +1,5 @@
 import controller from "./controller"
-import auth from "../middleware/auth"
+import auth from "~/middleware/auth"
 import express from "express"
 
 const app = express()

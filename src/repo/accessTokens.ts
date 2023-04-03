@@ -1,7 +1,6 @@
-import { Collection, ObjectId } from "mongodb"
-import db from "../connect/db"
+import db from "@db"
 import { randomUUID } from "crypto"
-import { loginSession } from "../config/config"
+import { loginSession } from "@config"
 
 const getExpirationDate = () => {
   return new Date(Date.now() + loginSession)

@@ -47,7 +47,7 @@ const baseCrudMethods = <T>(
   }
 }
 
-const defaultExtend = (
+export const defaultExtend = (
   crudMethods: ReturnType<typeof baseCrudMethods>,
   _collection: Collection
 ) => crudMethods

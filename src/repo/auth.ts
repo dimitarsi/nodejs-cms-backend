@@ -1,5 +1,5 @@
-import db from "../connect/db"
-import { User } from "../models/user"
+import db from "@db"
+import { User } from "~/models/user"
 import bcrypt from "bcrypt"
 
 export const getUserByEmail = async (email: string) => {

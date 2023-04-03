@@ -1,5 +1,5 @@
 import { JSONSchemaType } from "ajv";
-import ajv from "../../schema/core";
+import ajv from "~/schema/core";
 
 const notActive = {
   $or: [

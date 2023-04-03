@@ -2,7 +2,9 @@ import Ajv from "ajv"
 import addFormats from "ajv-formats"
 import checkIfExists from "./checkIfExists"
 
-const ajv = new Ajv()
+const ajv = new Ajv({
+  allowUnionTypes: true
+})
 
 addFormats(ajv)
 
