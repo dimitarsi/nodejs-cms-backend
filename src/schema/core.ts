@@ -1,9 +1,9 @@
 import Ajv from "ajv"
 import addFormats from "ajv-formats"
-import checkIfExists from "./checkIfExists"
+import { checkIfExists } from "./checkIfExists"
 
 const ajv = new Ajv({
-  allowUnionTypes: true
+  allowUnionTypes: true,
 })
 
 addFormats(ajv)
@@ -14,5 +14,12 @@ ajv.addKeyword({
   type: "string",
   validate: checkIfExists,
 })
+
+// ajv.addKeyword({
+//   keyword: "notFound",
+//   async: true,
+//   type: "string",
+//   validate: checkIfNotExists,
+// })
 
 export default ajv

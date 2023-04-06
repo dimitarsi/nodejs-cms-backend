@@ -5,12 +5,9 @@ import { ErrorObject } from "ajv"
 type ExtendCrud = Parameters<typeof crud>[1]
 type DefaultRoutes = "getAll" | "getById" | "create" | "update" | "delete"
 export type Validator =
-  | ((req: express.Request) => Promise<ErrorObject[] | null | undefined>)
+  | ((req: express.Request) => Promise<ErrorObject[] | null | undefined | true>)
   | undefined
-export type DefaultRoutesValidation = Record<
-  DefaultRoutes,
-  Validator
-  >
+export type DefaultRoutesValidation = Record<DefaultRoutes, Validator>
 export type PartialDefaultRoutesValidation = Partial<DefaultRoutesValidation>
 
 const validateRequest =
@@ -18,7 +15,7 @@ const validateRequest =
   async (route: DefaultRoutes, req: express.Request, res: express.Response) => {
     const errors = await validate?.[route]?.(req)
 
-    if (errors) {
+    if (errors && typeof errors === "object") {
       res.statusCode = 403
       res.json(errors || {})
     }
@@ -57,9 +54,9 @@ export const withDefaultRoutes = (
     },
     update: async (req, res) => {
       const valid = await guard("update", req, res)
-      const result = await repo.update(req.params.id, req.body)
-
       if (valid) {
+        const result = await repo.update(req.params.id, req.body)
+
         res.json({
           matched: result.matchedCount,
         })

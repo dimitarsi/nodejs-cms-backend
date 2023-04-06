@@ -1,4 +1,4 @@
-import { User } from "~/models/user"
+import { UserWithPermissions as User } from "~/models/user"
 import crud, { BaseRepoMethods } from "./crud"
 import { ObjectId } from "mongodb"
 import bcrypt from "bcrypt"
@@ -6,11 +6,7 @@ import { rounds } from "@config"
 
 const usersRepo = crud("users", { softDelete: false }, (crud, _collection) => ({
   ...crud,
-  create: (data: Partial<User>) => {
-    if (!data.password) {
-      throw "Invalid password"
-    }
-
+  create: (data: User) => {
     return crud.create({
       firstName: data.firstName,
       lastName: data.lastName,

@@ -1,19 +1,27 @@
 import { withDefaultRoutes } from "../controller";
 import users from "~/repo/users";
 import express from "express";
-import validate from "./schema";
+import { validateIsInactive, validateCreateUser } from "./schema"
 
 const app = express();
 
-withDefaultRoutes(app, users);
+withDefaultRoutes(app, users, {
+  create: (req) =>  validateCreateUser(req.body)
+      .then(_result => {
+        return undefined
+      })
+      .catch(err => {
+        return err.errors
+    })
+});
 
 app.post("/:id/activate", async (req, res) => {
   try {
-    const valid = await validate(req.params);
+    const valid = await validateIsInactive(req.params)
     
     if (!valid) {
       res.statusCode = 405;
-      res.json(validate.errors);
+      res.json(validateIsInactive.errors)
       return;
     }
   } catch (er) {

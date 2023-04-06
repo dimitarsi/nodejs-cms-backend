@@ -6,6 +6,7 @@ export const getUserByEmail = async (email: string) => {
   return await db.collection<User>("users").findOne({
     email,
     password: { $exists: true },
+    isActive: true
   })
 }
 
