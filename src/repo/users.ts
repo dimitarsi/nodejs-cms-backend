@@ -11,8 +11,8 @@ const usersRepo = crud("users", { softDelete: false }, (crud, _collection) => ({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      isActive: false,
-      isAdmin: false,
+      isActive: data.isActive,
+      isAdmin: data.isAdmin,
       password: bcrypt.hashSync(data.password, rounds),
     })
   },

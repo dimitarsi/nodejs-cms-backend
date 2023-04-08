@@ -1,29 +1,8 @@
 import express, { Application } from "express"
-import crud from "../repo/crud"
-import { ErrorObject } from "ajv"
+import { PartialDefaultRoutesValidation, validateRequest } from "./request"
 
-type ExtendCrud = Parameters<typeof crud>[1]
-type DefaultRoutes = "getAll" | "getById" | "create" | "update" | "delete"
-export type Validator =
-  | ((req: express.Request) => Promise<ErrorObject[] | null | undefined | true>)
-  | undefined
-export type DefaultRoutesValidation = Record<DefaultRoutes, Validator>
-export type PartialDefaultRoutesValidation = Partial<DefaultRoutesValidation>
 
-const validateRequest =
-  (validate?: PartialDefaultRoutesValidation) =>
-  async (route: DefaultRoutes, req: express.Request, res: express.Response) => {
-    const errors = await validate?.[route]?.(req)
-
-    if (errors && typeof errors === "object") {
-      res.statusCode = 403
-      res.json(errors || {})
-    }
-
-    return errors === undefined
-  }
-
-export const withDefaultRoutes = (
+const defaultController = (
   app: Application,
   repo: Record<string, Function>,
   validate?: PartialDefaultRoutesValidation
@@ -84,21 +63,5 @@ export const withDefaultRoutes = (
   return app
 }
 
-export const scaffold = <T extends Object>(
-  collectionName: string,
-  extend?: ExtendCrud,
-  validate?: DefaultRoutesValidation
-) => {
-  const crudOptions = [{ softDelete: false }]
 
-  if (extend) {
-    crudOptions.push(extend)
-  }
-
-  const repo = crud<T>(collectionName, ...crudOptions)
-  const app = express()
-
-  return withDefaultRoutes(app, repo, validate)
-}
-
-export default scaffold
+export default defaultController

@@ -11,9 +11,10 @@ export interface AccessToken {
   expire: Date
   userId: string
   isActive: boolean
+  isAdmin: boolean
 }
 
-export const findOrCreateAccessToken = async (userId: string) => {
+export const findOrCreateAccessToken = async (userId: string, data: {isAdmin: boolean | undefined | null}) => {
   const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
     userId,
     expire: { $gt: new Date() },
@@ -31,6 +32,7 @@ export const findOrCreateAccessToken = async (userId: string) => {
     expire: getExpirationDate(),
     userId,
     isActive: true,
+    isAdmin: Boolean(data?.isAdmin)
   })
 
   return accessToken
@@ -49,4 +51,16 @@ export const deactivateToken = async (accessToken: string) => {
   )
 
   return data.modifiedCount > 0
+}
+
+export const findToken = async (token: string) => {
+  const activeToken = await db
+    .collection<AccessToken>("accessTokens")
+    .findOne({
+      token,
+      expire: { $gt: new Date() },
+      isActive: true,
+    })
+  
+  return activeToken
 }

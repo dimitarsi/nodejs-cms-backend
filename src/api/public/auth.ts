@@ -1,19 +1,19 @@
 import {
   findOrCreateAccessToken,
   deactivateToken,
-} from "./../repo/accessTokens"
+} from "~/repo/accessTokens"
 
 import express from "express"
-import { authenticate } from "../repo/auth"
+import { authenticate } from "~/repo/auth"
 
 const app = express()
 
 app.post("/login", async (req, res) => {
   const body = req.body
-  const { userId, isLoggedIn } = await authenticate(body.email, body.password)
+  const { userId, isLoggedIn, isAdmin } = await authenticate(body.email, body.password)
 
   if (isLoggedIn && userId) {
-    const accessToken = await findOrCreateAccessToken(userId)
+    const accessToken = await findOrCreateAccessToken(userId, {isAdmin})
 
     res.json({
       accessToken,
