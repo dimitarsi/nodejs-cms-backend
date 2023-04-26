@@ -7,7 +7,7 @@ import storyConfigs from "~/repo/storyConfigs"
 const app = express()
 
 const validateCreate: Validator = (req: express.Request) =>
-  validate(req.body) ? undefined : validate.errors
+  validate(req.body).then(_result => undefined).catch(error => error);
 
 defaultController(app, storyConfigs, {
   create: validateCreate,

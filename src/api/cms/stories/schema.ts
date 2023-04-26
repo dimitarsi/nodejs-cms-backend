@@ -22,84 +22,85 @@ ajv.addSchema(featureDef);
 
 const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
   type: "object",
+  $async: true,
   properties: {
     fields: {
       type: "array",
       minItems: 0,
       items:
-        {
-          type: "object",
-          properties: {
-            groupName: {
-              type: "string",
-            },
-            row: {
-              type: "array",
-              minItems: 0,
-              items:
-                {
-                  type: "object",
-                  properties: {
-                    label: {
-                      type: "string",
-                    },
-                    displayName: {
-                      type: "string",
-                    },
-                    type: {
-                      enum: ["custom", "text", "number", "boolean"],
-                    },
-                    width: {
-                      type: ["string", "number"],
-                    },
-                    source: {
-                      // anyOf: [
-                      //   {
-                      //     type: "object",
-                      //     properties: {
-                      //       type: {
-                      //         type: "string"
-                      //       },
-                      //       options: {
-                      //         type: {
-                      //           type: "string"
-                      //         },
-                      //         items: {
-                      //           type: "string"
-                      //         }
-                      //       }
-                      //     }
-                      //   },
-                      // {
-                      //   type: "object",
-                      //   properties: {
-                      //     type: {
-                      //       type: "string"
-                      //     },
-                      //     dataSourceId: {
-                      //       type: "string"
-                      //     }
-                      //   }
-                      // },
-                      // {
-                      //   type: "object",
-                      //   properties: {
-                      //     type: {
-                      //       type: "string"
-                      //     },
-                      //     url: {
-                      //       type: "string",
-                      //       format: "url"
-                      //     }
-                      //   }
-                      // }
-                      // ]
-                    },
-                  },
+      {
+        type: "object",
+        properties: {
+          groupName: {
+            type: "string",
+          },
+          row: {
+            type: "array",
+            minItems: 0,
+            items:
+            {
+              type: "object",
+              properties: {
+                label: {
+                  type: "string",
                 },
+                displayName: {
+                  type: "string",
+                },
+                type: {
+                  enum: ["custom", "text", "number", "boolean"],
+                },
+                width: {
+                  type: ["string", "number"],
+                },
+                source: {
+                  // anyOf: [
+                  //   {
+                  //     type: "object",
+                  //     properties: {
+                  //       type: {
+                  //         type: "string"
+                  //       },
+                  //       options: {
+                  //         type: {
+                  //           type: "string"
+                  //         },
+                  //         items: {
+                  //           type: "string"
+                  //         }
+                  //       }
+                  //     }
+                  //   },
+                  // {
+                  //   type: "object",
+                  //   properties: {
+                  //     type: {
+                  //       type: "string"
+                  //     },
+                  //     dataSourceId: {
+                  //       type: "string"
+                  //     }
+                  //   }
+                  // },
+                  // {
+                  //   type: "object",
+                  //   properties: {
+                  //     type: {
+                  //       type: "string"
+                  //     },
+                  //     url: {
+                  //       type: "string",
+                  //       format: "url"
+                  //     }
+                  //   }
+                  // }
+                  // ]
+                },
+              },
             },
           },
         },
+      },
     },
     name: {
       type: "string",
@@ -119,7 +120,13 @@ const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
         },
       },
     },
+    slug: {
+      type: "string",
+      found: {notIn: true, in: "storiesConfig:slug"}
+    }
   },
+  required: ["fields", "slug", "name"],
+  additionalProperties: false
 })
 
 export default validate;

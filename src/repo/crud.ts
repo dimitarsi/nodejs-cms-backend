@@ -16,17 +16,34 @@ const baseCrudMethods = <T>(
         limit: pageSize,
       })
 
-      const data = await cursor.toArray()
+      const [items, count] = await Promise.all([cursor.toArray(), collection.countDocuments()])
       cursor.close()
 
-      return data
+      const totalPages = Math.ceil(count / pageSize);
+      return {
+        items,
+        pagination: {
+          page,
+          perPage: pageSize,
+          count,
+          totalPage: totalPages,
+          nextPage: page >= totalPages ? null : page + 1,
+        },
+      }
     },
     async create(data: Partial<T>) {
       return await collection.insertOne(data)
     },
     async update(id: string | number, data: Partial<T>) {
+      let query: any = { _id: -1 }
+      try {
+        query = { _id: new ObjectId(id) }
+      } catch (_e) {
+        query = { slug: id }
+      }
+
       return await collection.updateOne(
-        { _id: new ObjectId(id), ...notDeleted },
+        { ...query, ...notDeleted },
         { $set: data }
       )
     },
@@ -42,7 +59,18 @@ const baseCrudMethods = <T>(
       return await collection.deleteOne({ _id: new ObjectId(id) })
     },
     async getById(id: string | number) {
-      return await collection.findOne({ _id: new ObjectId(id), ...notDeleted })
+      let query: any = { _id: -1 };
+      try {
+        query = { _id: new ObjectId(id) }; 
+      } catch (_e) {
+        query = {slug: id}
+      }
+
+
+      return await collection.findOne({
+        ...query,
+        ...notDeleted,
+      })
     },
   }
 }

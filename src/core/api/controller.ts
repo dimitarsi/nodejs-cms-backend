@@ -1,6 +1,11 @@
 import express, { Application } from "express"
 import { PartialDefaultRoutesValidation, validateRequest } from "./request"
 
+const tap = (method: Function, space?: string) => (...args: any[]) => {
+  console.log('tapInto ', space || method.name || 'method');
+  return method(...args)
+}
+
 
 const defaultController = (
   app: Application,
@@ -55,7 +60,7 @@ const defaultController = (
   }
 
   app.get("/", routes.getAll)
-  app.get("/:id", routes.getById)
+  app.get("/:id", tap(routes.getById))
   app.post("/", routes.create)
   app.patch("/:id", routes.update)
   app.delete("/:id", routes.delete)

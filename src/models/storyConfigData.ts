@@ -1,4 +1,4 @@
-interface Row {
+interface Field {
   label: string
   displayName: string
   width: number | string
@@ -18,13 +18,13 @@ interface Row {
       }
 }
 
-interface Field {
+interface Groups {
   groupName: string
-  rows: Row[]
+  rows: Field[]
 }
 
 export interface StoryConfigData {
-  fields: Field[]
+  fields: Groups[]
   name: string
   tags?: string[]
   features?: {
