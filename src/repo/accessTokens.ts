@@ -2,7 +2,7 @@ import db from "@db"
 import { randomUUID } from "crypto"
 import { loginSession } from "@config"
 
-const getExpirationDate = () => {
+export const getExpirationDate = () => {
   return new Date(Date.now() + loginSession)
 }
 

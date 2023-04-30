@@ -34,7 +34,7 @@ const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
           groupName: {
             type: "string",
           },
-          row: {
+          rows: {
             type: "array",
             minItems: 0,
             items:

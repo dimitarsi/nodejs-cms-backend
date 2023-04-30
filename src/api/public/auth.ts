@@ -5,6 +5,7 @@ import {
 
 import express from "express"
 import { authenticate } from "~/repo/auth"
+import db from "@db"
 
 const app = express()
 
@@ -40,6 +41,17 @@ app.post("/logout", async (req, res) => {
     res.json({
       success: false,
     })
+  }
+})
+
+app.post("/logout-all", async (req, res) => {
+  try {
+    db.collection("accessTokens").deleteMany();
+     res.json({
+       success: true,
+     })
+  } catch (e) {
+    res.status(400).json({success: false})
   }
 })
 
