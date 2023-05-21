@@ -107,7 +107,7 @@ const validate = ajv.compile<JSONSchemaType<StoryConfigData>>({
     },
     tags: {},
     features: {
-      type: "object",
+      type: ["object", "null"],
       properties: {
         likes: {
           $ref: `${featureRefUrl}#/definitions/feature`,

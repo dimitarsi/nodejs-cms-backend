@@ -3,7 +3,7 @@ import auth from "~/middleware/auth"
 import express from "express"
 import stories from "~/repo/stories"
 import ajv from "~/schema/core"
-import { JSONSchemaType } from "ajv"
+import { type JSONSchemaType } from "ajv"
 
 const app = express()
 
