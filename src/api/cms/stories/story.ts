@@ -41,7 +41,7 @@ const validateRequestBody = (req: express.Request) => {
 
 defaultController(app, stories, {
   create: validateRequestBody,
-  update: validateRequestBody,
+  // update: validateRequestBody,
 })
 
 export default app
