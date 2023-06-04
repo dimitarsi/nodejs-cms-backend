@@ -36,6 +36,7 @@
     "paths": {
       "@db": ["./src/connect/db"],
       "@api/*": ["./src/api/*"],
+      "@repo/*": ["./src/repo/*"],
       "@config": ["./src/config/config"],
       "~/*": ["./src/*"]
     },                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
