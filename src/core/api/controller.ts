@@ -23,7 +23,8 @@ const defaultController = (
       const valid = await guard("getById", req, res)
 
       if (valid) {
-        res.json(await repo.getById(req.params.id))
+        const data = await repo.getById(req.params.id)
+        res.json(data)
       }
     },
     create: async (req, res) => {

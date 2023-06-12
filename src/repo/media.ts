@@ -28,3 +28,18 @@ export const getPath = async (id: string) => {
 
   return null
 }
+
+export const updateMedia = async (id: string, data: Record<string, string>) => {
+  await db.collection(collectionName).findOneAndUpdate({
+    _id: new ObjectId(id)
+  }, {
+    $set: {
+      name: data.name,
+      author: data.author,
+      tags: data.tags,
+      location: data.location,
+      description: data.description,
+      seoAlt: data.seoAlt
+    }
+  })
+}
