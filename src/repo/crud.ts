@@ -1,4 +1,4 @@
-import { Collection, ObjectId } from "mongodb"
+import { Collection, ObjectId, WithId } from "mongodb"
 import db from "../connect/db"
 
 const baseCrudMethods = <T>(
@@ -10,16 +10,22 @@ const baseCrudMethods = <T>(
     : {}
 
   return {
+    getDbName() {
+      return collection.dbName
+    },
     async getAll(page = 1, pageSize = 20) {
       const cursor = await collection.find(notDeleted, {
         skip: pageSize * (page - 1),
         limit: pageSize,
       })
 
-      const [items, count] = await Promise.all([cursor.toArray(), collection.countDocuments()])
+      const [items, count] = await Promise.all([
+        cursor.toArray(),
+        collection.countDocuments(notDeleted),
+      ])
       cursor.close()
 
-      const totalPages = Math.ceil(count / pageSize);
+      const totalPages = Math.ceil(count / pageSize)
       return {
         items,
         pagination: {
@@ -59,13 +65,12 @@ const baseCrudMethods = <T>(
       return await collection.deleteOne({ _id: new ObjectId(id) })
     },
     async getById(id: string | number) {
-      let query: any = { _id: -1 };
+      let query: any = { _id: -1 }
       try {
-        query = { _id: new ObjectId(id) }; 
+        query = { _id: new ObjectId(id) }
       } catch (_e) {
-        query = {slug: id}
+        query = { slug: id }
       }
-
 
       return await collection.findOne({
         ...query,
@@ -85,8 +90,11 @@ export type BaseRepoMethods<T> = ReturnType<typeof baseCrudMethods<T>>
 export default <T extends Object>(
   collectionName: string,
   options = { softDelete: false },
-  extend = defaultExtend
-): ReturnType<typeof extend> => {
+  extend: (
+    crudMethods: ReturnType<typeof baseCrudMethods>,
+    _collection: Collection
+  ) => Record<string, any> = defaultExtend
+) => {
   const collection = db.collection(collectionName)
   const crudMethods = baseCrudMethods<T>(collection, options)
 

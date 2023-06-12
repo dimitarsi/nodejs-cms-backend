@@ -1,5 +1,5 @@
 import crud from "./crud";
 
-export default crud("storiesConfig", { softDelete: true })
+export const dbName: string = "storiesConfig";
 
-
+export default crud(dbName, { softDelete: true })
