@@ -56,8 +56,7 @@ const handler: (options: { isAdmin: boolean }) => RequestHandler =
       extendSession(activeToken._id, 15);
       next()
     } else {
-      res.statusCode = 401
-      res.json({
+      res.status(401).json({
         error: "Unauthorized",
       })
     }

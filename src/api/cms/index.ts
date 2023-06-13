@@ -14,5 +14,6 @@ router.use("/users", user)
 router.use("/stories", stories)
 router.use("/story-configs", storyConfigs)
 router.use('/attachments', uploadHandler)
+router.use("/check", (_, res) => res.status(200).send());
 
 export default router
