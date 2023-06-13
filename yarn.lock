@@ -9,6 +9,11 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@dim.iliev/process-utils-exec@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@dim.iliev/process-utils-exec/-/process-utils-exec-1.0.1.tgz#99b632ee3fd1b33c1131c8442de7d1d92d645948"
+  integrity sha512-EJAcRTz9GUPBDXC/MVxc0Y08vFfa1exxuw0IUOMrNiupq/64yjJeB6O5OtdVEQaumRW0200xWH13Y/vbvAJ9Yg==
+
 "@jridgewell/resolve-uri@^3.0.3":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@jridgewell/resolve-uri/-/resolve-uri-3.1.1.tgz#c08679063f279615a3326583ba3a90d1d82cc721"

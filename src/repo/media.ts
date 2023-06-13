@@ -7,6 +7,7 @@ const collectionName = 'files';
 interface MediaDocument {
   path: string,
   mimetype: string,
+  filetype: string,
   originalName: string,
   size: string
 }
@@ -23,10 +24,16 @@ export const getPath = async (id: string) => {
   })
 
   if(res) {
-    return res.path
+    return {
+      path: res.path,
+      filetype: res.filetype
+    }
   }
 
-  return null
+  return {
+    path: null,
+    filetype: null
+  }
 }
 
 export const updateMedia = async (id: string, data: Record<string, string>) => {

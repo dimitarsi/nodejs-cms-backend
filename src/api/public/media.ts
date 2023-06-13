@@ -4,15 +4,18 @@ import fs from "fs"
 
 
 export const mediaHandler = async (req: Request, res: Response) => {
-  const filePath = await getPath(req.params['hash']);
+  const {path, filetype} = await getPath(req.params['hash']);
 
-  if(!filePath || fs.existsSync(filePath) === false) {
+  if(!path || fs.existsSync(path) === false) {
     res.status(404);
     res.json({error: "No such file in DB"})
     return;
   }
-  
-  const stream = fs.createReadStream(filePath)
+  if(filetype) {
+    res.setHeader('content-type', filetype);
+  }
+
+  const stream = fs.createReadStream(path)
   
   stream.pipe(res);
   stream.on('error', () => {
