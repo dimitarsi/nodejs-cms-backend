@@ -1,7 +1,6 @@
 import Ajv from "ajv"
 import addFormats from "ajv-formats"
 import { checkIfExists } from "./checkIfExists"
-import { checkIsAdmin } from "./checkIsAdmin"
 
 const ajv = new Ajv({
   allowUnionTypes: true,

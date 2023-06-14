@@ -1,5 +1,4 @@
 import defaultController from "~/core/api/controller"
-import auth from "~/middleware/auth"
 import express from "express"
 import stories from "~/repo/stories"
 import ajv from "~/schema/core"
@@ -19,8 +18,8 @@ const validate = ajv.compile<
   type: "object",
   properties: {
     configId: {
-      type: "string",
-      found: { in: "storiesConfig" },
+      type: ["string", "null"],
+      found: { in: "storiesConfig", optional: true },
     },
     name: {
       type: "string",
@@ -36,7 +35,11 @@ const validate = ajv.compile<
 })
 
 const validateRequestBody = (req: express.Request) => {
-  return validate(req.body).then(_result => undefined).catch((err) => err)
+  return validate(req.body).then(_result => {
+    return undefined
+  }).catch((err) => {
+    return err;
+  })
 }
 
 defaultController(app, stories, {

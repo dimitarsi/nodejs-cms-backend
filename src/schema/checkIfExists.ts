@@ -6,6 +6,7 @@ interface FoundSchema {
   extra ?: any; 
   in: `${string}:${string}` | string
   notIn?: Boolean
+  optional?: Boolean
 }
 
 export const checkIfExists: SchemaValidateFunction = async (
@@ -13,6 +14,11 @@ export const checkIfExists: SchemaValidateFunction = async (
   data
 ) => {
   const [table, field = "_id"] = schema.in.split(":")
+
+  if(schema.optional && !data) {
+    return true
+  }
+
   const extra = schema.extra || {}
   const collection = db.collection(table)
   const fieldValue = field === "_id" ? new ObjectId(data) : data
