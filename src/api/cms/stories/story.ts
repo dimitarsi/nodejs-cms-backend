@@ -27,6 +27,12 @@ const validate = ajv.compile<
     slug: {
       type: "string",
     },
+    type: {
+      enum: ["folder", "document"]
+    },
+    folder: {
+      type: "string"
+    },
     data: {
       type: "object",
       properties: {},
@@ -41,6 +47,30 @@ const validateRequestBody = (req: express.Request) => {
     return err;
   })
 }
+
+app.get('/search', async (req, res) => {
+  const page = parseInt(req.query["page"]?.toString() || "1")
+  const folderName = req.query["folder"] || '/'
+
+  let folderQuery: Record<string, any> = {};
+  
+  if(typeof folderName === 'string') {
+    folderQuery = {folder: folderName}
+  // @ts-ignore
+  } else if(typeof folderName === 'object' && typeof folderName?.['like'] === 'string') {
+  // @ts-ignore
+    folderQuery = {folder: new RegExp(`${folderName?.['like']?.toString()}`)}
+  // @ts-ignore
+  } else if(typeof folderName === 'object' && typeof folderName?.['startsWith'] === 'string') {
+  // @ts-ignore
+    folderQuery = {folder: new RegExp(`^${folderName?.['startsWith']?.toString()}.?`)}
+  }
+
+  res.json(await stories.getAll(isNaN(page) ? 1 : Math.max(1, page), {
+    pageSize: 20,
+    filter: folderQuery
+  }))
+});
 
 defaultController(app, stories, {
   create: validateRequestBody,

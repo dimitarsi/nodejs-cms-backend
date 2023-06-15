@@ -3,10 +3,12 @@ import crud from "./crud"
 import {dbName as storiesDbName} from "./storyConfigs"
 
 const withUpdateConfigId = (data: Record<string, any>) => {
-  const {configId = '', ...splat} = data;
+  const {configId = '', folder, ...splat} = data;
   const config = configId ? {configId: new ObjectId(configId)} : {};
 
   return {
+    folder,
+    depth: folder.replace().split('/').length - 1 || 1,
     ...config,
     ...splat
   }
@@ -21,16 +23,20 @@ const unwrapConfigField = (data: Record<string, any>) => {
   return {config, ...splat};
 }
 
-const repo = crud("stories", { softDelete: false }, (crud, _collection) => {
+const notDeleted = { softDelete: false }
+// TODO: pass softDelete query from `crud`
+const softDelete = {}
+
+const repo = crud("stories", notDeleted, (crud, collection) => {
   return {
     ...crud,
     create(data: Record<string, any>) {
-
+      const normalized = withUpdateConfigId(data)
       return crud.create({
         createOn: new Date(),
         updatedOn: new Date(),
         isActive: true,
-        ...withUpdateConfigId(data)
+        ...normalized
       })
     },
     update(id: string, data: Record<string, any>) {
@@ -38,6 +44,37 @@ const repo = crud("stories", { softDelete: false }, (crud, _collection) => {
         updatedOn: new Date(),
         ...withUpdateConfigId(data)
       })
+    },
+    async getAll(page = 1, options: {pageSize: number, filter: Record<string, any> } = {pageSize:20, filter: {}} ) {
+      
+      const filter = {
+        ...softDelete,
+        ...(options.filter || {})
+      }
+      
+      const cursor = await collection.find(filter, {
+        skip: options.pageSize * (page - 1),
+        limit: options.pageSize,
+      })
+
+      const [items, count] = await Promise.all([
+        cursor.toArray(),
+        collection.countDocuments(filter),
+      ])
+      cursor.close()
+
+      const totalPages = Math.ceil(count / options.pageSize)
+      
+      return {
+        items,
+        pagination: {
+          page,
+          perPage: options.pageSize,
+          count,
+          totalPage: totalPages,
+          nextPage: page >= totalPages ? null : page + 1,
+        },
+      }
     },
     async getById(id: string) {
       let query: any = { _id: -1 };
@@ -47,7 +84,7 @@ const repo = crud("stories", { softDelete: false }, (crud, _collection) => {
         query = {slug: id}
       }
 
-      const cursor = await _collection.aggregate([
+      const cursor = await collection.aggregate([
         {
           $match: {
             ...query
