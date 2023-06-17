@@ -5,10 +5,16 @@ import {dbName as storiesDbName} from "./storyConfigs"
 const withUpdateConfigId = (data: Record<string, any>) => {
   const {configId = '', folder, ...splat} = data;
   const config = configId ? {configId: new ObjectId(configId)} : {};
+  let folderConfig = {};
+  if(folder) {
+    folderConfig = {
+      folder,
+      depth: folder.split('/').length - 1 || 1,
+    }
+  }
 
   return {
-    folder,
-    depth: folder.replace().split('/').length - 1 || 1,
+    ...folderConfig,
     ...config,
     ...splat
   }
