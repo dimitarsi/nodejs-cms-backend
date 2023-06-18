@@ -26,6 +26,9 @@ const validate = ajv.compile<
     },
     slug: {
       type: "string",
+      found: {
+        in: "stories:slug", notIn: true
+      }
     },
     type: {
       enum: ["folder", "document"]
