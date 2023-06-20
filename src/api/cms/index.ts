@@ -4,6 +4,7 @@ import stories from "./stories/story"
 import storyConfigs from "./stories/story_config"
 import auth from "~/middleware/auth"
 import uploadHandler from './files'
+import components from './components'
 
 
 const router = Router()
@@ -14,6 +15,7 @@ router.use("/users", user)
 router.use("/stories", stories)
 router.use("/story-configs", storyConfigs)
 router.use('/attachments', uploadHandler)
+router.use('/components', components)
 router.use("/check", (_, res) => res.status(200).send());
 
 export default router

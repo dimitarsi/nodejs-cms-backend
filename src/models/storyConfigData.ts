@@ -1,8 +1,9 @@
-interface Field {
+export interface Field {
   label: string
   displayName: string
   width: number | string
-  type: "custom" | "number" | "text" | "boolean"
+  type: "ref" | "number" | "text" | "boolean" | "component" | "date"
+  data: Record<string, any>,
   source?:
     | {
         type: "list"
@@ -18,7 +19,7 @@ interface Field {
       }
 }
 
-interface Groups {
+export interface Groups {
   groupName: string
   rows: Field[]
 }
