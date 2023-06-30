@@ -1,22 +1,19 @@
-import { Field, StoryConfigData } from "~/models/storyConfigData";
-import crud from "./crud";
+import { StoryConfigData } from "~/models/contentType";
+import makeRepo from "./crud";
 import { WithId } from "mongodb";
 import components from "./components";
-import { inspect } from "util";
+import { Field } from "~/models/component";
 
-export const dbName: string = "storiesConfig";
+const crud = makeRepo("contentTypes", { softDelete: true });
 
-export default crud(dbName, { softDelete: true }, (crud, collection) => ({
+export default {
   ...crud,
   async getById(idOrSlug: string) {
     const config = await crud.getById(idOrSlug) as WithId<StoryConfigData>;
 
     const getWithComponents = async (row: Field) => {
       if(row.type === 'component' && row.data['componentId']) {
-        console.log('>> Fetch component', row.data['componentId'].toString());
         const component = await components.getById(row.data['componentId'].toString())
-
-        console.log(inspect(component, {depth: 99}))
 
         return {
           ...row,
@@ -43,4 +40,4 @@ export default crud(dbName, { softDelete: true }, (crud, collection) => ({
       fields
     }
   }
-}))
+}

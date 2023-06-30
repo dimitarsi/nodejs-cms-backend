@@ -1,15 +1,18 @@
-import { Collection, ObjectId, WithId } from "mongodb"
+import { Collection, Filter, ObjectId, OptionalUnlessRequiredId } from "mongodb"
 import db from "../connect/db"
 
-const baseCrudMethods = <T>(
-  collection: Collection,
+const baseCrudMethods = <T extends Record<string, any>>(
+  collection: Collection<T>,
   options = { softDelete: false }
 ) => {
-  const notDeleted = options.softDelete
+  const notDeleted: Filter<any> = options.softDelete
     ? { $or: [{ deletedOn: null }, { deletedOn: { $exists: false } }] }
     : {}
 
   return {
+    getCollection() {
+      return collection
+    },
     getDbName() {
       return collection.dbName
     },
@@ -37,7 +40,7 @@ const baseCrudMethods = <T>(
         },
       }
     },
-    async create(data: Partial<T>) {
+    async create(data: OptionalUnlessRequiredId<T>) {
       return await collection.insertOne(data)
     },
     async update(id: string | number, data: Partial<T>) {
@@ -54,15 +57,15 @@ const baseCrudMethods = <T>(
       )
     },
     async deleteById(id: string | number) {
+      const filterById: Filter<any> = { _id: new ObjectId(id) }
+
       if (options.softDelete) {
-        return await collection.updateOne(
-          { _id: new ObjectId(id) },
-          {
-            $set: { deletedOn: new Date() },
-          }
-        )
+        const updateFilter: any = {
+          $set: { deletedOn: new Date() },
+        }
+        return await collection.updateOne(filterById, updateFilter)
       }
-      return await collection.deleteOne({ _id: new ObjectId(id) })
+      return await collection.deleteOne(filterById)
     },
     async getById(id: string | number) {
       let query: any = { _id: -1 }
@@ -72,7 +75,7 @@ const baseCrudMethods = <T>(
         query = { slug: id }
       }
 
-      return await collection.findOne({
+      return await collection.findOne<T>({
         ...query,
         ...notDeleted,
       })
@@ -85,18 +88,10 @@ export const defaultExtend = (
   _collection: Collection
 ) => crudMethods
 
-export type BaseRepoMethods<T> = ReturnType<typeof baseCrudMethods<T>>
-
 export default <T extends Object>(
   collectionName: string,
   options = { softDelete: false },
-  extend: (
-    crudMethods: ReturnType<typeof baseCrudMethods>,
-    _collection: Collection
-  ) => Record<string, any> = defaultExtend
 ) => {
-  const collection = db.collection(collectionName)
-  const crudMethods = baseCrudMethods<T>(collection, options)
-
-  return extend(crudMethods, collection)
+  const collection = db.collection<T>(collectionName)
+  return baseCrudMethods<T>(collection, options)
 }

@@ -1,6 +1,6 @@
 import defaultController from "~/core/api/controller"
 import express from "express"
-import stories from "~/repo/stories"
+import stories from "@repo/content"
 import ajv from "~/schema/core"
 import { type JSONSchemaType } from "ajv"
 

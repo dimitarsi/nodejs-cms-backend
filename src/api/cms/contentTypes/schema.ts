@@ -1,5 +1,5 @@
 import { JSONSchemaType } from "ajv";
-import { StoryConfigData } from "~/models/storyConfigData";
+import { StoryConfigData } from "~/models/contentType";
 import ajv from "~/schema/core";
 
 const featureRefUrl = "http://plenty-cms/schemas/defs.json";

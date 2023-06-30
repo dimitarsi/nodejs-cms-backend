@@ -1,10 +1,13 @@
 import { UserWithPermissions as User } from "~/models/user"
-import crud, { BaseRepoMethods } from "./crud"
+import makeRepo from "./crud"
 import { ObjectId } from "mongodb"
 import bcrypt from "bcrypt"
 import { rounds } from "@config"
 
-const usersRepo = crud("users", { softDelete: false }, (crud, _collection) => ({
+const crud = makeRepo<User>('users');
+const collection = crud.getCollection()
+
+export default {
   ...crud,
   create: (data: User) => {
     return crud.create({
@@ -28,15 +31,11 @@ const usersRepo = crud("users", { softDelete: false }, (crud, _collection) => ({
     })
   },
   activate: (id: string | number) => {
-    _collection.findOneAndUpdate(
+    collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       {
         $set: { isActive: true },
       }
     )
   },
-}))
-
-export default usersRepo as BaseRepoMethods<User> & {
-  activate: (id: string | number) => Promise<void>
 }

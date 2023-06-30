@@ -2,7 +2,7 @@ import express from "express"
 import { Validator } from "~/core/api/request"
 import defaultController from "~/core/api/controller"
 import validate from "./schema"
-import storyConfigs from "~/repo/storyConfigs"
+import storyConfigs from "@repo/contentTypes"
 
 const app = express()
 

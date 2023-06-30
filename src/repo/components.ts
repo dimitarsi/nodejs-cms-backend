@@ -1,9 +1,10 @@
-import { Field, Groups } from "~/models/storyConfigData";
-import crud from "./crud";
-import { inspect } from "util";
+import { Component } from "~/models/component";
+import makeRepo from "./crud";
+
+const crud = makeRepo<Component>('components')
 
 
-export default crud("components", {softDelete: false}, (crud, collection) => ({
+export default {
   ...crud,
   async getById(idOrSlug: string) {
 
@@ -14,7 +15,7 @@ export default crud("components", {softDelete: false}, (crud, collection) => ({
         return null
       }
 
-      const rows = await Promise.all(component.rows.map(async (component: Field) => {
+      const rows: any = await Promise.all(component.rows.map(async (component) => {
         if(component.type === 'component' && component.data['componentId']) {
           return {
             ...component,
@@ -37,4 +38,4 @@ export default crud("components", {softDelete: false}, (crud, collection) => ({
 
     return getNestedComponents(idOrSlug);
   }
-}))
+}
