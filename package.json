@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --inspect=localhost:9222 --exec node -r ts-node/register ./src/server.ts",
     "format": "prettier -w ./src/**/*.ts ./src/*.ts",
-    "seed": "node -r ts-node/register ./src/cli/index.ts --seed"
+    "seed": "node -r ts-node/register ./src/cli/index.ts --seed",
+    "re:seed": "node -r ts-node/register ./src/cli/index.ts --reseed"
   },
   "keywords": [],
   "author": "",

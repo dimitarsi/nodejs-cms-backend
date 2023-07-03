@@ -1,4 +1,5 @@
 import components from '@repo/components'
+import contentTypes from '@repo/contentTypes'
 
 export const seedComponents = async () => {
   const result = await components.create({
@@ -77,36 +78,37 @@ export const seedComponents = async () => {
     ],
   })
 
-  // await contentType.create({
-  //   displayName: "Basic Page",
-  //   fields: [
-  //     {
-  //       groupName: "Content",
-  //       rows: [
-  //         {
-  //           name: "content",
-  //           label: "content",
-  //           type: "component",
-  //           data: {
-  //             componentId: postComponent['insertedId']
-  //           }
-  //         }
-  //       ]
-  //     }
-  //   ]
-  // })
+  await contentTypes.create({
+    name: "Basic Page",
+    slug: "basic-page",
+    fields: [
+      {
+        groupName: "Content",
+        rows: [
+          {
+            displayName: "Main Text",
+            label: "mainText",
+            type: "component",
+            data: {
+              componentId: postComponent["insertedId"],
+            },
+          },
+        ],
+      },
+    ],
+  })
 
-  // const result3 = await components.create({
-  //   groupName: 'Author',
-  //   rows: [
-  //     {
-  //       name: '',
-  //       label: "nested-component",
-  //       type: 'component',
-  //       data: {
-  //         componentId: result['insertedId'].toString()
-  //       }
-  //     }
-  //   ]
-  // })
+  const result3 = await components.create({
+    groupName: 'Author',
+    rows: [
+      {
+        name: '',
+        label: "nested-component",
+        type: 'component',
+        data: {
+          componentId: result['insertedId'].toString()
+        }
+      }
+    ]
+  })
 } 

@@ -1,5 +1,5 @@
-import { Collection, Filter, ObjectId, OptionalUnlessRequiredId } from "mongodb"
-import db from "../connect/db"
+import { Collection, Filter, ObjectId } from "mongodb"
+import db from "@db"
 
 const baseCrudMethods = <T extends Record<string, any>>(
   collection: Collection<T>,
@@ -40,7 +40,7 @@ const baseCrudMethods = <T extends Record<string, any>>(
         },
       }
     },
-    async create(data: OptionalUnlessRequiredId<T>) {
+    async create(data: any) {
       return await collection.insertOne(data)
     },
     async update(id: string | number, data: Partial<T>) {
@@ -66,6 +66,9 @@ const baseCrudMethods = <T extends Record<string, any>>(
         return await collection.updateOne(filterById, updateFilter)
       }
       return await collection.deleteOne(filterById)
+    },
+    async deleteAll() {
+      return await collection.deleteMany({})
     },
     async getById(id: string | number) {
       let query: any = { _id: -1 }

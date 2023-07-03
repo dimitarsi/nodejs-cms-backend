@@ -1,4 +1,4 @@
-import { StoryConfigData } from "~/models/contentType";
+import { ContentType } from "~/models/contentType";
 import makeRepo from "./crud";
 import { WithId } from "mongodb";
 import components from "./components";
@@ -9,7 +9,7 @@ const crud = makeRepo("contentTypes", { softDelete: true });
 export default {
   ...crud,
   async getById(idOrSlug: string) {
-    const config = await crud.getById(idOrSlug) as WithId<StoryConfigData>;
+    const config = (await crud.getById(idOrSlug)) as WithId<ContentType>
 
     const getWithComponents = async (row: Field) => {
       if(row.type === 'component' && row.data['componentId']) {

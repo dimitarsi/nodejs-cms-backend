@@ -29,7 +29,7 @@ const unwrapConfigField = (data: Record<string, any>) => {
   return {config, ...splat};
 }
 
-const crud =  makeRepo<Content>("stories", { softDelete: false });
+const crud =  makeRepo<Content>("content", { softDelete: false });
 const collection = crud.getCollection();
 const contentTypesDbName = crud.getDbName()
 

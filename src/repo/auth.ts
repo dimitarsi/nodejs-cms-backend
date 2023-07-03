@@ -24,3 +24,13 @@ export const authenticate = async (email: string, password: string) => {
     userId: user?._id.toString(),
   }
 }
+
+export const deleteAll = async () => {
+  return await db.collection("users").deleteMany({});
+}
+
+export default {
+  getUserByEmail,
+  authenticate,
+  deleteAll
+}

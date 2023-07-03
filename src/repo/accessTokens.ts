@@ -64,3 +64,14 @@ export const findToken = async (token: string) => {
   
   return activeToken
 }
+
+export const deleteAll = async () => {
+  return await db.collection<AccessToken>("accessTokens").deleteMany({});
+}
+
+export default {
+  findOrCreateAccessToken,
+  deactivateToken,
+  findToken,
+  deleteAll
+}

@@ -50,3 +50,23 @@ export const updateMedia = async (id: string, data: Record<string, string>) => {
     }
   })
 }
+
+// TODO: remove the file as well, in the controller
+export const deleteById = async (id: string) => {
+  return await db.collection(collectionName).findOneAndDelete({
+    _id: new ObjectId(id)
+  })
+}
+
+// TODO: remove the files as well, in the controller
+export const deleteAll = async () => {
+  return await db.collection(collectionName).deleteMany({});
+}
+
+export default {
+  insertMany,
+  getPath,
+  updateMedia,
+  deleteById,
+  deleteAll
+}
