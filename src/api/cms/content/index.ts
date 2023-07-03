@@ -1,6 +1,7 @@
+import contentTypesRepo from '@repo/contentTypes';
+import contentRepo from '@repo/content'
 import defaultController from "~/core/api/controller"
 import express from "express"
-import stories from "@repo/content"
 import ajv from "~/schema/core"
 import { type JSONSchemaType } from "ajv"
 
@@ -19,7 +20,7 @@ const validate = ajv.compile<
   properties: {
     configId: {
       type: ["string", "null"],
-      found: { in: "storiesConfig", optional: true },
+      found: { in: contentTypesRepo.collectionName(), optional: true },
     },
     name: {
       type: "string",
@@ -27,14 +28,15 @@ const validate = ajv.compile<
     slug: {
       type: "string",
       found: {
-        in: "stories:slug", notIn: true
-      }
+        in: "stories:slug",
+        notIn: true,
+      },
     },
     type: {
-      enum: ["folder", "document"]
+      enum: ["folder", "document"],
     },
     folder: {
-      type: "string"
+      type: "string",
     },
     data: {
       type: "object",
@@ -69,13 +71,15 @@ app.get('/search', async (req, res) => {
     folderQuery = {folder: new RegExp(`^${folderName?.['startsWith']?.toString()}.?`)}
   }
 
-  res.json(await stories.getAll(isNaN(page) ? 1 : Math.max(1, page), {
-    pageSize: 20,
-    filter: folderQuery
-  }))
+  res.json(
+    await contentRepo.getAll(isNaN(page) ? 1 : Math.max(1, page), {
+      pageSize: 20,
+      filter: folderQuery,
+    })
+  )
 });
 
-defaultController(app, stories, {
+defaultController(app, contentRepo, {
   create: validateRequestBody,
   // update: validateRequestBody,
 })

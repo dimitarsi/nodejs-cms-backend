@@ -13,8 +13,8 @@ const baseCrudMethods = <T extends Record<string, any>>(
     getCollection() {
       return collection
     },
-    getDbName() {
-      return collection.dbName
+    collectionName() {
+      return collection.collectionName
     },
     async getAll(page = 1, pageSize = 20) {
       const cursor = await collection.find(notDeleted, {

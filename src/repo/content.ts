@@ -31,7 +31,7 @@ const unwrapConfigField = (data: Record<string, any>) => {
 
 const crud =  makeRepo<Content>("content", { softDelete: false });
 const collection = crud.getCollection();
-const contentTypesDbName = crud.getDbName()
+const contentTypesDbName = crud.collectionName()
 
 export default {
   ...crud,
