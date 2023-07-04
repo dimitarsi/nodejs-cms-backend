@@ -7,19 +7,19 @@ export const seedComponents = async () => {
     rows: [
       {
         displayName: "Title",
-        label: "title",
+        slug: "title",
         type: "text",
         data: null,
       },
       {
         displayName: "Description",
-        label: "description",
+        slug: "description",
         type: "text",
         data: null,
       },
       {
         displayName: "Image",
-        label: "image",
+        slug: "image",
         type: "file",
         data: null,
       },
@@ -31,25 +31,25 @@ export const seedComponents = async () => {
     rows: [
       {
         displayName: "Headline",
-        label: "headline",
+        slug: "headline",
         type: "text",
         data: null,
       },
       {
         displayName: "Subline",
-        label: "subline",
+        slug: "subline",
         type: "text",
         data: null,
       },
       {
         displayName: "Excerpt",
-        label: "excerpt",
+        slug: "excerpt",
         type: "text",
         data: null,
       },
       {
         displayName: "Content",
-        label: "content",
+        slug: "content",
         type: "text",
         data: null,
       },
@@ -61,7 +61,7 @@ export const seedComponents = async () => {
     rows: [
       {
         displayName: "Seo Metadata",
-        label: "seo-metadata",
+        slug: "seo-metadata",
         type: "component",
         data: {
           componentId: result["insertedId"].toString(),
@@ -69,7 +69,7 @@ export const seedComponents = async () => {
       },
       {
         displayName: "Page Content",
-        label: "content",
+        slug: "content",
         type: "component",
         data: {
           componentId: result2["insertedId"].toString(),
@@ -87,7 +87,7 @@ export const seedComponents = async () => {
         rows: [
           {
             displayName: "Main Text",
-            label: "mainText",
+            slug: "mainText",
             type: "component",
             data: {
               componentId: postComponent["insertedId"],
@@ -102,8 +102,8 @@ export const seedComponents = async () => {
     groupName: 'Author',
     rows: [
       {
-        name: '',
-        label: "nested-component",
+        name: 'Nested Author Fields',
+        slug: "nested-component",
         type: 'component',
         data: {
           componentId: result['insertedId'].toString()
