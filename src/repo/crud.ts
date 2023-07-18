@@ -1,4 +1,4 @@
-import { Collection, Filter, ObjectId } from "mongodb"
+import { Collection, Filter, ObjectId, OptionalUnlessRequiredId } from "mongodb"
 import db from "@db"
 
 const baseCrudMethods = <T extends Record<string, any>>(
@@ -40,7 +40,8 @@ const baseCrudMethods = <T extends Record<string, any>>(
         },
       }
     },
-    async create(data: any) {
+    // async create(data: OptionalUnlessRequiredId<T>) {
+    async create(data: OptionalUnlessRequiredId<T>) {
       return await collection.insertOne(data)
     },
     async update(id: string | number, data: Partial<T>) {

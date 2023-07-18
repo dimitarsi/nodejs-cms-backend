@@ -1,9 +1,10 @@
 import contentTypesRepo from '@repo/contentTypes';
 import contentRepo from '@repo/content'
 import defaultController from "~/core/api/controller"
-import express from "express"
+import express, { Request } from "express"
 import ajv from "~/schema/core"
 import { type JSONSchemaType } from "ajv"
+import { Validator } from '~/core/api/request';
 
 const app = express()
 
@@ -45,12 +46,14 @@ const validate = ajv.compile<
   },
 })
 
-const validateRequestBody = (req: express.Request) => {
-  return validate(req.body).then(_result => {
-    return undefined
-  }).catch((err) => {
-    return err;
-  })
+const validateRequestBody: Validator = (req: express.Request) => {
+  return undefined
+
+  // return validate(req.body).then(_result => {
+  //   return undefined
+  // }).catch((err) => {
+  //   return err;
+  // })
 }
 
 app.get('/search', async (req, res) => {

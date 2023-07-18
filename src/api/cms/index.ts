@@ -12,10 +12,10 @@ const router = Router()
 router.use(auth({isAdmin: true}))
 
 router.use("/users", user)
-router.use("/stories", stories)
-router.use("/story-configs", contentTypes)
+router.use("/content", stories)
+router.use("/content_types", contentTypes)
 router.use('/attachments', uploadHandler)
-router.use('/components', components)
+// router.use('/components', components)
 router.use("/check", (_, res) => res.status(200).send());
 
 export default router

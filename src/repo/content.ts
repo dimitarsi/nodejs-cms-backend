@@ -21,7 +21,8 @@ const withUpdateConfigId = (data: Record<string, any>) => {
 }
 
 const unwrapConfigField = (data: Record<string, any>) => {
-  const {config, ...splat} = data;
+  const { config, ...splat } = data;
+  
   if(config && Array.isArray(config) && config.length >= 1) {
     return {config: config[0], ...splat};
   }
@@ -35,7 +36,7 @@ const contentTypesDbName = crud.collectionName()
 
 export default {
   ...crud,
-  create(data: Record<string, any>) {
+  create(data: Partial<Omit<Content, 'id'>>) {
     const normalized = withUpdateConfigId(data)
     
     return crud.create({

@@ -1,38 +1,47 @@
 import { ObjectId } from "mongodb";
 import { BaseModel } from "./modal";
+import { Component } from "./component"
 
 type FileId = string;
 type RefId = string;
 
 export type TextDataType = {
-  type: "text",
+  type: "text"
   value: string
 }
 
 export type FileDataType = {
-  type: "files",
+  type: "files"
   value: FileId
 }
 
 export type RefDataType = {
-  type: "ref",
+  type: "ref"
   value: {
-    refId: RefId,
+    refId: RefId
     type: string
   }
 }
 
 export type ComponentDataType = {
-  type: "component",
-  value: {
-    componentId: string | ObjectId
-  }
+  type: "component"
+  componentId: string | ObjectId
+  value: Record<string, DataTypes>
 }
 
 export type DataTypes = TextDataType | FileDataType | RefDataType | ComponentDataType
 
+
+export interface ContentType {
+  fields: Component[]
+  name: string
+}
+
+
 export interface Content extends BaseModel {
   displayName: string
-  configId: string | ObjectId;
-  data: DataTypes
+  id?: String
+  configId: string | ObjectId
+  config: ContentType
+  data: Record<string, DataTypes>
 }

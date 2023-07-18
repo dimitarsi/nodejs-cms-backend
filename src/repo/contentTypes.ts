@@ -1,43 +1,28 @@
 import { ContentType } from "~/models/contentType";
 import makeRepo from "./crud";
 import { WithId } from "mongodb";
-import components from "./components";
-import { Field } from "~/models/component";
 
-const crud = makeRepo("contentTypes", { softDelete: true });
+const crud = makeRepo<ContentType>("contentTypes", { softDelete: true })
 
 export default {
   ...crud,
   async getById(idOrSlug: string) {
     const config = (await crud.getById(idOrSlug)) as WithId<ContentType>
-
-    const getWithComponents = async (row: Field) => {
-      if(row.type === 'component' && row.data['componentId']) {
-        const component = await components.getById(row.data['componentId'].toString())
-
-        return {
-          ...row,
-          component
-        }
-      }
-
-      return row;
+    return config
+  },
+  async update(idOrSlug: string, data: ContentType) {
+    if (data.type !== "composite" && data.children?.length) {
+      data.type = "composite"
+      data.children = [{
+        name: data.name,
+        slug: data.slug,
+        type: data.type,
+      },
+      ...data.children]
     }
 
-    const fields = await Promise.all(config.fields.map(async (group) => {
-      const rows = await Promise.all(group.rows.map((row) => {
-        return getWithComponents(row);
-      }))
+    const { _id, ...updated } = data;
 
-      return {
-        ...group,
-        rows
-      };
-    }));
-
-    return {
-      ...config,
-      fields
-    }
+    return await crud.update(idOrSlug, updated as any);
   }
 }

@@ -1,4 +1,3 @@
-import componentsRepo from "@repo/components"
 import contentTypesRepo from "@repo/contentTypes"
 import contentRepo from "@repo/content"
 import usersRepo from "@repo/users"
@@ -27,7 +26,6 @@ export default async function removeData() {
   
 
   return Promise.all([
-    componentsRepo.deleteAll(),
     contentTypesRepo.deleteAll(),
     contentRepo.deleteAll(),
     // usersRepo.deleteAll(),

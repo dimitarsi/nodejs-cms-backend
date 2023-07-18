@@ -24,7 +24,13 @@ const defaultController = (
 
       if (valid) {
         const data = await repo.getById(req.params.id)
-        res.json(data)
+
+        if (!data || Object.keys(data).length === 0) {
+          res.status(404).json({"message": "Not Found"})
+        } else {
+          res.json(data)
+        }
+
       }
     },
     create: async (req, res) => {
@@ -40,7 +46,8 @@ const defaultController = (
     update: async (req, res) => {
       const valid = await guard("update", req, res)
       if (valid) {
-        const result = await repo.update(req.params.id, req.body)
+        const { _id, ...body } = req.body;
+        const result = await repo.update(req.params.id, body)
 
         res.json({
           matched: result.matchedCount,
