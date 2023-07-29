@@ -5,7 +5,7 @@ export interface ContentType {
   _id?: ObjectId
   name: string
   slug: string
-  type: string
+  type: "root" | "composite" | string
   children?: ContentType[] | null 
 }
 
@@ -16,12 +16,12 @@ export const textContentType = (name: string): ContentType => ({
   children: null
 })
 
-export const compositeContentType = (name: string) => {
+export const compositeContentType = (name: string, isRoot = false) => {
 
   const rootContentType: ContentType = {
     name,
     slug: slugify(name),
-    type: "composite",
+    type: isRoot ? "root" : "composite",
     children: []
   }
 

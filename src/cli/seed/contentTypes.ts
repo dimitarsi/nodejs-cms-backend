@@ -4,7 +4,7 @@ import { compositeContentType, textContentType } from '~/models/contentType'
 export const seedComponents = async () => {
 
   await contentTypes.create(
-    compositeContentType("Post Page")
+    compositeContentType("Post Page", true)
       .add(
         compositeContentType("Content")
           .add(textContentType("Title"))
