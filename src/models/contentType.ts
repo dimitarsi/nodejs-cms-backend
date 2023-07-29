@@ -26,9 +26,20 @@ export const compositeContentType = (name: string, isRoot = false) => {
   }
 
   const chainable = {
+    __rootContentType: rootContentType,
     add(contentType: ContentType) {
       rootContentType.children!.push(contentType)
       return chainable
+    },
+    clone() {
+      const cloned = compositeContentType(name, isRoot)
+      // TODO: add a proper cloning
+      cloned.__rootContentType.children = JSON.parse(JSON.stringify(rootContentType.children)) 
+
+      return cloned;
+    },
+    clearChildren() {
+      rootContentType.children = []
     },
     getType() {
       return rootContentType

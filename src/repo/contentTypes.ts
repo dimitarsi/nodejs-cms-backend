@@ -26,20 +26,8 @@ export default {
   ...crud,
   getById,
   async update(idOrSlug: string, data: ContentType) {
-    if (data.type !== "composite" && data.children?.length) {
-      data.type = "composite"
-      data.children = [
-        {
-          name: data.name,
-          slug: data.slug,
-          type: data.type,
-        },
-        ...data.children,
-      ]
-    }
 
     const { _id, ...updated } = data
-
-    return await crud.update(idOrSlug, updated as any)
+    return await crud.update(idOrSlug, updated)
   },
 }

@@ -1,12 +1,11 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals"
 
-import repo from '../contentTypes'
+import repo from "../contentTypes"
 import db, { closeMongoClient, connectMongoClient } from "@db"
 
-import { compositeContentType, textContentType } from '~/models/contentType';
+import { compositeContentType, textContentType } from "~/models/contentType"
 
 describe("ContentTypes Repo", () => {
-
   beforeAll(async () => {
     await connectMongoClient()
   })
@@ -29,34 +28,66 @@ describe("ContentTypes Repo", () => {
     expect(item._id).toBeDefined()
   })
 
-  test("Can create and find root references", async () => {
-
+  describe("Nested references", () => {
     const post = compositeContentType("Post", true)
     const seo = compositeContentType("SEO", true)
 
-    seo.add(textContentType("title"))
+    seo
+      .add(textContentType("title"))
       .add(textContentType("description"))
       .add(textContentType("image"))
-    
-    await repo.create(seo.getType())
 
-    const seoItem = await repo.getById("seo")
+    beforeEach(async () => {
+      await repo.create(seo.getType())
 
-    post.add(seoItem)
+      const seoItem = await repo.getById("seo")
 
-    await repo.create(post.getType())
+      post.add(seoItem)  
 
-    const postItem = await repo.getById("post")
+      await repo.create(post.getType())
+    })
 
-    expect(postItem.type).toBe("root")
-    expect(postItem.children).toHaveLength(1)
-    expect(postItem.children?.[0]).toHaveProperty("type")
-    expect(postItem.children?.[0]).toHaveProperty("name")
-    expect(postItem.children?.[0]).toHaveProperty("slug")
-    expect(postItem.children?.[0]).toHaveProperty("children")
-    expect(postItem.children?.[0]).toHaveProperty("_id")
-    expect(postItem.children?.[0].type).toBe("root")
-    expect(postItem.children?.[0].name).toBe("SEO")
-    expect(postItem.children?.[0].children).toHaveLength(seo.getType().children!.length)
+    afterEach(async () => {
+      await repo.deleteAll()
+      post.clearChildren()
+    })
+
+    test("Can create and find root references", async () => {
+      const postItem = await repo.getById("post")
+
+      expect(postItem.type).toBe("root")
+      expect(postItem.children).toHaveLength(1)
+      expect(postItem.children?.[0]).toHaveProperty("type")
+      expect(postItem.children?.[0]).toHaveProperty("name")
+      expect(postItem.children?.[0]).toHaveProperty("slug")
+      expect(postItem.children?.[0]).toHaveProperty("children")
+      expect(postItem.children?.[0]).toHaveProperty("_id")
+      expect(postItem.children?.[0].type).toBe("root")
+      expect(postItem.children?.[0].name).toBe("SEO")
+      expect(postItem.children?.[0].children).toHaveLength(
+        seo.getType().children!.length
+      )
+    })
+
+    test("Updating a referred (root) field also updates the reference", async () => {
+      seo.add(textContentType("schemaType"))
+
+      await repo.update("seo", seo.getType())
+
+      const postItem = await repo.getById("post")
+
+      expect(postItem.type).toBe("root")
+      expect(postItem.children).toHaveLength(1)
+      expect(postItem.children?.[0]).toHaveProperty("type")
+      expect(postItem.children?.[0]).toHaveProperty("name")
+      expect(postItem.children?.[0]).toHaveProperty("slug")
+      expect(postItem.children?.[0]).toHaveProperty("children")
+      expect(postItem.children?.[0]).toHaveProperty("_id")
+      expect(postItem.children?.[0].type).toBe("root")
+      expect(postItem.children?.[0].name).toBe("SEO")
+      expect(postItem.children?.[0].children).toHaveLength(
+        seo.getType().children!.length
+      )
+    })
   })
 })
