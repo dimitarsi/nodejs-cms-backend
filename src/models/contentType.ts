@@ -6,7 +6,15 @@ export interface ContentType {
   name: string
   slug: string
   type: "root" | "composite" | string
-  children?: ContentType[] | null 
+  children?: ContentType[] | null
+  /**
+   * Flag the ContentType as freezed, meaning should not be allowed to change.
+   * This is enforced only on the client, as a measure when referencing other "root"
+   * ContentTypes.
+   */
+  freezed?: boolean
+  originalName?: string
+  originalSlug?: string
 }
 
 export const textContentType = (name: string): ContentType => ({
@@ -16,18 +24,38 @@ export const textContentType = (name: string): ContentType => ({
   children: null
 })
 
+export const freezeAllChildren = (contentType: Pick<ContentType, 'children' | 'freezed'>) => {
+  contentType.freezed = true;
+  contentType.children?.forEach(c => freezeAllChildren(c))
+}
+
+export const unfeezeAllChildren = (contentType: ContentType) => {
+  contentType.freezed = true
+  contentType.children?.forEach((c) => unfeezeAllChildren(c))
+}
+
+/**
+ * Helper method to easily compose contentTypes for tests and seeding
+ */
 export const compositeContentType = (name: string, isRoot = false) => {
 
   const rootContentType: ContentType = {
     name,
     slug: slugify(name),
     type: isRoot ? "root" : "composite",
-    children: []
+    children: [],
+    freezed: false
   }
 
   const chainable = {
     __rootContentType: rootContentType,
     add(contentType: ContentType) {
+
+      if (rootContentType.freezed) {
+        contentType.freezed = true
+
+      }
+
       rootContentType.children!.push(contentType)
       return chainable
     },
@@ -38,11 +66,22 @@ export const compositeContentType = (name: string, isRoot = false) => {
 
       return cloned;
     },
+    /**
+     * convenience method when setuping up tests
+     */
     clearChildren() {
       rootContentType.children = []
     },
     getType() {
       return rootContentType
+    },
+    freeze() {
+      freezeAllChildren(rootContentType);
+      return chainable
+    },
+    unfreeze() {
+      freezeAllChildren(rootContentType)
+      return chainable
     }
   }
 
