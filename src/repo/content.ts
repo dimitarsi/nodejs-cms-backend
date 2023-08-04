@@ -3,24 +3,31 @@ import makeRepo from "./crud"
 import { Content } from "~/models/content";
 
 const withUpdateConfigId = (data: Record<string, any>) => {
-  const {configId = '', folder, ...splat} = data;
+  const {configId = '', folderLocation, ...splat} = data;
   const config = configId ? {configId: new ObjectId(configId)} : {};
+  
   let folderConfig = {};
-  if(folder) {
+
+  if (folderLocation) {
     folderConfig = {
-      folder,
-      depth: folder.split('/').length - 1 || 1,
+      folderLocation,
+      depth: folderLocation.split("/").length - 1 || 1,
     }
   }
 
   return {
-    ...folderConfig,
+    ...folderConfig, // calculates the depth, in case we need it
     ...config,
     ...splat
   }
 }
-
-const unwrapConfigField = (data: Record<string, any>) => {
+/**
+ * Returns the first item of an array,
+ * needed because the aggregate 
+ * @param data 
+ * @returns 
+ */
+const unwrapConfigField = (data: Content): Content => {
   const { config, ...splat } = data;
   
   if(config && Array.isArray(config) && config.length >= 1) {
@@ -103,7 +110,7 @@ export default {
         }
       ])
 
-      const data = await cursor.toArray();
+      const data: any[] = await cursor.toArray();
       cursor.close()
 
       return data.map(unwrapConfigField)[0];

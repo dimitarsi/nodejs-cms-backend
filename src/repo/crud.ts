@@ -71,10 +71,15 @@ const baseCrudMethods = <T extends Record<string, any>>(
     async deleteAll() {
       return await collection.deleteMany({})
     },
-    async getById(id: string | number) {
+    async getById(id: ObjectId | string | number) {
       let query: any = { _id: -1 }
       try {
-        query = { _id: new ObjectId(id) }
+        if (typeof id === 'string' || typeof id === 'number') {
+          query = { _id: new ObjectId(id) }
+        } else {
+          query = {_id: id}
+        }
+
       } catch (_e) {
         query = { slug: id }
       }

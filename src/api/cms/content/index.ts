@@ -1,10 +1,11 @@
 import contentTypesRepo from '@repo/contentTypes';
 import contentRepo from '@repo/content'
 import defaultController from "~/core/api/controller"
-import express, { Request } from "express"
+import express, { Request, application, query } from "express"
 import ajv from "~/schema/core"
 import { type JSONSchemaType } from "ajv"
 import { Validator } from '~/core/api/request';
+import { ObjectId } from 'mongodb';
 
 const app = express()
 
@@ -63,15 +64,21 @@ app.get('/search', async (req, res) => {
   let folderQuery: Record<string, any> = {};
   
   if(typeof folderName === 'string') {
-    folderQuery = {folder: folderName}
+    folderQuery = {folderLocation: folderName}
   // @ts-ignore
   } else if(typeof folderName === 'object' && typeof folderName?.['like'] === 'string') {
-  // @ts-ignore
-    folderQuery = {folder: new RegExp(`${folderName?.['like']?.toString()}`)}
+    folderQuery = {
+      // @ts-ignore
+      folderLocation: new RegExp(`${folderName?.["like"]?.toString()}`),
+    }
   // @ts-ignore
   } else if(typeof folderName === 'object' && typeof folderName?.['startsWith'] === 'string') {
-  // @ts-ignore
-    folderQuery = {folder: new RegExp(`^${folderName?.['startsWith']?.toString()}.?`)}
+    folderQuery = {
+      folderLocation: new RegExp(
+        // @ts-ignore
+        `^${folderName?.["startsWith"]?.toString()}.?`
+      ),
+    }
   }
 
   res.json(
@@ -81,6 +88,38 @@ app.get('/search', async (req, res) => {
     })
   )
 });
+
+
+app.get('/:id/config', async (req, res) => {
+  const id = req.params["id"]
+
+  // let query: any = { _id: -1 }
+  // try {
+  //   query = { _id: new ObjectId(id) }
+  // } catch (_e) {
+  //   query = { slug: id }
+  // }
+
+  //TODO: try using $graphLookup - https://www.mongodb.com/docs/manual/reference/operator/aggregation/graphLookup/
+
+  // const config = await contentTypesRepo.getById(content.config);
+  // await contentRepo.getCollection().aggregate([
+  //   {
+  //     $match: query
+  //   },
+  //   {
+  //     $lookup: {
+  //       from: contentTypesRepo.collectionName,
+  //       localField: 'configId',
+  //     }
+  //   }
+  // ])
+
+  const content = await contentRepo.getById(id)
+  const config = await contentTypesRepo.getById(content.configId)
+
+  res.json(config)
+})
 
 defaultController(app, contentRepo, {
   create: validateRequestBody,

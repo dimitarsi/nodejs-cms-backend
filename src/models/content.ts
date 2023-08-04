@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { BaseModel } from "./modal";
-import { Component } from "./component"
+import { ContentType } from "./contentType";
 
 type FileId = string;
 type RefId = string;
@@ -30,13 +30,6 @@ export type ComponentDataType = {
 }
 
 export type DataTypes = TextDataType | FileDataType | RefDataType | ComponentDataType
-
-
-export interface ContentType {
-  fields: Component[]
-  name: string
-}
-
 
 export interface Content extends BaseModel {
   displayName: string

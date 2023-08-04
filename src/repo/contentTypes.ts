@@ -1,22 +1,38 @@
 import { ContentType, freezeAllChildren } from "~/models/contentType";
 import makeRepo from "./crud";
-import { OptionalId, WithId } from "mongodb";
+import { ObjectId, OptionalId } from "mongodb";
 
 const crud = makeRepo<ContentType>("contentTypes", { softDelete: true })
 
-async function getById(idOrSlug: string) {
-  const entity = (await crud.getById(idOrSlug)) as WithId<ContentType>
+async function getById(idOrSlug: ObjectId | string) {
 
   const waitList: Array<Promise<any>> = [];
+  let entity: ContentType | null = null;
+  
+  try {
+    entity = (await crud.getById(idOrSlug))
+    if (!entity) {
+      throw new Error(`Enitity not found - ${idOrSlug}`);
+    }
+  } catch (e) {
+    return null;
+  }
 
   entity.children?.forEach((entityChild, ind) => {
     if (entityChild.type === "root") {
-      waitList.push(getById(entityChild._id!.toString()).then(({ name: originalName, slug: originalSlug, ...data }) => {
-        const { name, slug } = entity.children![ind];
+      waitList.push(getById(entityChild._id!.toString()).then((result) => {
+
+        if (!result || entity?.children) {
+          return;
+        }
+
+        const { name: originalName, slug: originalSlug, ...data } = result;
+        const { name, slug } = entity!.children![ind];
         
         freezeAllChildren(data)
 
-        entity.children![ind] = {
+        // @ts-ignore
+        entity.children[ind] = {
           name,
           slug,
           originalName,
@@ -30,7 +46,10 @@ async function getById(idOrSlug: string) {
 
   await Promise.all(waitList)
 
-  return entity
+  return {
+    ...entity,
+    children: entity.children || []
+  }
 };
 
 export default {

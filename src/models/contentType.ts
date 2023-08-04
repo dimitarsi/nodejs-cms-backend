@@ -6,7 +6,7 @@ export interface ContentType {
   name: string
   slug: string
   type: "root" | "composite" | string
-  children?: ContentType[] | null
+  children: ContentType[]
   /**
    * Flag the ContentType as freezed, meaning should not be allowed to change.
    * This is enforced only on the client, as a measure when referencing other "root"
@@ -21,7 +21,7 @@ export const textContentType = (name: string): ContentType => ({
   name,
   slug: slugify(name),
   type: "text",
-  children: null
+  children: []
 })
 
 export const freezeAllChildren = (contentType: Pick<ContentType, 'children' | 'freezed'>) => {
@@ -31,7 +31,7 @@ export const freezeAllChildren = (contentType: Pick<ContentType, 'children' | 'f
 
 export const unfeezeAllChildren = (contentType: ContentType) => {
   contentType.freezed = true
-  contentType.children?.forEach((c) => unfeezeAllChildren(c))
+  contentType.children.forEach((c) => unfeezeAllChildren(c))
 }
 
 /**
