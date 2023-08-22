@@ -93,29 +93,15 @@ app.get('/search', async (req, res) => {
 app.get('/:id/config', async (req, res) => {
   const id = req.params["id"]
 
-  // let query: any = { _id: -1 }
-  // try {
-  //   query = { _id: new ObjectId(id) }
-  // } catch (_e) {
-  //   query = { slug: id }
-  // }
-
-  //TODO: try using $graphLookup - https://www.mongodb.com/docs/manual/reference/operator/aggregation/graphLookup/
-
-  // const config = await contentTypesRepo.getById(content.config);
-  // await contentRepo.getCollection().aggregate([
-  //   {
-  //     $match: query
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: contentTypesRepo.collectionName,
-  //       localField: 'configId',
-  //     }
-  //   }
-  // ])
-
   const content = await contentRepo.getById(id)
+
+  if (content == null) {
+    res.status(404).json({
+      message: "Could not find item with idOrSlug: " +id  
+    })
+    return;
+  }
+
   const config = await contentTypesRepo.getById(content.configId)
 
   res.json(config)
