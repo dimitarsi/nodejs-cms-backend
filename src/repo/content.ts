@@ -88,12 +88,15 @@ export default {
   },
     async getById(id: string) {
       let query: any = { _id: -1 };
+
       try {
-        query = { _id: new ObjectId(id) }; 
+        query = {
+          $or: [{ _id: new ObjectId(id) }, { slug: id }],
+        } 
       } catch (_e) {
         query = {slug: id}
       }
-
+      
       const cursor = await collection.aggregate([
         {
           $match: {
