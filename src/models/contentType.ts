@@ -1,11 +1,24 @@
 import { ObjectId } from "mongodb"
 import slugify from "~/helpers/slugify"
 
+
+
+
 export interface ContentType {
   _id?: ObjectId
   name: string
   slug: string
-  type: "root" | "composite" | string
+  type:
+    | "root"
+    | "composite"
+    | "text"
+    | "media"
+    | "toggle"
+    | "date"
+    | "rich-text"
+    | "number"
+    | "reference"
+  repeated: null | { min?: number; max?: number }
   children: ContentType[]
   /**
    * Flag the ContentType as freezed, meaning should not be allowed to change.
@@ -17,11 +30,28 @@ export interface ContentType {
   originalSlug?: string
 }
 
-export const textContentType = (name: string): ContentType => ({
+type ContentTypesWithoutChildren = Exclude<ContentType["type"], "root" | "composite">
+
+export const CT_TYPES: ContentTypesWithoutChildren[] = [
+  "text",
+  "media",
+  "toggle",
+  "date",
+  "rich-text",
+  "number",
+  "reference",
+]
+
+export const createContentType = (
+  name: string,
+  type: ContentTypesWithoutChildren = "text",
+  repeated: ContentType["repeated"] = null
+): ContentType => ({
   name,
   slug: slugify(name),
-  type: "text",
-  children: []
+  type,
+  repeated,
+  children: [],
 })
 
 export const freezeAllChildren = (contentType: Pick<ContentType, 'children' | 'freezed'>) => {
@@ -44,7 +74,8 @@ export const compositeContentType = (name: string, isRoot = false) => {
     slug: slugify(name),
     type: isRoot ? "root" : "composite",
     children: [],
-    freezed: false
+    freezed: false,
+    repeated: null
   }
 
   const chainable = {
