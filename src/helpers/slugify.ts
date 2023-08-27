@@ -2,11 +2,11 @@ import { identity } from "./filter";
 
 export default function slugify(val: string) {
   const withUnderscore = val
-    .replace(/\s+/, '_')
+    .replace(/\s+/g, '_')
     .split(/([A-Z][a-z]+)/)
     .filter(identity)
     .join("_")
-    .replace(/_+/, '_')
+    .replace(/_+/g, '_')
     .toLowerCase()
   
   return encodeURIComponent(withUnderscore);
