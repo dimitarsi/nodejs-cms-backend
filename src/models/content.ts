@@ -32,9 +32,14 @@ export type ComponentDataType = {
 export type DataTypes = TextDataType | FileDataType | RefDataType | ComponentDataType
 
 export interface Content extends BaseModel {
-  displayName: string
+  name: string
+  slug: string
+  type: 'document' | 'folder'
+  folderLocation: string
+  folderTarget: ''
+  depth?: number
   id?: String
-  configId: string | ObjectId
-  config: ContentType
-  data: Record<string, DataTypes>
+  configId?: string | ObjectId
+  config?: ContentType
+  data: any
 }

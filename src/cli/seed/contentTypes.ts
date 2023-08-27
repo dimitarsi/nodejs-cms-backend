@@ -1,7 +1,7 @@
 import contentTypes from '@repo/contentTypes'
 import { CT_TYPES, compositeContentType, createContentType, freezeAllChildren } from '~/models/contentType'
 
-export const seedComponents = async () => {
+export const seedContentTypes = async () => {
 
   const metaType =
     compositeContentType("Meta", true)
@@ -28,7 +28,7 @@ export const seedComponents = async () => {
       postType.add(createContentType(`Post ${t.toUpperCase()}`, t))
     })
 
-    await contentTypes.create(
+    return await contentTypes.create(
       postType.getType()
     )
   }

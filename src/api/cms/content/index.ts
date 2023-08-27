@@ -95,11 +95,11 @@ app.get('/:id/config', async (req, res) => {
 
   const content = await contentRepo.getById(id)
 
-  if (content == null) {
+  if (content == null || !content.configId) {
     res.status(404).json({
-      message: "Could not find item with idOrSlug: " +id  
+      message: "Could not find item with idOrSlug: " + id,
     })
-    return;
+    return
   }
 
   const config = await contentTypesRepo.getById(content.configId)
