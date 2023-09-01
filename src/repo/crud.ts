@@ -47,7 +47,7 @@ const baseCrudMethods = <T extends Record<string, any>>(
     async update(id: string | number, data: Partial<T>) {
       let query: any = { _id: -1 }
       try {
-        query = { _id: new ObjectId(id) }
+        query = { $or: [{ _id: new ObjectId(id) }, {slug: id}] }
       } catch (_e) {
         query = { slug: id }
       }
