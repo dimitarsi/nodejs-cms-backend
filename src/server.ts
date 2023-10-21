@@ -17,8 +17,6 @@ app.use(cmsAPI)
 
 app.use(errorHandler)
 
-// app.use(auth)
-
 app.listen(port, () => {
   console.log(`Listening on http:/localhost:${port}`)
 })

@@ -1,20 +1,20 @@
-import {
-  findOrCreateAccessToken,
-  deactivateToken,
-} from "~/repo/accessTokens"
+import { findOrCreateAccessToken, deactivateToken } from "~/repo/accessTokens"
 
-import express from "express"
+import Router from "express"
 import { authenticate } from "~/repo/auth"
 import db from "@db"
 
-const app = express()
+const router = Router()
 
-app.post("/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   const body = req.body
-  const { userId, isLoggedIn, isAdmin } = await authenticate(body.email, body.password)
+  const { userId, isLoggedIn, isAdmin } = await authenticate(
+    body.email,
+    body.password
+  )
 
   if (isLoggedIn && userId) {
-    const accessToken = await findOrCreateAccessToken(userId, {isAdmin})
+    const accessToken = await findOrCreateAccessToken(userId, { isAdmin })
 
     res.json({
       accessToken,
@@ -27,7 +27,7 @@ app.post("/login", async (req, res) => {
   }
 })
 
-app.post("/logout", async (req, res) => {
+router.post("/logout", async (req, res) => {
   const { accessToken } = req.body
 
   const success = await deactivateToken(accessToken)
@@ -44,15 +44,15 @@ app.post("/logout", async (req, res) => {
   }
 })
 
-app.post("/logout-all", async (req, res) => {
+router.post("/logout-all", async (req, res) => {
   try {
-    db.collection("accessTokens").deleteMany();
-     res.json({
-       success: true,
-     })
+    db.collection("accessTokens").deleteMany()
+    res.json({
+      success: true,
+    })
   } catch (e) {
-    res.status(400).json({success: false})
+    res.status(400).json({ success: false })
   }
 })
 
-export default app
+export default router
