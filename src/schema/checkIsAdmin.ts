@@ -1,5 +1,5 @@
-import { SchemaValidateFunction } from 'ajv';
-import { findToken } from './../repo/accessTokens';
+import { SchemaValidateFunction } from "ajv"
+import { findToken } from "./../repo/accessTokens"
 
 export const checkIsAdmin: SchemaValidateFunction = async (
   schema: {},

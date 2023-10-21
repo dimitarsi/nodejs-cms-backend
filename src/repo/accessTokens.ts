@@ -14,7 +14,10 @@ export interface AccessToken {
   isAdmin: boolean
 }
 
-export const findOrCreateAccessToken = async (userId: string, data: {isAdmin: boolean | undefined | null}) => {
+export const findOrCreateAccessToken = async (
+  userId: string,
+  data: { isAdmin: boolean | undefined | null }
+) => {
   const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
     userId,
     expire: { $gt: new Date() },
@@ -32,7 +35,7 @@ export const findOrCreateAccessToken = async (userId: string, data: {isAdmin: bo
     expire: getExpirationDate(),
     userId,
     isActive: true,
-    isAdmin: Boolean(data?.isAdmin)
+    isAdmin: Boolean(data?.isAdmin),
   })
 
   return accessToken
@@ -54,24 +57,22 @@ export const deactivateToken = async (accessToken: string) => {
 }
 
 export const findToken = async (token: string) => {
-  const activeToken = await db
-    .collection<AccessToken>("accessTokens")
-    .findOne({
-      token,
-      expire: { $gt: new Date() },
-      isActive: true,
-    })
-  
+  const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
+    token,
+    expire: { $gt: new Date() },
+    isActive: true,
+  })
+
   return activeToken
 }
 
 export const deleteAll = async () => {
-  return await db.collection<AccessToken>("accessTokens").deleteMany({});
+  return await db.collection<AccessToken>("accessTokens").deleteMany({})
 }
 
 export default {
   findOrCreateAccessToken,
   deactivateToken,
   findToken,
-  deleteAll
+  deleteAll,
 }

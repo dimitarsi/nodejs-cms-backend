@@ -3,7 +3,7 @@ import db from "../connect/db"
 import { ObjectId } from "mongodb"
 
 interface FoundSchema {
-  extra ?: any; 
+  extra?: any
   in: `${string}:${string}` | string
   notIn?: Boolean
   optional?: Boolean
@@ -15,7 +15,7 @@ export const checkIfExists: SchemaValidateFunction = async (
 ) => {
   const [table, field = "_id"] = schema.in.split(":")
 
-  if(schema.optional && !data) {
+  if (schema.optional && !data) {
     return true
   }
 

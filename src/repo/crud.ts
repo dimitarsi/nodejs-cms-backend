@@ -47,7 +47,7 @@ const baseCrudMethods = <T extends Record<string, any>>(
     async update(id: string | number, data: Partial<T>) {
       let query: any = { _id: -1 }
       try {
-        query = { $or: [{ _id: new ObjectId(id) }, {slug: id}] }
+        query = { $or: [{ _id: new ObjectId(id) }, { slug: id }] }
       } catch (_e) {
         query = { slug: id }
       }
@@ -74,12 +74,11 @@ const baseCrudMethods = <T extends Record<string, any>>(
     async getById(id: ObjectId | string | number) {
       let query: any = { _id: -1 }
       try {
-        if (typeof id === 'string' || typeof id === 'number') {
+        if (typeof id === "string" || typeof id === "number") {
           query = { _id: new ObjectId(id) }
         } else {
-          query = {_id: id}
+          query = { _id: id }
         }
-
       } catch (_e) {
         query = { slug: id }
       }
@@ -99,7 +98,7 @@ export const defaultExtend = (
 
 export default <T extends Object>(
   collectionName: string,
-  options = { softDelete: false },
+  options = { softDelete: false }
 ) => {
   const collection = db.collection<T>(collectionName)
   return baseCrudMethods<T>(collection, options)

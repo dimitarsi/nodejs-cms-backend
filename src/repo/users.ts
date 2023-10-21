@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb"
 import bcrypt from "bcrypt"
 import { rounds } from "@config"
 
-const crud = makeRepo<User>('users');
+const crud = makeRepo<User>("users")
 const collection = crud.getCollection()
 
 export default {
@@ -20,13 +20,15 @@ export default {
     })
   },
   update: (id: string | number, data: Partial<User>) => {
+    // When updating the password, it needs to be encrypted
     if (!data.password) {
       return crud.update(id, data)
     }
 
+    // Update only the password field
     return crud.update(id, {
-      firstName: data.firstName,
-      lastName: data.lastName,
+      // firstName: data.firstName,
+      // lastName: data.lastName,
       password: bcrypt.hashSync(data.password, rounds),
     })
   },

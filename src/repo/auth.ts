@@ -6,7 +6,7 @@ export const getUserByEmail = async (email: string) => {
   return await db.collection<UserWithPermissions>("users").findOne({
     email,
     password: { $exists: true },
-    isActive: true
+    isActive: true,
   })
 }
 
@@ -26,11 +26,11 @@ export const authenticate = async (email: string, password: string) => {
 }
 
 export const deleteAll = async () => {
-  return await db.collection("users").deleteMany({});
+  return await db.collection("users").deleteMany({})
 }
 
 export default {
   getUserByEmail,
   authenticate,
-  deleteAll
+  deleteAll,
 }

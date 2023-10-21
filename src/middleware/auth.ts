@@ -14,14 +14,13 @@ const extendSession = (activeTokenId: ObjectId, minutes: number = 15) => {
       },
       {
         $set: {
-          expire: getExpirationDate()
+          expire: getExpirationDate(),
         },
       }
     )
   } catch (e: any) {
-    console.error(`Could NOT update user session, reason ${e}`);
+    console.error(`Could NOT update user session, reason ${e}`)
   }
-
 }
 
 const handler: (options: { isAdmin: boolean }) => RequestHandler =
@@ -53,7 +52,7 @@ const handler: (options: { isAdmin: boolean }) => RequestHandler =
     }
 
     if (activeToken) {
-      extendSession(activeToken._id, 15);
+      extendSession(activeToken._id, 15)
       next()
     } else {
       res.status(401).json({

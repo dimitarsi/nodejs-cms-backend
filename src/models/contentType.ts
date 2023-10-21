@@ -1,9 +1,6 @@
 import { ObjectId } from "mongodb"
 import slugify from "~/helpers/slugify"
 
-
-
-
 export interface ContentType {
   _id?: ObjectId
   name: string
@@ -30,7 +27,10 @@ export interface ContentType {
   originalSlug?: string
 }
 
-type ContentTypesWithoutChildren = Exclude<ContentType["type"], "root" | "composite">
+type ContentTypesWithoutChildren = Exclude<
+  ContentType["type"],
+  "root" | "composite"
+>
 
 export const CT_TYPES: ContentTypesWithoutChildren[] = [
   "text",
@@ -54,9 +54,11 @@ export const createContentType = (
   children: [],
 })
 
-export const freezeAllChildren = (contentType: Pick<ContentType, 'children' | 'freezed'>) => {
-  contentType.freezed = true;
-  contentType.children?.forEach(c => freezeAllChildren(c))
+export const freezeAllChildren = (
+  contentType: Pick<ContentType, "children" | "freezed">
+) => {
+  contentType.freezed = true
+  contentType.children?.forEach((c) => freezeAllChildren(c))
 }
 
 export const unfeezeAllChildren = (contentType: ContentType) => {
@@ -68,23 +70,20 @@ export const unfeezeAllChildren = (contentType: ContentType) => {
  * Helper method to easily compose contentTypes for tests and seeding
  */
 export const compositeContentType = (name: string, isRoot = false) => {
-
   const rootContentType: ContentType = {
     name,
     slug: slugify(name),
     type: isRoot ? "root" : "composite",
     children: [],
     freezed: false,
-    repeated: null
+    repeated: null,
   }
 
   const chainable = {
     __rootContentType: rootContentType,
     add(contentType: ContentType) {
-
       if (rootContentType.freezed) {
         contentType.freezed = true
-
       }
 
       rootContentType.children!.push(contentType)
@@ -93,9 +92,11 @@ export const compositeContentType = (name: string, isRoot = false) => {
     clone() {
       const cloned = compositeContentType(name, isRoot)
       // TODO: add a proper cloning
-      cloned.__rootContentType.children = JSON.parse(JSON.stringify(rootContentType.children)) 
+      cloned.__rootContentType.children = JSON.parse(
+        JSON.stringify(rootContentType.children)
+      )
 
-      return cloned;
+      return cloned
     },
     /**
      * convenience method when setuping up tests
@@ -107,14 +108,14 @@ export const compositeContentType = (name: string, isRoot = false) => {
       return rootContentType
     },
     freeze() {
-      freezeAllChildren(rootContentType);
+      freezeAllChildren(rootContentType)
       return chainable
     },
     unfreeze() {
       freezeAllChildren(rootContentType)
       return chainable
-    }
+    },
   }
 
-  return chainable;
+  return chainable
 }

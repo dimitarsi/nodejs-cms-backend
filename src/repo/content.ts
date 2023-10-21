@@ -1,12 +1,12 @@
 import { ObjectId } from "mongodb"
 import makeRepo from "./crud"
-import { Content } from "~/models/content";
+import { Content } from "~/models/content"
 
 const withUpdateConfigId = (data: Record<string, any>) => {
-  const {configId = '', folderLocation, ...splat} = data;
-  const config = configId ? {configId: new ObjectId(configId)} : {};
-  
-  let folderConfig = {};
+  const { configId = "", folderLocation, ...splat } = data
+  const config = configId ? { configId: new ObjectId(configId) } : {}
+
+  let folderConfig = {}
 
   if (folderLocation) {
     folderConfig = {
@@ -18,50 +18,56 @@ const withUpdateConfigId = (data: Record<string, any>) => {
   return {
     ...folderConfig, // calculates the depth, in case we need it
     ...config,
-    ...splat
+    ...splat,
   }
 }
 /**
  * Returns the first item of an array,
- * needed because the aggregate 
- * @param data 
- * @returns 
+ * needed because the aggregate
+ * @param data
+ * @returns
  */
 const unwrapConfigField = (data: Content): Content => {
-  const { config, ...splat } = data;
-  
-  if(config && Array.isArray(config) && config.length >= 1) {
-    return {config: config[0], ...splat};
+  const { config, ...splat } = data
+
+  if (config && Array.isArray(config) && config.length >= 1) {
+    return { config: config[0], ...splat }
   }
 
-  return {config, ...splat};
+  return { config, ...splat }
 }
 
-const crud =  makeRepo<Content>("content", { softDelete: false });
-const collection = crud.getCollection();
+const crud = makeRepo<Content>("content", { softDelete: false })
+const collection = crud.getCollection()
 const contentTypesDbName = crud.collectionName()
 
 export default {
   ...crud,
-  create(data: Partial<Omit<Content, 'id'>>) {
+  create(data: Partial<Omit<Content, "id">>) {
     const normalized = withUpdateConfigId(data)
-    
+
     return crud.create({
       createdOn: new Date(),
       updatedOn: new Date(),
       active: true,
-      ...normalized
+      ...normalized,
     } as any)
   },
   update(id: string, data: Record<string, any>) {
     return crud.update(id, {
       updatedOn: new Date(),
-      ...withUpdateConfigId(data)
+      ...withUpdateConfigId(data),
     })
   },
-  async getAll(page = 1, options: {pageSize: number, filter: Record<string, any> } = {pageSize:20, filter: {}} ) {
+  async getAll(
+    page = 1,
+    options: { pageSize: number; filter: Record<string, any> } = {
+      pageSize: 20,
+      filter: {},
+    }
+  ) {
     const filter = options.filter || {}
-    
+
     const cursor = await collection.find(filter, {
       skip: options.pageSize * (page - 1),
       limit: options.pageSize,
@@ -74,7 +80,7 @@ export default {
     cursor.close()
 
     const totalPages = Math.ceil(count / options.pageSize)
-    
+
     return {
       items,
       pagination: {
@@ -86,37 +92,36 @@ export default {
       },
     }
   },
-    async getById(id: string) {
-      let query: any = { _id: -1 };
+  async getById(id: string) {
+    let query: any = { _id: -1 }
 
-      try {
-        query = {
-          $or: [{ _id: new ObjectId(id) }, { slug: id }],
-        } 
-      } catch (_e) {
-        query = {slug: id}
+    try {
+      query = {
+        $or: [{ _id: new ObjectId(id) }, { slug: id }],
       }
-      
-      const cursor = await collection.aggregate([
-        {
-          $match: {
-            ...query
-          }
-        },
-        {
-          $lookup: {
-            from: contentTypesDbName,
-            localField: "configId",
-            foreignField: "_id",
-            as: "config"
-          }
-        }
-      ])
-
-      const data: any[] = await cursor.toArray();
-      cursor.close()
-
-      return data.map(unwrapConfigField)[0];
-
+    } catch (_e) {
+      query = { slug: id }
     }
-  };
+
+    const cursor = await collection.aggregate([
+      {
+        $match: {
+          ...query,
+        },
+      },
+      {
+        $lookup: {
+          from: contentTypesDbName,
+          localField: "configId",
+          foreignField: "_id",
+          as: "config",
+        },
+      },
+    ])
+
+    const data: any[] = await cursor.toArray()
+    cursor.close()
+
+    return data.map(unwrapConfigField)[0]
+  },
+}

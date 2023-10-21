@@ -1,46 +1,46 @@
-import { ContentType, freezeAllChildren } from "~/models/contentType";
-import makeRepo from "./crud";
-import { ObjectId, OptionalId } from "mongodb";
+import { ContentType, freezeAllChildren } from "~/models/contentType"
+import makeRepo from "./crud"
+import { ObjectId, OptionalId } from "mongodb"
 
 const crud = makeRepo<ContentType>("contentTypes", { softDelete: true })
 
 async function getById(idOrSlug: ObjectId | string) {
+  const waitList: Array<Promise<any>> = []
+  let entity: ContentType | null = null
 
-  const waitList: Array<Promise<any>> = [];
-  let entity: ContentType | null = null;
-  
   try {
-    entity = (await crud.getById(idOrSlug))
+    entity = await crud.getById(idOrSlug)
     if (!entity) {
-      throw new Error(`Enitity not found - ${idOrSlug}`);
+      throw new Error(`Enitity not found - ${idOrSlug}`)
     }
   } catch (e) {
-    return null;
+    return null
   }
 
   entity.children?.forEach((entityChild, ind) => {
     if (entityChild.type === "root") {
-      waitList.push(getById(entityChild._id!.toString()).then((result) => {
+      waitList.push(
+        getById(entityChild._id!.toString()).then((result) => {
+          if (!result || entity?.children) {
+            return
+          }
 
-        if (!result || entity?.children) {
-          return;
-        }
+          const { name: originalName, slug: originalSlug, ...data } = result
+          const { name, slug } = entity!.children![ind]
 
-        const { name: originalName, slug: originalSlug, ...data } = result;
-        const { name, slug } = entity!.children![ind];
-        
-        freezeAllChildren(data)
+          freezeAllChildren(data)
 
-        // @ts-ignore
-        entity.children[ind] = {
-          name,
-          slug,
-          originalName,
-          originalSlug,
-          freezed: true,
-          ...data
-        }
-      }))
+          // @ts-ignore
+          entity.children[ind] = {
+            name,
+            slug,
+            originalName,
+            originalSlug,
+            freezed: true,
+            ...data,
+          }
+        })
+      )
     }
   })
 
@@ -48,18 +48,18 @@ async function getById(idOrSlug: ObjectId | string) {
 
   return {
     ...entity,
-    children: entity.children || []
+    children: entity.children || [],
   }
-};
+}
 
 export default {
   ...crud,
   getById,
-  async create({type: _type, ...data}: OptionalId<ContentType>) {
+  async create({ type: _type, ...data }: OptionalId<ContentType>) {
     return crud.create({
       type: "root",
-      ...data
-    });
+      ...data,
+    })
   },
   async update(idOrSlug: string, data: ContentType) {
     const { _id, ...updated } = data

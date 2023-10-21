@@ -18,5 +18,4 @@ const client = new MongoClient(mongoUrl, {
 export const closeMongoClient = () => client.close()
 export const connectMongoClient = () => client.connect()
 
-
 export default client.db(dbName)

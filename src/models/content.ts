@@ -1,9 +1,9 @@
-import { ObjectId } from "mongodb";
-import { BaseModel } from "./modal";
-import { ContentType } from "./contentType";
+import { ObjectId } from "mongodb"
+import { BaseModel } from "./modal"
+import { ContentType } from "./contentType"
 
-type FileId = string;
-type RefId = string;
+type FileId = string
+type RefId = string
 
 export type TextDataType = {
   type: "text"
@@ -29,14 +29,18 @@ export type ComponentDataType = {
   value: Record<string, DataTypes>
 }
 
-export type DataTypes = TextDataType | FileDataType | RefDataType | ComponentDataType
+export type DataTypes =
+  | TextDataType
+  | FileDataType
+  | RefDataType
+  | ComponentDataType
 
 export interface Content extends BaseModel {
   name: string
   slug: string
-  type: 'document' | 'folder'
+  type: "document" | "folder"
   folderLocation: string
-  folderTarget: ''
+  folderTarget: ""
   depth?: number
   id?: String
   configId?: string | ObjectId
