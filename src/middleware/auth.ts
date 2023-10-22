@@ -2,6 +2,7 @@ import { RequestHandler, Router } from "express"
 import db from "@db"
 import type { ObjectId, WithId } from "mongodb"
 import { getExpirationDate } from "~/repo/accessTokens"
+import { registerMiddleware } from "~/core/api/router"
 
 const router = Router()
 type ActiveTokenMinType = WithId<{ expire: Date }>
@@ -23,8 +24,10 @@ const extendSession = (activeTokenId: ObjectId, minutes: number = 15) => {
   }
 }
 
-const handler: (options: { isAdmin: boolean }) => RequestHandler =
-  (options) => async (req, res, next) => {
+export const handler: (options: { isAdmin: boolean }) => RequestHandler = (
+  options
+) =>
+  async function auth(req, res, next) {
     let accessToken = ""
     let activeToken: ActiveTokenMinType | null = null
 
@@ -60,5 +63,7 @@ const handler: (options: { isAdmin: boolean }) => RequestHandler =
       })
     }
   }
+
+registerMiddleware("auth:isAdmin", handler({ isAdmin: true }))
 
 export default (options: { isAdmin: boolean }) => router.use(handler(options))

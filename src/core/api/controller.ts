@@ -24,7 +24,8 @@ function prefixMethodName(prefix: string) {
 const defaultController = (
   router: ReturnType<typeof Router>,
   repo: Record<string, Function>,
-  validate?: PartialDefaultRoutesValidation
+  validate?: PartialDefaultRoutesValidation,
+  prefix: string = "/"
 ) => {
   const guard = validateRequest(validate)
 
@@ -87,11 +88,11 @@ const defaultController = (
     routes.delete.toString =
       prefixMethodName("DefaultRouter")
 
-  router.get("/", routes.getAll)
-  router.get("/:id", tap(routes.getById))
-  router.post("/", routes.create)
-  router.patch("/:id", routes.update)
-  router.delete("/:id", routes.delete)
+  router.get(`${prefix}`, routes.getAll)
+  router.get(`${prefix}:id`, tap(routes.getById))
+  router.post(`${prefix}`, routes.create)
+  router.patch(`${prefix}:id`, routes.update)
+  router.delete(`${prefix}:id`, routes.delete)
 
   return router
 }

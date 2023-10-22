@@ -4,6 +4,9 @@ import cors from "cors"
 import publicAPI from "~/api/public"
 import cmsAPI from "~/api/cms"
 import errorHandler from "@api/error"
+import Router from "./core/api/router"
+import "~/middleware/auth"
+import "~/middleware/devEnv"
 
 const app = express()
 const port = process.env.PORT || 8000
@@ -12,9 +15,15 @@ app.use(bodyParser.urlencoded())
 app.use(bodyParser.json())
 app.use(cors())
 
-app.use(publicAPI)
-app.use(cmsAPI)
+const router = Router()
+publicAPI(router)
 
+router.use("auth:isAdmin")
+{
+  cmsAPI(router)
+}
+
+app.use(router)
 app.use(errorHandler)
 
 app.listen(port, () => {

@@ -1,20 +1,12 @@
-import Router from "../../core/api/router"
+import type Router from "~/core/api/router"
 import user from "./user"
-import stories from "./content"
+import content from "./content"
 import contentTypes from "./contentTypes"
-import auth from "~/middleware/auth"
-import uploadHandler from "./files"
-// import components from './components'
+import attachments from "./files"
 
-const router = Router()
-
-router.use(auth({ isAdmin: true }))
-
-router.use("/users", user)
-router.use("/content", stories)
-router.use("/content_types", contentTypes)
-router.use("/attachments", uploadHandler)
-// router.use('/components', components)
-router.use("/check", (_, res) => res.status(200).send())
-
-export default router
+export default (router: ReturnType<typeof Router>) => {
+  user(router, "/user/")
+  attachments(router, "/attachments/")
+  content(router, "/content/")
+  contentTypes(router, "/content_types/")
+}

@@ -15,7 +15,7 @@ export function registerMiddleware(
   })
 }
 
-export default function Router(mounthpath: string = "") {
+export default function Router() {
   const router = ExpressRouter()
   const registeredMiddlewares: string[] = []
   const routerProxy: typeof router = new Proxy(router, {
@@ -46,12 +46,7 @@ export default function Router(mounthpath: string = "") {
       if (spiedProperties.includes(p.toString())) {
         // @ts-ignore
         return (...args) => {
-          textRouteReporter(
-            `${p.toString()}`,
-            mounthpath,
-            registeredMiddlewares,
-            args
-          )
+          textRouteReporter(`${p.toString()}`, registeredMiddlewares, args)
           // @ts-ignore
           return target[p].apply(target, args)
         }
