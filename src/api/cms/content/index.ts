@@ -1,13 +1,13 @@
-import contentTypesRepo from '@repo/contentTypes';
-import contentRepo from '@repo/content'
+import contentTypesRepo from "@repo/contentTypes"
+import contentRepo from "@repo/content"
 import defaultController from "~/core/api/controller"
-import express, { Request, application, query } from "express"
+import express from "express"
 import ajv from "~/schema/core"
 import { type JSONSchemaType } from "ajv"
-import { Validator } from '~/core/api/request';
-import { ObjectId } from 'mongodb';
+import { Validator } from "~/core/api/request"
+import Router from "~/core/api/router"
 
-const app = express()
+const router = Router("/content")
 
 const validate = ajv.compile<
   JSONSchemaType<{
@@ -57,25 +57,27 @@ const validateRequestBody: Validator = (req: express.Request) => {
   // })
 }
 
-app.get('/search', async (req, res) => {
+router.get("/search", async function search(req, res) {
   const page = parseInt(req.query["page"]?.toString() || "1")
-  const folderName = req.query["folder"] || '/'
+  const folderName: string | Record<string, any> = req.query["folder"] || "/"
 
-  let folderQuery: Record<string, any> = {};
-  
-  if(typeof folderName === 'string') {
-    folderQuery = {folderLocation: folderName}
-  // @ts-ignore
-  } else if(typeof folderName === 'object' && typeof folderName?.['like'] === 'string') {
+  let folderQuery: Record<string, any> = {}
+
+  if (typeof folderName === "string") {
+    folderQuery = { folderLocation: folderName }
+  } else if (
+    typeof folderName === "object" &&
+    typeof folderName?.["like"] === "string"
+  ) {
     folderQuery = {
-      // @ts-ignore
       folderLocation: new RegExp(`${folderName?.["like"]?.toString()}`),
     }
-  // @ts-ignore
-  } else if(typeof folderName === 'object' && typeof folderName?.['startsWith'] === 'string') {
+  } else if (
+    typeof folderName === "object" &&
+    typeof folderName?.["startsWith"] === "string"
+  ) {
     folderQuery = {
       folderLocation: new RegExp(
-        // @ts-ignore
         `^${folderName?.["startsWith"]?.toString()}.?`
       ),
     }
@@ -87,10 +89,9 @@ app.get('/search', async (req, res) => {
       filter: folderQuery,
     })
   )
-});
+})
 
-
-app.get('/:id/config', async (req, res) => {
+router.get("/:id/config", async function getContentConfig(req, res) {
   const id = req.params["id"]
 
   const content = await contentRepo.getById(id)
@@ -107,9 +108,9 @@ app.get('/:id/config', async (req, res) => {
   res.json(config)
 })
 
-defaultController(app, contentRepo, {
+defaultController(router, contentRepo, {
   create: validateRequestBody,
   // update: validateRequestBody,
 })
 
-export default app
+export default router

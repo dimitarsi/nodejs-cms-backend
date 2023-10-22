@@ -1,4 +1,4 @@
-import { Router } from "express"
+import Router from "../../core/api/router"
 import user from "./user"
 import stories from "./content"
 import contentTypes from "./contentTypes"

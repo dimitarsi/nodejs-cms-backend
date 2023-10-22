@@ -1,39 +1,52 @@
-import express, { Application } from "express"
+import type Router from "../../core/api/router"
+import { type Handler } from "express"
 import { PartialDefaultRoutesValidation, validateRequest } from "./request"
 
-const tap = (method: Function, space?: string) => (...args: any[]) => {
-  console.log('tapInto ', space || method.name || 'method');
-  return method(...args)
+function tap(method: Function, space?: string) {
+  const Tapped = (...args: any[]) => {
+    console.log("tapInto ", space || method.name || "method")
+    return method(...args)
+  }
+
+  Tapped.toString = function () {
+    return `Tapped::DefaultRouter::${method.name}`
+  }
+
+  return Tapped
 }
 
+function prefixMethodName(prefix: string) {
+  return function toString(this: Function) {
+    return `${prefix}::${this.name}`
+  }
+}
 
 const defaultController = (
-  app: Application,
+  router: ReturnType<typeof Router>,
   repo: Record<string, Function>,
   validate?: PartialDefaultRoutesValidation
 ) => {
   const guard = validateRequest(validate)
 
-  const routes: Record<string, express.Handler> = {
-    getAll: async (req, res) => {
+  const routes: Record<string, Handler> = {
+    async getAll(req, res) {
       const page = parseInt(req.query["page"]?.toString() || "1")
       res.json(await repo.getAll(isNaN(page) ? 1 : Math.max(1, page)))
     },
-    getById: async (req, res) => {
+    async getById(req, res) {
       const valid = await guard("getById", req, res)
 
       if (valid) {
         const data = await repo.getById(req.params.id)
 
         if (!data || Object.keys(data).length === 0) {
-          res.status(404).json({"message": "Not Found"})
+          res.status(404).json({ message: "Not Found" })
         } else {
           res.json(data)
         }
-
       }
     },
-    create: async (req, res) => {
+    async create(req, res) {
       const valid = await guard("create", req, res)
 
       if (valid) {
@@ -43,10 +56,10 @@ const defaultController = (
         })
       }
     },
-    update: async (req, res) => {
+    async update(req, res) {
       const valid = await guard("update", req, res)
       if (valid) {
-        const { _id, ...body } = req.body;
+        const { _id, ...body } = req.body
         const result = await repo.update(req.params.id, body)
 
         res.json({
@@ -54,7 +67,7 @@ const defaultController = (
         })
       }
     },
-    delete: async (req, res) => {
+    async delete(req, res) {
       const valid = await guard("delete", req, res)
 
       if (valid) {
@@ -67,14 +80,20 @@ const defaultController = (
     },
   }
 
-  app.get("/", routes.getAll)
-  app.get("/:id", tap(routes.getById))
-  app.post("/", routes.create)
-  app.patch("/:id", routes.update)
-  app.delete("/:id", routes.delete)
+  routes.getAll.toString =
+    routes.getById.toString =
+    routes.create.toString =
+    routes.update.toString =
+    routes.delete.toString =
+      prefixMethodName("DefaultRouter")
 
-  return app
+  router.get("/", routes.getAll)
+  router.get("/:id", tap(routes.getById))
+  router.post("/", routes.create)
+  router.patch("/:id", routes.update)
+  router.delete("/:id", routes.delete)
+
+  return router
 }
-
 
 export default defaultController

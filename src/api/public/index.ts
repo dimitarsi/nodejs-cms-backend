@@ -1,5 +1,5 @@
 import auth from "./auth"
-import { Router } from "express"
+import Router from "~/core/api/router"
 import { mediaHandler } from "./media"
 
 const router = Router()

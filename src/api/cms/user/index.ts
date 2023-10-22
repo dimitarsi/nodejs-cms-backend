@@ -3,11 +3,12 @@ import users from "~/repo/users"
 import express from "express"
 import { validateIsInactive, validateCreateUser } from "./schema"
 import { User } from "~/models/user"
+import Router from "~/core/api/router"
 
-const app = express()
+const router = Router("/user")
 
 defaultController(
-  app,
+  router,
   {
     ...users,
     create(data: User) {
@@ -33,7 +34,7 @@ defaultController(
   }
 )
 
-app.post("/:id/activate", async (req, res) => {
+router.post("/:id/activate", async function activateUser(req, res) {
   try {
     const valid = await validateIsInactive(req.params)
 
@@ -55,4 +56,4 @@ app.post("/:id/activate", async (req, res) => {
   res.json({ success: true })
 })
 
-export default app
+export default router

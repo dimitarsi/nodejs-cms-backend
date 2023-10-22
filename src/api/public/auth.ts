@@ -1,12 +1,12 @@
 import { findOrCreateAccessToken, deactivateToken } from "~/repo/accessTokens"
 
-import Router from "express"
+import Router from "~/core/api/router"
 import { authenticate } from "~/repo/auth"
 import db from "@db"
 
 const router = Router()
 
-router.post("/login", async (req, res) => {
+router.post("/login", async function login(req, res) {
   const body = req.body
   const { userId, isLoggedIn, isAdmin } = await authenticate(
     body.email,
@@ -27,7 +27,7 @@ router.post("/login", async (req, res) => {
   }
 })
 
-router.post("/logout", async (req, res) => {
+router.post("/logout", async function logout(req, res) {
   const { accessToken } = req.body
 
   const success = await deactivateToken(accessToken)
@@ -44,7 +44,7 @@ router.post("/logout", async (req, res) => {
   }
 })
 
-router.post("/logout-all", async (req, res) => {
+router.post("/logout-all", async function logoutAll(req, res) {
   try {
     db.collection("accessTokens").deleteMany()
     res.json({
