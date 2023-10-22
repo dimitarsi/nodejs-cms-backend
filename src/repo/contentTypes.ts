@@ -21,7 +21,7 @@ async function getById(idOrSlug: ObjectId | string) {
     if (entityChild.type === "root") {
       waitList.push(
         getById(entityChild._id!.toString()).then((result) => {
-          if (!result || entity?.children) {
+          if (!result) {
             return
           }
 
