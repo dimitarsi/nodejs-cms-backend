@@ -1,9 +1,9 @@
 import { type Handler } from "express"
 import Router from "../router"
 
-export function route(
+export function crudRoutes(
   path: `/${string}/` | "/",
-  controller: (action: string) => Handler
+  controller: (action: any) => Handler
 ) {
   const router = Router()
   const root = path === "/" ? path : path.replace(/\/$/, "")
@@ -13,4 +13,6 @@ export function route(
   router.post(`${path}`, controller("create"))
   router.patch(`${path}:id`, controller("update"))
   router.delete(`${path}:id`, controller("delete"))
+
+  return router
 }

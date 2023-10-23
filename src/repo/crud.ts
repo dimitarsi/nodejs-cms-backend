@@ -57,16 +57,23 @@ const baseCrudMethods = <T extends Record<string, any>>(
         { $set: data }
       )
     },
-    async deleteById(id: string | number) {
+    async deleteById(id: string | number): Promise<DeleteResult | null> {
       const filterById: Filter<any> = { _id: new ObjectId(id) }
 
       if (options.softDelete) {
         const updateFilter: any = {
           $set: { deletedOn: new Date() },
         }
-        return await collection.updateOne(filterById, updateFilter)
+
+        return {
+          type: "softDelete",
+          result: await collection.updateOne(filterById, updateFilter),
+        }
       }
-      return await collection.deleteOne(filterById)
+      return {
+        type: "hardDelete",
+        result: await collection.deleteOne(filterById),
+      }
     },
     async deleteAll() {
       return await collection.deleteMany({})
@@ -90,6 +97,15 @@ const baseCrudMethods = <T extends Record<string, any>>(
     },
   }
 }
+
+export type DeleteResult =
+  | { type: "softDelete"; result: Awaited<ReturnType<Collection["updateOne"]>> }
+  | {
+      type: "hardDelete"
+      result: Awaited<ReturnType<Collection["deleteOne"]>>
+    }
+
+export type CrudRepo = ReturnType<typeof baseCrudMethods>
 
 export const defaultExtend = (
   crudMethods: ReturnType<typeof baseCrudMethods>,

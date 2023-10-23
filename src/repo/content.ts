@@ -41,7 +41,7 @@ const crud = makeRepo<Content>("content", { softDelete: false })
 const collection = crud.getCollection()
 const contentTypesDbName = crud.collectionName()
 
-export default {
+const Repo = {
   ...crud,
   create(data: Partial<Omit<Content, "id">>) {
     const normalized = withUpdateConfigId(data)
@@ -125,3 +125,7 @@ export default {
     return data.map(unwrapConfigField)[0]
   },
 }
+
+export type ContentRepo = typeof Repo
+
+export default Repo

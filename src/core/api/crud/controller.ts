@@ -11,30 +11,38 @@ function getPage(query: Request["query"]) {
   return isNaN(page) ? 1 : Math.max(1, page)
 }
 
-export function createCrudController(
-  repo: Record<string, Function>,
-  actions: Record<string, (this: Controller) => any>
-) {
+export function createCrudController<
+  R,
+  T extends Record<string, (this: Controller<R>) => any>,
+  K extends keyof T,
+  ALL_KEYS extends
+    | K
+    | "create"
+    | "deleteAction"
+    | "update"
+    | "getById"
+    | "getAll"
+>(repo: R, actions?: T) {
   const crudActions = {
     create,
     deleteAction,
     update,
     getById,
     getAll,
-    ...actions,
+    ...(actions || {}),
   }
 
-  const availableActions = Object.keys(crudActions)
+  const availableActions = Object.keys(crudActions) as ALL_KEYS[]
 
   const controller =
-    (action: keyof typeof crudActions): Handler =>
+    (action: ALL_KEYS): Handler =>
     (req, res, next) => {
       if (!availableActions.includes(action)) {
         next()
         return
       }
 
-      const context: Controller = {
+      const context: Controller<R> = {
         repo,
         request: req,
         body: req.body,
@@ -43,14 +51,19 @@ export function createCrudController(
         getPage: () => getPage(req.query),
       }
 
-      const result = actions[action].apply(context)
+      // @ts-ignore
+      const result = crudActions[action].apply(context)
 
-      // Can return '0' and false
       if (result === null || typeof result === "undefined") {
-        res.status(404)
-      } else {
-        res.json(result)
+        res.status(404).json({ message: "Not Found" })
+        return
       }
+
+      if (action === "create") {
+        res.statusCode = 201
+      }
+
+      res.json(result)
     }
 
   return controller

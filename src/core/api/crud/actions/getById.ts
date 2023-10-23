@@ -1,12 +1,8 @@
-import { Controller } from "./types"
+import { type CrudRepo } from "@repo/crud"
+import { type Controller } from "./types"
 
-export function getById(this: Controller) {
+export function getById<R extends CrudRepo>(this: Controller<R>) {
   const { repo, id } = this
-  return repo.getById(id)
 
-  // if (!data || Object.keys(data).length === 0) {
-  //   res.status(404).json({ message: "Not Found" })
-  // } else {
-  //   res.json(data)
-  // }
+  return id ? repo.getById(id) : null
 }

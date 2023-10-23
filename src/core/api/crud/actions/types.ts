@@ -1,11 +1,10 @@
 export type Repo = Record<string, Function>
 
-export interface Controller {
+export interface Controller<T> {
   params: Record<string, string | string[] | undefined>
-  repo: Record<string, Function>
+  repo: T
   getPage(): number
   request: Express.Request
-  // response: Express.Response
   id?: string
   body?: any
 }
