@@ -1,22 +1,22 @@
 const expectedPathLength = 20
 export function textRouteReporter(
   method: string | symbol,
-  // mounthpath: string | string[],
+  mounthpath: string | string[],
   middlewares: string[],
   handlers: any[]
 ) {
   const middleware = middlewares.length ? `( ${middlewares.join(",")} )` : ""
   const httpMethod = `[${method.toString().toUpperCase()}]`.padEnd(8, " ")
-  const path = `${handlers.slice(0, -1)?.[0] || "/"}`.padEnd(
+  const path = `${mounthpath}${handlers.slice(0, -1)?.[0]}`.padEnd(
     expectedPathLength,
     " "
   )
   const httpHandler = handlers.slice(-1)[0]
 
-  const handlerName =
-    (httpHandler.toString().includes("DefaultRouter")
-      ? httpHandler.toString()
-      : httpHandler?.name) || `anonymous`
+  let handlerName = httpHandler.toString()
+  if (handlerName.includes("function")) {
+    handlerName = httpHandler.name
+  }
 
   const routeInfo = `${httpMethod} ${path} ${middleware}`.padEnd(50, " ")
 

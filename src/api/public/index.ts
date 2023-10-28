@@ -1,4 +1,4 @@
-import { handler } from "./../../middleware/auth"
+// import { handler } from "./../../middleware/auth"
 import auth from "./auth"
 import Router from "~/core/api/router"
 import { mediaHandler } from "./media"
@@ -9,7 +9,7 @@ export default (router: ReturnType<typeof Router>) => {
   router.get("/media/:hash", mediaHandler)
 
   const devRouter = Router()
-  devRouter.use("devOnlyEnv")
+  // devRouter.use("devOnlyEnv")
   revokeAccessTokens(devRouter)
 
   router.use(devRouter)

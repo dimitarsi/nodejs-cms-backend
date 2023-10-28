@@ -3,7 +3,7 @@ import { registerMiddleware } from "~/core/api/router"
 
 const devOnlyHandler: Handler = (_, res, next) => {
   if (process.env.NODE_ENV !== "production") {
-    res.status(403).send("Forbidden")
+    res.status(403).send("Forbidden - devOnlyHandler")
     return
   }
 
