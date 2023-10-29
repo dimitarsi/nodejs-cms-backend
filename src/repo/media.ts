@@ -1,74 +1,74 @@
-import db from "@db"
-import { ObjectId } from "mongodb"
+import { Db, ObjectId } from "mongodb"
+import { MediaDocument } from "~/models/media"
 
 const collectionName = "files"
 
-interface MediaDocument {
-  path: string
-  mimetype: string
-  filetype: string
-  originalName: string
-  size: string
-}
+export default function media(db: Db) {
+  const insertMany = async (data: MediaDocument[]) => {
+    const resp = await db.collection(collectionName).insertMany(data)
 
-export const insertMany = async (data: MediaDocument[]) => {
-  const resp = await db.collection(collectionName).insertMany(data)
+    return resp
+  }
 
-  return resp
-}
+  const getPath = async (fileId: string) => {
+    const res = await db.collection(collectionName).findOne<MediaDocument>({
+      fileId: fileId,
+    })
 
-export const getPath = async (id: string) => {
-  const res = await db.collection(collectionName).findOne<MediaDocument>({
-    _id: new ObjectId(id),
-  })
-
-  if (res) {
-    return {
-      path: res.path,
-      filetype: res.filetype,
+    if (res) {
+      return {
+        path: res.absolutePath,
+        filetype: res.mimetype,
+      }
     }
+
+    return {
+      path: null,
+      filetype: null,
+    }
+  }
+
+  const updateMedia = async (id: string, data: Record<string, string>) => {
+    await db.collection(collectionName).findOneAndUpdate(
+      {
+        _id: new ObjectId(id),
+      },
+      {
+        $set: {
+          name: data.name,
+          author: data.author,
+          tags: data.tags,
+          location: data.location,
+          description: data.description,
+          seoAlt: data.seoAlt,
+        },
+      }
+    )
+  }
+
+  // TODO: remove the file as well, in the controller
+  const deleteById = async (id: string) => {
+    return await db.collection(collectionName).findOneAndDelete({
+      _id: new ObjectId(id),
+    })
+  }
+
+  // TODO: remove the files as well, in the controller
+  const deleteAll = async () => {
+    return await db.collection(collectionName).deleteMany({})
   }
 
   return {
-    path: null,
-    filetype: null,
+    insertMany,
+    getPath,
+    updateMedia,
+    deleteById,
+    deleteAll,
   }
 }
 
-export const updateMedia = async (id: string, data: Record<string, string>) => {
-  await db.collection(collectionName).findOneAndUpdate(
-    {
-      _id: new ObjectId(id),
-    },
-    {
-      $set: {
-        name: data.name,
-        author: data.author,
-        tags: data.tags,
-        location: data.location,
-        description: data.description,
-        seoAlt: data.seoAlt,
-      },
-    }
-  )
-}
-
-// TODO: remove the file as well, in the controller
-export const deleteById = async (id: string) => {
-  return await db.collection(collectionName).findOneAndDelete({
-    _id: new ObjectId(id),
-  })
-}
-
-// TODO: remove the files as well, in the controller
-export const deleteAll = async () => {
-  return await db.collection(collectionName).deleteMany({})
-}
-
-export default {
-  insertMany,
-  getPath,
-  updateMedia,
-  deleteById,
-  deleteAll,
+declare module "fastify" {
+  interface FastifyInstance {
+    media: ReturnType<typeof media>
+  }
 }

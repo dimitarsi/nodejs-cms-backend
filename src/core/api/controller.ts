@@ -1,6 +1,7 @@
 import type Router from "../../core/api/router"
 import { type Handler } from "express"
 import { PartialDefaultRoutesValidation, validateRequest } from "./request"
+import fastify from "fastify"
 
 function tap(method: Function, space?: string) {
   const Tapped = (...args: any[]) => {
@@ -22,7 +23,7 @@ function prefixMethodName(prefix: string) {
 }
 
 const defaultController = (
-  router: ReturnType<typeof Router>,
+  router: ReturnType<typeof fastify>,
   repo: Record<string, Function>,
   validate?: PartialDefaultRoutesValidation,
   prefix: string = "/"
@@ -88,11 +89,11 @@ const defaultController = (
     routes.delete.toString =
       prefixMethodName("DefaultRouter")
 
-  router.get(`${prefix}`, routes.getAll)
-  router.get(`${prefix}:id`, tap(routes.getById))
-  router.post(`${prefix}`, routes.create)
-  router.patch(`${prefix}:id`, routes.update)
-  router.delete(`${prefix}:id`, routes.delete)
+  // router.get(`${prefix}`, routes.getAll)
+  // router.get(`${prefix}:id`, tap(routes.getById))
+  // router.post(`${prefix}`, routes.create)
+  // router.patch(`${prefix}:id`, routes.update)
+  // router.delete(`${prefix}:id`, routes.delete)
 
   return router
 }

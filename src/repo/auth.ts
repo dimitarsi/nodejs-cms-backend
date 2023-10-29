@@ -1,36 +1,44 @@
-import db from "@db"
 import { UserWithPermissions } from "~/models/user"
 import bcrypt from "bcrypt"
+import { Db } from "mongodb"
 
-export const getUserByEmail = async (email: string) => {
-  return await db.collection<UserWithPermissions>("users").findOne({
-    email,
-    password: { $exists: true },
-    isActive: true,
-  })
-}
+export default function auth(db: Db) {
+  const getUserByEmail = async (email: string) => {
+    return await db.collection<UserWithPermissions>("users").findOne({
+      email,
+      password: { $exists: true },
+      isActive: true,
+    })
+  }
 
-export const authenticate = async (email: string, password: string) => {
-  const user = await getUserByEmail(email)
-  let isLoggedIn = false
+  const authenticate = async (email: string, password: string) => {
+    const user = await getUserByEmail(email)
+    let isLoggedIn = false
 
-  if (user) {
-    isLoggedIn = bcrypt.compareSync(password, user.password)
+    if (user) {
+      isLoggedIn = bcrypt.compareSync(password, user.password)
+    }
+
+    return {
+      isLoggedIn,
+      isAdmin: user?.isAdmin,
+      userId: user?._id.toString(),
+    }
+  }
+
+  const deleteAll = async () => {
+    return await db.collection("users").deleteMany({})
   }
 
   return {
-    isLoggedIn,
-    isAdmin: user?.isAdmin,
-    userId: user?._id.toString(),
+    getUserByEmail,
+    authenticate,
+    deleteAll,
   }
 }
 
-export const deleteAll = async () => {
-  return await db.collection("users").deleteMany({})
-}
-
-export default {
-  getUserByEmail,
-  authenticate,
-  deleteAll,
+declare module "fastify" {
+  interface FastifyInstance {
+    auth: ReturnType<typeof auth>
+  }
 }

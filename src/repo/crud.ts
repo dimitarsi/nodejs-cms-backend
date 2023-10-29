@@ -1,7 +1,6 @@
 import { Collection, Filter, ObjectId, OptionalUnlessRequiredId } from "mongodb"
-import db from "@db"
 
-const baseCrudMethods = <T extends Record<string, any>>(
+export const baseCrudMethods = <T extends Record<string, any>>(
   collection: Collection<T>,
   options = { softDelete: false }
 ) => {
@@ -113,9 +112,8 @@ export const defaultExtend = (
 ) => crudMethods
 
 export default <T extends Object>(
-  collectionName: string,
+  collection: Collection<T>,
   options = { softDelete: false }
 ) => {
-  const collection = db.collection<T>(collectionName)
   return baseCrudMethods<T>(collection, options)
 }

@@ -1,78 +1,109 @@
-import db from "@db"
 import { randomUUID } from "crypto"
 import { loginSession } from "@config"
+import { Db, ObjectId } from "mongodb"
+import { AccessToken } from "~/models/accessToken"
 
-export const getExpirationDate = () => {
+const getExpirationDate = () => {
   return new Date(Date.now() + loginSession)
 }
 
-export interface AccessToken {
-  token: string
-  expire: Date
-  userId: string
-  isActive: boolean
-  isAdmin: boolean
-}
+export default function accessToken(db: Db) {
+  const collection = db.collection<AccessToken>("accessTokens")
 
-export const findOrCreateAccessToken = async (
-  userId: string,
-  data: { isAdmin: boolean | undefined | null }
-) => {
-  const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
-    userId,
-    expire: { $gt: new Date() },
-    isActive: true,
-  })
-
-  if (activeToken) {
-    return activeToken.token
-  }
-
-  const accessToken = randomUUID()
-
-  await db.collection<AccessToken>("accessTokens").insertOne({
-    token: accessToken,
-    expire: getExpirationDate(),
-    userId,
-    isActive: true,
-    isAdmin: Boolean(data?.isAdmin),
-  })
-
-  return accessToken
-}
-
-export const deactivateToken = async (accessToken: string) => {
-  const data = await db.collection<AccessToken>("accessTokens").updateOne(
-    {
-      token: accessToken,
+  const findOrCreateAccessToken = async (
+    userId: string,
+    data: { isAdmin: boolean | undefined | null }
+  ) => {
+    const activeToken = await collection.findOne({
+      userId,
       expire: { $gt: new Date() },
       isActive: true,
-    },
-    {
-      $set: { isActive: false },
+    })
+
+    if (activeToken) {
+      return activeToken.token
     }
-  )
 
-  return data.modifiedCount > 0
+    const accessToken = randomUUID()
+
+    await collection.insertOne({
+      token: accessToken,
+      expire: getExpirationDate(),
+      userId,
+      isActive: true,
+      isAdmin: Boolean(data?.isAdmin),
+    })
+
+    return accessToken
+  }
+
+  const deactivateToken = async (accessToken: string) => {
+    const data = await collection.updateOne(
+      {
+        token: accessToken,
+        expire: { $gt: new Date() },
+        isActive: true,
+      },
+      {
+        $set: { isActive: false },
+      }
+    )
+
+    return data.modifiedCount > 0
+  }
+
+  const findToken = async (token: string) => {
+    const activeToken = await collection.findOne({
+      token,
+      expire: { $gt: new Date() },
+      isActive: true,
+    })
+
+    return activeToken
+  }
+
+  const findAdminToken = async (token: string) => {
+    const activeToken = await collection.findOne({
+      token,
+      expire: { $gt: new Date() },
+      isActive: true,
+      isAdmin: true,
+    })
+
+    return activeToken
+  }
+
+  const deleteAll = async () => {
+    return await collection.deleteMany({})
+  }
+
+  const touchAdminToken = async (activeTokenId: ObjectId) => {
+    return await collection.updateOne(
+      {
+        _id: activeTokenId,
+        isActive: true,
+        expire: { $gt: new Date() },
+      },
+      {
+        $set: {
+          expire: getExpirationDate(),
+        },
+      }
+    )
+  }
+
+  return {
+    findOrCreateAccessToken,
+    deactivateToken,
+    findToken,
+    deleteAll,
+    findAdminToken,
+    touchAdminToken,
+  }
 }
 
-export const findToken = async (token: string) => {
-  const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
-    token,
-    expire: { $gt: new Date() },
-    isActive: true,
-  })
-
-  return activeToken
-}
-
-export const deleteAll = async () => {
-  return await db.collection<AccessToken>("accessTokens").deleteMany({})
-}
-
-export default {
-  findOrCreateAccessToken,
-  deactivateToken,
-  findToken,
-  deleteAll,
+declare module "fastify" {
+  interface FastifyInstance {
+    accessToken: ReturnType<typeof accessToken>
+  }
 }

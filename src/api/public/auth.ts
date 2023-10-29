@@ -1,45 +1,77 @@
-import { findOrCreateAccessToken, deactivateToken } from "~/repo/accessTokens"
+import { FastifyInstance, RouteShorthandOptions } from "fastify"
 
-import Router from "~/core/api/router"
-import { authenticate } from "~/repo/auth"
-import db from "@db"
+const opts: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: "object",
+      properties: {
+        email: { type: "string" },
+        password: { type: "string" },
+      },
+    },
+  },
+}
 
-export default (router: ReturnType<typeof Router>) => {
-  router.post("/login", async function login(req, res) {
+const logoutOptions: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: "object",
+      properties: {
+        accessToken: { type: "string" },
+      },
+    },
+  },
+}
+
+export default function auth(
+  instance: FastifyInstance,
+  options: never,
+  done: Function
+) {
+  instance.post<{
+    Body: { email: string; password: string }
+  }>("/login", opts, async function login(req, res) {
     const body = req.body
-    const { userId, isLoggedIn, isAdmin } = await authenticate(
+    const { userId, isLoggedIn, isAdmin } = await instance.auth.authenticate(
       body.email,
       body.password
     )
 
     if (isLoggedIn && userId) {
-      const accessToken = await findOrCreateAccessToken(userId, { isAdmin })
+      const accessToken = await instance.accessToken.findOrCreateAccessToken(
+        userId,
+        {
+          isAdmin,
+        }
+      )
 
-      res.json({
+      res.code(200).send({
         accessToken,
       })
     } else {
-      res.statusCode = 401
-      res.json({
+      res.code(401).send({
         error: "Unrecognized user",
       })
     }
   })
 
-  router.post("/logout", async function logout(req, res) {
+  instance.post<{
+    Body: { accessToken: string }
+  }>("/logout", logoutOptions, async function logout(req, res) {
     const { accessToken } = req.body
 
-    const success = await deactivateToken(accessToken)
+    const success = await instance.accessToken.deactivateToken(accessToken)
 
     if (success) {
-      res.json({
+      res.code(200).send({
         success: true,
       })
     } else {
-      res.statusCode = 400
-      res.json({
+      res.code(400).send({
         success: false,
       })
     }
   })
+
+  done()
 }
