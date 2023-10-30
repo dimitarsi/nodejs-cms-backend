@@ -1,11 +1,7 @@
 import { randomUUID } from "crypto"
-import { loginSession } from "@config"
 import { Db, ObjectId } from "mongodb"
 import { AccessToken } from "~/models/accessToken"
-
-const getExpirationDate = () => {
-  return new Date(Date.now() + loginSession)
-}
+import { getSessionExpirationDate } from "~/helpers/date"
 
 export default function accessToken(db: Db) {
   const collection = db.collection<AccessToken>("accessTokens")
@@ -28,7 +24,7 @@ export default function accessToken(db: Db) {
 
     await collection.insertOne({
       token: accessToken,
-      expire: getExpirationDate(),
+      expire: getSessionExpirationDate(),
       userId,
       isActive: true,
       isAdmin: Boolean(data?.isAdmin),
@@ -86,7 +82,7 @@ export default function accessToken(db: Db) {
       },
       {
         $set: {
-          expire: getExpirationDate(),
+          expire: getSessionExpirationDate(),
         },
       }
     )

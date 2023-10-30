@@ -8,4 +8,6 @@ export interface User {
 export interface UserWithPermissions extends User {
   isActive: boolean
   isAdmin: boolean
+  activationHash: string
+  hashExpiration: Date
 }
