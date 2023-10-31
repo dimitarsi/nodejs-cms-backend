@@ -16,6 +16,8 @@ import publicApiAuth from "~/api/public/auth"
 import fastifyPlugin from "fastify-plugin"
 import attachments from "@api/cms/files"
 import media from "@api/public/media"
+import users from "@api/cms/user"
+import cmsApiSchema from "~/schema/cms-api"
 
 const app = fastify({
   logger: true,
@@ -32,9 +34,14 @@ const port = parseInt(process.env.PORT || "8000")
 // app.router.use("auth:isAdmin")
 // {
 // app.register(dbConnector)
+
+app.register(fastifyPlugin(cmsApiSchema))
+
 app.register(fastifyPlugin(dbLayer), {
   dbName: process.env.DB_NAME || "plenty_cms",
 })
+
+app.register(users)
 app.register(publicApiAuth)
 app.register(media)
 app.register(attachments, { uploadDir: "uploads" })

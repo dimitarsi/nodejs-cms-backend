@@ -16,6 +16,10 @@ export const baseCrudMethods = <T extends Record<string, any>>(
       return collection.collectionName
     },
     async getAll(page = 1, pageSize = 20) {
+      console.log(">> Query", notDeleted, collection.collectionName, {
+        skip: pageSize * (page - 1),
+        limit: pageSize,
+      })
       const cursor = await collection.find(notDeleted, {
         skip: pageSize * (page - 1),
         limit: pageSize,

@@ -1,6 +1,9 @@
 import { FastifyInstance, RouteShorthandOptions } from "fastify"
 import auth from "@middleware/auth"
 import { UpdateResult } from "mongodb"
+import { schemaRef } from "~/schema/cms-api"
+import { User } from "~/models/user"
+import { getAllUsers } from "./actions/getAll"
 
 // const oldController = (
 //   router: ReturnType<typeof fastify>,
@@ -57,26 +60,51 @@ import { UpdateResult } from "mongodb"
 //   })
 // }
 
-const opts: RouteShorthandOptions = {
+const getByIdOptions: RouteShorthandOptions = {
   schema: {
-    params: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-      },
+    params: schemaRef("idParamStrict"),
+  },
+}
+
+const createUserOptions: RouteShorthandOptions = {
+  schema: {
+    body: schemaRef("userCreatePayload"),
+  },
+}
+
+const updatePassword = {
+  type: "object",
+  properties: {
+    password: { type: "string" },
+    confirmPassword: { type: "string" },
+  },
+  additionalProperties: false,
+  required: ["password", "confirmPassword"],
+}
+
+const updateUserData = {
+  type: "object",
+  properties: {
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+  },
+  additionalProperties: false,
+  required: [],
+}
+
+const updateUserOptions: RouteShorthandOptions = {
+  schema: {
+    params: schemaRef("idParamStrict"),
+    body: {
+      oneOf: [updatePassword, updateUserData],
     },
   },
 }
 
-const getAllOpts: RouteShorthandOptions = {
+const activateOptions: RouteShorthandOptions = {
   schema: {
-    querystring: {
-      type: "object",
-      properties: {
-        page: { type: "number" },
-        perPage: { type: "number" },
-      },
-    },
+    params: schemaRef("idParamStrict"),
+    querystring: schemaRef("hashQueryStrict"),
   },
 }
 
@@ -87,25 +115,16 @@ export default function (
 ) {
   instance.register(auth, { isAdmin: true })
 
-  instance.get("/user", async (_req, reply) => {
-    const users = await instance.users.getAll()
-
-    reply.send(users)
-  })
+  getAllUsers(instance)
 
   instance.get<{
     Params: { id: string }
-  }>("/user/:id", getAllOpts, async (req, reply) => {
+  }>("/users/:id", getByIdOptions, async (req, reply) => {
     reply.send(await instance.users.getById(req.params.id))
   })
   instance.post<{
-    Body: {
-      firstName: string
-      lastName: string
-      email: string
-      password: string
-    }
-  }>("/user", opts, async (req, reply) => {
+    Body: User
+  }>("/users", createUserOptions, async (req, reply) => {
     const body = req.body
 
     const result = await instance.users.create({
@@ -138,7 +157,7 @@ export default function (
     Params: {
       id: string
     }
-  }>("/user/:id", async (req, reply) => {
+  }>("/users/:id", updateUserOptions, async (req, reply) => {
     const body = req.body
     const id = req.params.id
     let result: UpdateResult | null = null
@@ -158,7 +177,7 @@ export default function (
 
   instance.delete<{
     Params: { id: string }
-  }>("/user/:id", async (req, reply) => {
+  }>("/users/:id", getByIdOptions, async (req, reply) => {
     const id = req.params.id
     const result = await instance.users.deleteById(id)
 
@@ -172,7 +191,7 @@ export default function (
   instance.get<{
     Params: { id: string }
     Querystring: { hash: string }
-  }>("/user/:id/activate", async (req, reply) => {
+  }>("/users/:id/activate", activateOptions, async (req, reply) => {
     const id = req.params.id
 
     const result = await instance.users.selfActivate(id, req.query.hash)

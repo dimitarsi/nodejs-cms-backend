@@ -13,7 +13,7 @@ function shouldUpdatePassword(
 }
 
 export default function users(db: Db) {
-  const collection = db.collection<User>("user")
+  const collection = db.collection<User>("users")
   const crud = makeRepo(collection)
 
   return {

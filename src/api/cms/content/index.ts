@@ -1,7 +1,3 @@
-import express from "express"
-import ajv from "~/schema/core"
-import { type JSONSchemaType } from "ajv"
-import { Validator } from "~/core/api/request"
 import { FastifyPluginCallback } from "fastify"
 
 // const validate = ajv.compile<
