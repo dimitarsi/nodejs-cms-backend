@@ -113,7 +113,7 @@ export default function (
   options: never,
   done: Function
 ) {
-  instance.register(auth, { isAdmin: true })
+  auth(instance, { isAdmin: true }, () => {})
 
   getAllUsers(instance)
 

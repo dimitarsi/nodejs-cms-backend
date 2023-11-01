@@ -59,12 +59,13 @@ export default function accessToken(db: Db) {
   }
 
   const findAdminToken = async (token: string) => {
-    const activeToken = await collection.findOne({
+    const query = {
       token,
       expire: { $gt: new Date() },
       isActive: true,
       isAdmin: true,
-    })
+    }
+    const activeToken = await collection.findOne(query)
 
     return activeToken
   }
@@ -73,11 +74,10 @@ export default function accessToken(db: Db) {
     return await collection.deleteMany({})
   }
 
-  const touchAdminToken = async (activeTokenId: ObjectId) => {
+  const touchToken = async (activeTokenId: ObjectId) => {
     return await collection.updateOne(
       {
         _id: activeTokenId,
-        isActive: true,
         expire: { $gt: new Date() },
       },
       {
@@ -94,7 +94,7 @@ export default function accessToken(db: Db) {
     findToken,
     deleteAll,
     findAdminToken,
-    touchAdminToken,
+    touchToken,
   }
 }
 
