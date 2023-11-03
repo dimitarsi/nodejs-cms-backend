@@ -8,8 +8,10 @@ const getAllOptions: RouteShorthandOptions = {
 }
 
 export function getAllUsers(instance: FastifyInstance) {
-  instance.get("/users", getAllOptions, async (_req, reply) => {
-    const users = await instance.users.getAll()
+  instance.get<{
+    Querystring: { page: number; perPage: number }
+  }>("/users", getAllOptions, async (req, reply) => {
+    const users = await instance.users.getAll(req.query.page, req.query.perPage)
 
     reply.send(users)
   })

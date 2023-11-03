@@ -1,22 +1,15 @@
-import dbConnector from "@db"
-// import express from "express"
 import "./config"
-import bodyParser from "body-parser"
-import cors from "cors"
-import publicAPI from "~/api/public"
 import cmsAPI from "~/api/cms"
 import errorHandler from "@api/error"
 import Router from "./core/api/router"
 import "~/middleware/auth"
 import "~/middleware/devEnv"
 import fastify from "fastify"
-// import dbConnector from "@db"
 import dbLayer from "~/repo"
 import publicApiAuth from "~/api/public/auth"
 import fastifyPlugin from "fastify-plugin"
 import attachments from "@api/cms/files"
 import media from "@api/public/media"
-import users from "@api/cms/user"
 import cmsApiSchema from "~/schema/cms-api"
 
 const app = fastify({
@@ -41,7 +34,7 @@ app.register(fastifyPlugin(dbLayer), {
   dbName: process.env.DB_NAME || "plenty_cms",
 })
 
-app.register(users)
+app.register(cmsAPI)
 app.register(publicApiAuth)
 app.register(media)
 app.register(attachments, { uploadDir: "uploads" })
