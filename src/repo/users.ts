@@ -18,7 +18,15 @@ export default function users(db: Db) {
 
   return {
     ...crud,
-    create: (data: Omit<User, "activationHash" | "hashExpiration">) => {
+    create: async (data: Omit<User, "activationHash" | "hashExpiration">) => {
+      const user = await collection.findOne({
+        email: data.email,
+      })
+
+      if (user !== null) {
+        return null
+      }
+
       return crud.create({
         firstName: data.firstName,
         lastName: data.lastName,

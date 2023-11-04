@@ -23,6 +23,13 @@ export default function createUser(instance: FastifyInstance) {
       password: body.password,
     })
 
+    if (!result) {
+      return reply.code(400).send({
+        error: "Cannot create",
+        message: "User already exists",
+      })
+    }
+
     reply.code(201).header("location", `/user/${result.insertedId}`).send({
       id: result.insertedId,
       firstName: body.firstName,
