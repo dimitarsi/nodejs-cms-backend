@@ -36,9 +36,3 @@ export default function auth(db: Db) {
     deleteAll,
   }
 }
-
-declare module "fastify" {
-  interface FastifyInstance {
-    auth: ReturnType<typeof auth>
-  }
-}

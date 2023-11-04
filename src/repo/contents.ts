@@ -130,9 +130,3 @@ export default function contents(db: Db) {
     },
   }
 }
-
-declare module "fastify" {
-  interface FastifyInstance {
-    content: ReturnType<typeof contents>
-  }
-}

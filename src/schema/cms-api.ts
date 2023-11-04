@@ -15,7 +15,7 @@ const pageQuery: JSONSchemaType<{ page: number; perPage: number }> = {
   additionalProperties: false,
 }
 
-const userCreatePayload: JSONSchemaType<User> = {
+export const userCreatePayload: JSONSchemaType<User> = {
   type: "object",
   properties: {
     firstName: { type: "string" },

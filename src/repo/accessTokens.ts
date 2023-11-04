@@ -97,9 +97,3 @@ export default function accessToken(db: Db) {
     touchToken,
   }
 }
-
-declare module "fastify" {
-  interface FastifyInstance {
-    accessToken: ReturnType<typeof accessToken>
-  }
-}

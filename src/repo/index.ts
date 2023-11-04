@@ -1,12 +1,5 @@
-import dbConnector from "@db"
-import {
-  FastifyInstance,
-  FastifyPluginAsync,
-  FastifyPluginCallback,
-} from "fastify"
-import fastifyPlugin from "fastify-plugin"
+import { FastifyInstance, FastifyPluginAsync } from "fastify"
 import users from "./users"
-import { FastifyMongoObject } from "@fastify/mongodb"
 import contents from "./contents"
 import contentTypes from "./contentTypes"
 import media from "./media"
@@ -44,3 +37,14 @@ async function repo(
 }
 
 export default repo as FastifyPluginAsync<PluginOptions>
+
+declare module "fastify" {
+  interface FastifyInstance {
+    contents: ReturnType<typeof contents>
+    accessToken: ReturnType<typeof accessTokens>
+    media: ReturnType<typeof media>
+    users: ReturnType<typeof users>
+    auth: ReturnType<typeof auth>
+    contentTypes: ReturnType<typeof contentTypes>
+  }
+}

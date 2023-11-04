@@ -1,7 +1,5 @@
 import "./config"
 import cmsAPI from "~/api/cms"
-import errorHandler from "@api/error"
-import Router from "./core/api/router"
 import "~/middleware/auth"
 import "~/middleware/devEnv"
 import fastify from "fastify"

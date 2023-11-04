@@ -1,15 +1,12 @@
-import contentTypesRepo from "@repo/contentTypes"
-import contentRepo from "@repo/content"
-import usersRepo from "@repo/users"
-import authRepo from "@repo/auth"
-import accessTokens from "@repo/accessTokens"
-import mediaRepo from "@repo/media"
 import fs from "fs"
 import path from "path"
+import { type Db } from "mongodb"
+import mediaRepo from "~/repo/media"
+import contentRepo from "~/repo/contents"
+import contentTypesRepo from "~/repo/contentTypes"
 
-export default async function removeData() {
-
-  const mediaDir = path.join(process.cwd(), "./uploads/") 
+export default async function removeData(db: Db) {
+  const mediaDir = path.join(process.cwd(), "./uploads/")
 
   const files = fs.readdirSync(mediaDir)
 
@@ -23,14 +20,12 @@ export default async function removeData() {
     })
   })
 
-  
-
   return Promise.all([
-    contentTypesRepo.deleteAll(),
-    contentRepo.deleteAll(),
+    contentTypesRepo(db).deleteAll(),
+    contentRepo(db).deleteAll(),
     // usersRepo.deleteAll(),
     // authRepo.deleteAll(),
     // accessTokens.deleteAll(),
-    mediaRepo.deleteAll(),
+    mediaRepo(db).deleteAll(),
   ])
 }

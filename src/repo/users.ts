@@ -74,9 +74,3 @@ export default function users(db: Db) {
     },
   }
 }
-
-declare module "fastify" {
-  interface FastifyInstance {
-    users: ReturnType<typeof users>
-  }
-}

@@ -66,9 +66,3 @@ export default function media(db: Db) {
     deleteAll,
   }
 }
-
-declare module "fastify" {
-  interface FastifyInstance {
-    media: ReturnType<typeof media>
-  }
-}
