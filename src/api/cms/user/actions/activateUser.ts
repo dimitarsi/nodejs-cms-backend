@@ -22,5 +22,8 @@ const activateOptions: RouteShorthandOptions = {
   schema: {
     params: schemaRef("idParamStrict"),
     querystring: schemaRef("hashQueryStrict"),
+    // @ts-ignore
+    tags: ["user"],
+    description: "This is a description for the activate endpoint",
   },
 }

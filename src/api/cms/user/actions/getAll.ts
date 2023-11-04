@@ -4,6 +4,12 @@ import { schemaRef } from "~/schema/cms-api"
 const getAllOptions: RouteShorthandOptions = {
   schema: {
     querystring: schemaRef("pageQuery"),
+    // @ts-ignore
+    tags: ["user"],
+    description: "This is a description for the activate endpoint",
+    response: {
+      "200": {},
+    },
   },
 }
 
