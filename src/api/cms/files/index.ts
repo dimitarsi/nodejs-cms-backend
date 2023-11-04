@@ -1,92 +1,32 @@
-// import multer from "multer"
-// import { insertMany, updateMedia } from "@repo/media"
-import fileType from "~/helpers/fileType"
-import Router from "~/core/api/router"
 import { FastifyPluginCallback } from "fastify"
 import fs from "node:fs"
+import fsPromise from "fs/promises"
 import path from "node:path"
 import { MediaDocument } from "~/models/media"
 import { v4 } from "uuid"
-// import nanoid from "nanoid"
-
-// const app = Router("/attachments")
-
-// const oldControlelr = (
-//   router: ReturnType<typeof Router>,
-//   prefix: `/${string}/` | "/" = "/"
-// ) => {
-//   const upload = multer({ dest: "uploads" })
-//   router.post(
-//     prefix,
-//     upload.array("attachments"),
-//     async function upload(req, res) {
-//       const entries: any[] = []
-
-//       for (const f of req.files as any[]) {
-//         entries.push({
-//           path: f.path,
-//           mimetype: f.mimetype,
-//           filetype: await fileType(f.path),
-//           originalName: f.originalname,
-//           size: f.size,
-//         })
-//       }
-//       try {
-//         const resp = await insertMany(entries)
-//         res.status(200).json(
-//           entries.map((entry, idx) => ({
-//             id: resp.insertedIds[idx],
-//             name: entry.originalName,
-//             type: entry.filetype,
-//           }))
-//         )
-//       } catch (e) {
-//         res.status(400).json({ ok: false })
-//       }
-//     }
-//   )
-
-//   router.put(
-//     `${prefix}:hash`,
-//     upload.array("attachment"),
-//     async function updateUpload(req, res) {
-//       // const entries: any[] = []
-
-//       if (!req.params.hash) {
-//         res.status(404)
-//         res.send()
-//         return
-//       }
-
-//       let mediaData = req.body
-
-//       if (req.file) {
-//         mediaData = {
-//           ...mediaData,
-//           path: req.file.path,
-//           mimetype: req.file.mimetype,
-//           filetype: await fileType(req.file.path),
-//           originalName: req.file.originalname,
-//           size: req.file.size,
-//         }
-//       }
-
-//       await updateMedia(req.params.hash, mediaData)
-
-//       res.status(200)
-//       res.send()
-//     }
-//   )
-// }
+import auth from "@middleware/auth"
 
 type PluginOptions = { uploadDir: string }
 
-const filesPlugin: FastifyPluginCallback<PluginOptions> = (
+const filesPlugin: FastifyPluginCallback<PluginOptions> = async (
   instance,
   options,
   done
 ) => {
+  const location = path.join(process.cwd(), options.uploadDir)
+
   instance.register(import("@fastify/multipart"))
+
+  auth(instance, { isAdmin: true }, () => {})
+
+  fsPromise
+    .mkdir(location)
+    .then(() => {
+      console.log("[Server Boot] Create upload dir at", location)
+    })
+    .catch((e) => {
+      console.log("[Server Boot] Upload dir was not created at", location)
+    })
 
   instance.post("/attachments", async (req, reply) => {
     const files = await req.files()
@@ -117,7 +57,10 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = (
         fsStream.on("close", () => {
           res(true)
         })
-        fsStream.on("error", () => rej())
+        fsStream.on("error", (e) => {
+          console.log(">> Stream Error", e)
+          rej(e)
+        })
       })
 
       f.file.pipe(fsStream)
@@ -126,7 +69,15 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = (
 
     console.log("..save many", bulkSave)
 
-    await Promise.all([instance.media.insertMany(bulkSave), ...openPipes])
+    try {
+      await Promise.all([instance.media.insertMany(bulkSave), ...openPipes])
+    } catch (e) {
+      console.log(e)
+      reply.code(500).send({
+        error: "Error saving files",
+        message: "Could not save all files",
+      })
+    }
 
     reply.send()
   })
