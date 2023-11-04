@@ -14,7 +14,10 @@ export default function media(
 
     if (!path || fs.existsSync(path) === false) {
       reply.status(404)
-      reply.send({ error: "No such file in DB" })
+      reply.send({
+        error: "Not found",
+        message: "No such file in DB",
+      })
       return
     }
     if (filetype) {
