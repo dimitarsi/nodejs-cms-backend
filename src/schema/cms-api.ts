@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify"
 import Ajv, { JSONSchemaType } from "ajv"
 import createStrict from "./createStrict"
 import { User } from "~/models/user"
+import { Content, CreateContentPayload } from "~/models/content"
 
 const schemaId = (url: string) => `cms-api/${url}`
 
@@ -26,7 +27,59 @@ export const userCreatePayload: JSONSchemaType<User> = {
   required: ["firstName", "lastName", "password", "email"],
 }
 
+// JSONSchemaType<Omit<CreateContentPayload, "id" | "config">>
+export const contentCreatePayload = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    slug: { type: "string" },
+    type: { type: "string" }, // enum: ["document", "folder"]
+    folderLocation: { type: "string" },
+    folderTarget: { type: "string" },
+    depth: { type: "number", nullable: true },
+    configId: { type: "string", nullable: true },
+    data: {
+      type: "object",
+      required: [],
+      // nullable: true,
+      additionalProperties: true,
+      properties: {},
+    },
+  },
+  additionalProperties: false,
+  required: [
+    "name",
+    "slug",
+    "type",
+    "folderLocation",
+    "folderTarget",
+    "configId",
+    "data",
+  ],
+}
+
+export const contentTypeCreatePayload = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    slug: { type: "string" },
+    type: { type: "string" },
+    repeated: { type: "boolean" },
+    children: {
+      type: "array",
+      minLength: 0,
+      items: {
+        $ref: "#",
+      },
+    },
+    freezed: { type: "boolean" },
+  },
+  additionalProperties: false,
+  required: ["name", "slug", "type", "repeated", "children"],
+}
+
 const idParamStrict = createStrict("id")
+const idOrSlugParamStrict = createStrict("idOrSlug")
 const hashQueryStrict = createStrict("hash")
 
 const schemaDefinitions = {
@@ -36,6 +89,9 @@ const schemaDefinitions = {
     hashQueryStrict,
     pageQuery,
     userCreatePayload,
+    idOrSlugParamStrict,
+    contentCreatePayload,
+    contentTypeCreatePayload,
   },
 }
 

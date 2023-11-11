@@ -8,7 +8,7 @@ const getAllOptions: RouteShorthandOptions = {
     tags: ["user"],
     description: "This is a description for the activate endpoint",
     response: {
-      "200": {},
+      // "200": {},
     },
   },
 }

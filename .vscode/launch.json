@@ -8,16 +8,12 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Server",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/node_modules/nodemon/bin/nodemon.js",
-      "args": ["--exec", "'ts-node'", "${workspaceFolder}/src/index.ts" ],
+      "args": ["--exec", "'ts-node'", "${workspaceFolder}/src/server.ts"],
       // "program": "nodemon --inspect --exec 'ts-node' ./src/index.ts",
       // "restart": true,
-      "outFiles": [
-        "${workspaceFolder}/**/*.js"
-      ]
+      "outFiles": ["${workspaceFolder}/**/*.js"]
     },
     {
       "type": "node",
@@ -27,7 +23,7 @@
       "program": "${workspaceFolder}/node_modules/.bin/jest",
       "args": ["--config", "jest.config.js"],
       // "args": ["${fileBasenameNoExtension}", "--config", "jest.config.js"],
-      "console": "integratedTerminal",
+      "console": "integratedTerminal"
       // "windows": {
       //   "program": "${workspaceFolder}/node_modules/jest/bin/jest"
       // }

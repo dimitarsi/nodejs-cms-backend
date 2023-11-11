@@ -16,10 +16,6 @@ export const baseCrudMethods = <T extends Record<string, any>>(
       return collection.collectionName
     },
     async getAll(page = 1, pageSize = 20) {
-      console.log(">> Query", notDeleted, collection.collectionName, {
-        skip: pageSize * (page - 1),
-        limit: pageSize,
-      })
       const cursor = await collection.find(notDeleted, {
         skip: pageSize * (page - 1),
         limit: pageSize,
@@ -30,6 +26,17 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         collection.countDocuments(notDeleted),
       ])
       cursor.close()
+
+      console.log(
+        ">> Query",
+        notDeleted,
+        collection.collectionName,
+        {
+          skip: pageSize * (page - 1),
+          limit: pageSize,
+        },
+        { items }
+      )
 
       const totalPages = Math.ceil(count / pageSize)
       return {
@@ -43,7 +50,6 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         },
       }
     },
-    // async create(data: OptionalUnlessRequiredId<T>) {
     async create(data: OptionalUnlessRequiredId<T>) {
       return await collection.insertOne(data)
     },

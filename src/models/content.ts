@@ -35,7 +35,7 @@ export type DataTypes =
   | RefDataType
   | ComponentDataType
 
-export interface Content extends BaseModel {
+export interface CreateContentPayload {
   name: string
   slug: string
   type: "document" | "folder"
@@ -45,5 +45,7 @@ export interface Content extends BaseModel {
   id?: String
   configId?: string | ObjectId
   config?: ContentType
-  data: any
+  data: object
 }
+
+export type Content = BaseModel & CreateContentPayload

@@ -1,25 +1,21 @@
-// import express from "express"
-import { Validator } from "~/core/api/request"
-import defaultController from "~/core/api/controller"
-// import validate from "./schema"
-import contentTypesRepo from "@repo/contentTypes"
-import Router from "~/core/api/router"
+import { FastifyPluginCallback } from "fastify"
+import getAll from "./actions/getAll"
+import getById from "./actions/getById"
+import create from "./actions/create"
+import updateContentType from "./actions/update"
+import deleteContentType from "./actions/delete"
+import auth from "@middleware/auth"
 
-// const router = Router("/content_types")
+const contentTypes: FastifyPluginCallback = (instance, options, done) => {
+  instance.register(auth, { isAdmin: true })
 
-// const validateCreate: Validator = (req: express.Request) => undefined
-// validate(req.body).then(_result => undefined).catch(error => error);
+  getAll(instance)
+  getById(instance)
+  create(instance)
+  updateContentType(instance)
+  deleteContentType(instance)
 
-export default (
-  router: ReturnType<typeof Router>,
-  prefix: `/${string}/` | "/" = "/"
-) => {
-  defaultController(
-    router,
-    contentTypesRepo,
-    {
-      // create: validateCreate,
-    },
-    prefix
-  )
+  done()
 }
+
+export default contentTypes

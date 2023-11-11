@@ -72,7 +72,7 @@ import { AccessToken } from "~/models/accessToken"
 export default function (
   instance: FastifyInstance,
   options: { isAdmin: boolean },
-  done: Function
+  done: Function = () => {}
 ) {
   instance.addHook("preHandler", async (req, reply) => {
     const accessTokenHeader = req.headers["x-access-token"]
@@ -99,5 +99,5 @@ export default function (
     }
   })
 
-  // done()
+  done()
 }

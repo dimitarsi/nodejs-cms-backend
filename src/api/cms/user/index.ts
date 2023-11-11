@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify"
 import { getAllUsers } from "./actions/getAll"
-import createUser from "./actions/createUsers"
-import deleteUser from "./actions/deleteUser"
-import updateUser from "./actions/updateUser"
+import createUser from "./actions/create"
+import deleteUser from "./actions/delete"
+import updateUser from "./actions/update"
 import auth from "@middleware/auth"
 import activateUser from "./actions/activateUser"
 
@@ -14,7 +14,7 @@ export default function (
   activateUser(instance)
 
   instance.register((instance, options, done) => {
-    auth(instance, { isAdmin: true }, () => {})
+    auth(instance, { isAdmin: true })
 
     getAllUsers(instance)
 

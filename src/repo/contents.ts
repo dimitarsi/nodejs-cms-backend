@@ -65,16 +65,15 @@ export default function contents(db: Db) {
     },
     async getAll(
       page = 1,
-      options: { pageSize: number; filter: Record<string, any> } = {
-        pageSize: 20,
-        filter: {},
+      options: { perPage: number; filter?: Record<string, any> } = {
+        perPage: 20,
       }
     ) {
       const filter = options.filter || {}
 
       const cursor = await collection.find(filter, {
-        skip: options.pageSize * (page - 1),
-        limit: options.pageSize,
+        skip: options.perPage * (page - 1),
+        limit: options.perPage,
       })
 
       const [items, count] = await Promise.all([
@@ -83,13 +82,15 @@ export default function contents(db: Db) {
       ])
       cursor.close()
 
-      const totalPages = Math.ceil(count / options.pageSize)
+      const totalPages = Math.ceil(count / options.perPage)
+
+      console.log(">> Items", items.length, count)
 
       return {
         items,
         pagination: {
           page,
-          perPage: options.pageSize,
+          perPage: options.perPage,
           count,
           totalPage: totalPages,
           nextPage: page >= totalPages ? null : page + 1,
