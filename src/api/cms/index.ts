@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify"
 import user from "./user"
 import content from "./content"
 import contentTypes from "./contentTypes"
+import uploads from "./uploads"
 
 async function cmsAPI(
   fastify: FastifyInstance,
@@ -12,6 +13,7 @@ async function cmsAPI(
   fastify.register(user)
   fastify.register(content)
   fastify.register(contentTypes)
+  fastify.register(uploads, { uploadDir: "uploads" })
 
   done()
 }

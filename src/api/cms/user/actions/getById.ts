@@ -3,14 +3,21 @@ import { schemaRef } from "~/schema/cms-api"
 
 const getByIdOptions: RouteShorthandOptions = {
   schema: {
-    params: schemaRef("idParamStrict"),
+    params: schemaRef("idOrSlugParamStrict"),
   },
 }
 
 export default function getById(instance: FastifyInstance) {
   instance.get<{
-    Params: { id: string }
-  }>("/users/:id", getByIdOptions, async (req, reply) => {
-    reply.send(await instance.users.getById(req.params.id))
+    Params: { idOrSlug: string }
+  }>("/users/:idOrSlug", getByIdOptions, async (req, reply) => {
+    const result = await instance.users.getById(req.params.idOrSlug)
+
+    if (!result) {
+      reply.code(404).send()
+      return
+    }
+
+    reply.send(result)
   })
 }

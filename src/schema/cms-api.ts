@@ -67,7 +67,7 @@ export const contentTypeCreatePayload = {
     repeated: { type: "boolean" },
     children: {
       type: "array",
-      minLength: 0,
+      minItems: 0,
       items: {
         $ref: "#",
       },

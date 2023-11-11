@@ -6,9 +6,9 @@ module.exports = {
   setupFiles: ["./tests/setup.ts"],
   moduleNameMapper: {
     "@db": "<rootDir>/src/connect/db",
-    // "@api/*": ["./src/api/*"],
-    // "@repo(/.*)": "./src/repo$1",
-    // "@config": ["./src/config/config"],
+    "@middleware/auth": "<rootDir>/src/middleware/auth.ts",
+    "@config": "<rootDir>/src/config/config.ts",
+    "@api/cms/": "<rootDir>/src/api/cms/",
     "~/(.*)": "<rootDir>/src/$1",
   },
 }

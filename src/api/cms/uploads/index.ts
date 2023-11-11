@@ -24,8 +24,11 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = async (
     .then(() => {
       console.log("[Server Boot] Create upload dir at", location)
     })
-    .catch((e) => {
-      console.log("[Server Boot] Upload dir was not created at", location)
+    .catch((_e) => {
+      console.log(
+        "[Server Boot] SKIP creating upload dir - already exists or no permissions",
+        location
+      )
     })
 
   instance.post("/attachments", async (req, reply) => {

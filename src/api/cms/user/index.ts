@@ -5,6 +5,7 @@ import deleteUser from "./actions/delete"
 import updateUser from "./actions/update"
 import auth from "@middleware/auth"
 import activateUser from "./actions/activateUser"
+import getById from "./actions/getById"
 
 export default function (
   instance: FastifyInstance,
@@ -17,6 +18,7 @@ export default function (
     auth(instance, { isAdmin: true })
 
     getAllUsers(instance)
+    getById(instance)
 
     createUser(instance)
 
