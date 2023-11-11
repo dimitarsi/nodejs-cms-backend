@@ -1,4 +1,4 @@
-import superagent from "superagent"
+import _superagent from "superagent"
 import { describe, test, expect } from "@jest/globals"
 import express from "express"
 import request from "supertest"

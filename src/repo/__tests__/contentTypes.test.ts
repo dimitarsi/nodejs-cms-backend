@@ -1,7 +1,7 @@
 import { describe, expect, test } from "@jest/globals"
 
-import repo from "../contentTypes"
-import db, { closeMongoClient, connectMongoClient } from "@db"
+import contentTypes, { ContentTypesRepo } from "../contentTypes"
+import mongoClient from "@db"
 
 import {
   ContentType,
@@ -10,16 +10,17 @@ import {
 } from "~/models/contentType"
 
 describe("ContentTypes Repo", () => {
-  beforeAll(async () => {
-    await connectMongoClient()
+  let repo: ContentTypesRepo
+
+  beforeEach(async () => {
+    const db = await mongoClient.db(process.env.DB_NAME)
+    repo = contentTypes(db)
+
+    await repo.deleteAll()
   })
 
-  afterEach(async () => {
-    await db.dropDatabase()
-  })
-
-  afterAll(async () => {
-    await closeMongoClient()
+  afterAll(() => {
+    mongoClient.close(true)
   })
 
   test.failing("Tests can fail", () => {
@@ -33,7 +34,7 @@ describe("ContentTypes Repo", () => {
 
     expect(item).toBeDefined()
 
-    expect(item!.type).toBe("text")
+    expect(item!.type).toBe("root")
     expect(item!.name).toBe("Title")
     expect(item!._id).toBeDefined()
   })
@@ -105,7 +106,7 @@ describe("ContentTypes Repo", () => {
       )
     })
 
-    test.only("Preserving original contentType name when root contentType", async () => {
+    test("Preserving original contentType name when root contentType", async () => {
       const root = compositeContentType("root", true)
       const innerRoot = compositeContentType("innerRoot", true)
 

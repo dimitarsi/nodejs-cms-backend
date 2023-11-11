@@ -2,6 +2,8 @@ import { ContentType, freezeAllChildren } from "~/models/contentType"
 import makeRepo from "./crud"
 import { Db, ObjectId, OptionalId } from "mongodb"
 
+export type ContentTypesRepo = ReturnType<typeof contentTypes>
+
 export default function contentTypes(db: Db) {
   const crud = makeRepo<ContentType>(db.collection("contentTypes"), {
     softDelete: true,
@@ -60,8 +62,8 @@ export default function contentTypes(db: Db) {
     getById,
     async create({ type: _type, ...data }: OptionalId<ContentType>) {
       return crud.create({
-        type: "root",
         ...data,
+        type: "root",
       })
     },
     async update(idOrSlug: string, data: ContentType) {
