@@ -13,7 +13,15 @@ import accessToken from "~/repo/accessTokens"
     {
       isAdmin: true,
     },
-    process.env.TEST_ACCESS_TOKEN
+    process.env.TEST_ADMIN_ACCESS_TOKEN
+  )
+
+  await repo.findOrCreateAccessToken(
+    "2",
+    {
+      isAdmin: false,
+    },
+    process.env.TEST_NON_ADMIN_ACCESS_TOKEN
   )
 
   await conn.close()

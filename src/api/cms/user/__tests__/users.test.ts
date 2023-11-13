@@ -43,109 +43,189 @@ describe("Authentication", () => {
   })
 
   describe("Only Admins can create, delete, update and inspect users", () => {
-    const accessToken: string = process.env.TEST_ACCESS_TOKEN!
+    const adminAccessToken: string = process.env.TEST_ADMIN_ACCESS_TOKEN!
+    const nonAdminAccessToken: string = process.env.TEST_NON_ADMIN_ACCESS_TOKEN!
 
-    test("GET /users", async () => {
-      await app.ready()
-      const resp = await request(app.server)
-        .get("/users")
-        .set("X-Access-Token", accessToken)
-        .expect(200)
+    describe("As Admin", () => {
+      test("GET /users", async () => {
+        await app.ready()
+        const resp = await request(app.server)
+          .get("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .expect(200)
 
-      expect(resp.body).toHaveProperty("pagination")
-      expect(resp.body).toHaveProperty("items")
+        expect(resp.body).toHaveProperty("pagination")
+        expect(resp.body).toHaveProperty("items")
+      })
+
+      test("POST /users", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
+
+        await repo.deleteAll()
+
+        await app.ready()
+        const resp = await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(201)
+
+        expect(resp.body).toHaveProperty("_id")
+        expect(resp.body).toHaveProperty("firstName")
+        expect(resp.body).toHaveProperty("email")
+        expect(resp.body).toHaveProperty("isActive")
+        expect(resp.body).not.toHaveProperty("password")
+        expect(resp.body.isActive).toBeFalsy()
+        expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
+      })
+
+      test("POST /users - can create only one user with the same email", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
+
+        await repo.deleteAll()
+
+        await app.ready()
+        const resp = await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(201)
+
+        expect(resp.body).toHaveProperty("_id")
+        expect(resp.body).toHaveProperty("firstName")
+        expect(resp.body).toHaveProperty("email")
+        expect(resp.body).toHaveProperty("isActive")
+        expect(resp.body).not.toHaveProperty("password")
+        expect(resp.body.isActive).toBeFalsy()
+        expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
+
+        await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(422)
+      })
+
+      test("PATCH /users", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
+
+        await repo.deleteAll()
+
+        await app.ready()
+        const resp = await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(201)
+
+        await request(app.server)
+          .patch(`/users/${resp.body._id}`)
+          .set("X-Access-Token", adminAccessToken)
+          .send({
+            email: "foo@bar.com",
+            firstName: "Hello",
+            lastName: "World",
+          })
+          .expect(200)
+      })
     })
 
-    test("POST /users", async () => {
-      const db = await mongoClient.db(process.env.DB_NAME)
-      const repo = users(db)
+    describe("As Non-Admin", () => {
+      test("GET /users - is Forbidden", async () => {
+        await app.ready()
+        await request(app.server)
+          .get("/users")
+          .set("X-Access-Token", nonAdminAccessToken)
+          .expect(403)
+      })
 
-      await repo.deleteAll()
+      test("GET /users/:id - is Forbidden", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
 
-      await app.ready()
-      const resp = await request(app.server)
-        .post("/users")
-        .set("X-Access-Token", accessToken)
-        .send(createUserPayload)
-        .expect(201)
+        await repo.deleteAll()
 
-      expect(resp.body).toHaveProperty("_id")
-      expect(resp.body).toHaveProperty("firstName")
-      expect(resp.body).toHaveProperty("email")
-      expect(resp.body).toHaveProperty("isActive")
-      expect(resp.body).not.toHaveProperty("password")
-      expect(resp.body.isActive).toBeFalsy()
-      expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
-    })
+        await app.ready()
+        const resp = await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(201)
 
-    test("POST /users - can create only one user with the same email", async () => {
-      const db = await mongoClient.db(process.env.DB_NAME)
-      const repo = users(db)
+        await request(app.server)
+          .get(`/users/${resp.body._id}`)
+          .set("X-Access-Token", nonAdminAccessToken)
+          .expect(403)
+      })
 
-      await repo.deleteAll()
+      test("POST /users - is Forbidden", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
 
-      await app.ready()
-      const resp = await request(app.server)
-        .post("/users")
-        .set("X-Access-Token", accessToken)
-        .send(createUserPayload)
-        .expect(201)
+        await repo.deleteAll()
 
-      expect(resp.body).toHaveProperty("_id")
-      expect(resp.body).toHaveProperty("firstName")
-      expect(resp.body).toHaveProperty("email")
-      expect(resp.body).toHaveProperty("isActive")
-      expect(resp.body).not.toHaveProperty("password")
-      expect(resp.body.isActive).toBeFalsy()
-      expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
+        await app.ready()
+        await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", nonAdminAccessToken)
+          .send(createUserPayload)
+          .expect(403)
+      })
 
-      await request(app.server)
-        .post("/users")
-        .set("X-Access-Token", accessToken)
-        .send(createUserPayload)
-        .expect(422)
-    })
+      test("POST /users - can create only one user with the same email - is Forbidden", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
 
-    test("PATCH /users", async () => {
-      const db = await mongoClient.db(process.env.DB_NAME)
-      const repo = users(db)
+        await repo.deleteAll()
 
-      await repo.deleteAll()
+        await app.ready()
+        const resp = await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(201)
 
-      await app.ready()
-      const resp = await request(app.server)
-        .post("/users")
-        .set("X-Access-Token", accessToken)
-        .send(createUserPayload)
-        .expect(201)
+        expect(resp.body).toHaveProperty("_id")
+        expect(resp.body).toHaveProperty("firstName")
+        expect(resp.body).toHaveProperty("email")
+        expect(resp.body).toHaveProperty("isActive")
+        expect(resp.body).not.toHaveProperty("password")
+        expect(resp.body.isActive).toBeFalsy()
+        expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
 
-      await request(app.server)
-        .patch(`/users/${resp.body._id}`)
-        .set("X-Access-Token", accessToken)
-        .send({ email: "foo@bar.com", firstName: "Hello", lastName: "World" })
-        .expect(200)
-    })
+        await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", nonAdminAccessToken)
+          .send(createUserPayload)
+          .expect(403)
+      })
 
-    test.skip("PATCH /users - cannot update password without confirmation", async () => {
-      const db = await mongoClient.db(process.env.DB_NAME)
-      const repo = users(db)
+      test("PATCH /users - is Forbidden", async () => {
+        const db = await mongoClient.db(process.env.DB_NAME)
+        const repo = users(db)
 
-      await repo.deleteAll()
+        await repo.deleteAll()
 
-      await app.ready()
-      const resp = await request(app.server)
-        .post("/users")
-        .set("X-Access-Token", accessToken)
-        .send(createUserPayload)
-        .expect(201)
+        await app.ready()
+        const resp = await request(app.server)
+          .post("/users")
+          .set("X-Access-Token", adminAccessToken)
+          .send(createUserPayload)
+          .expect(201)
 
-      await request(app.server)
-        .patch(`/users/${resp.body._id}`)
-        .set("X-Access-Token", accessToken)
-        .send({
-          password: "this is the new password",
-        })
-        .expect(422)
+        await request(app.server)
+          .patch(`/users/${resp.body._id}`)
+          .set("X-Access-Token", nonAdminAccessToken)
+          .send({
+            email: "foo@bar.com",
+            firstName: "Hello",
+            lastName: "World",
+          })
+          .expect(403)
+      })
     })
   })
 })
