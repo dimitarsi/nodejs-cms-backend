@@ -24,7 +24,9 @@ export default function updateUser(instance: FastifyInstance) {
 
     if (shouldUpdatePassword(body)) {
       result = await instance.users.update(id, { password: body.password })
-    } else if (shouldUpdateFirstAndLastName(body)) {
+    }
+
+    if (shouldUpdateFirstAndLastName(body)) {
       result = await instance.users.update(id, body)
     }
 

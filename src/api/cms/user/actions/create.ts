@@ -8,10 +8,12 @@ const createUserOptions: RouteShorthandOptions = {
   },
 }
 
+const usersRoute = "/users"
+
 export default function createUser(instance: FastifyInstance) {
   instance.post<{
     Body: User
-  }>("/users", createUserOptions, async (req, reply) => {
+  }>(usersRoute, createUserOptions, async (req, reply) => {
     const body = req.body
 
     const result = await instance.users.create({
@@ -24,17 +26,17 @@ export default function createUser(instance: FastifyInstance) {
     })
 
     if (!result) {
-      return reply.code(400).send({
+      return reply.code(422).send({
         error: "Cannot create",
         message: "User already exists",
       })
     }
 
-    reply.code(201).header("location", `/user/${result.insertedId}`).send({
-      id: result.insertedId,
-      firstName: body.firstName,
-      lastName: body.lastName,
-      email: body.email,
-    })
+    const createdUser = await instance.users.getById(result.insertedId)
+
+    reply
+      .code(201)
+      .header("location", `${usersRoute}/${result.insertedId}`)
+      .send(createdUser)
   })
 }

@@ -8,7 +8,8 @@ export default function accessToken(db: Db) {
 
   const findOrCreateAccessToken = async (
     userId: string,
-    data: { isAdmin: boolean | undefined | null }
+    data: { isAdmin: boolean | undefined | null },
+    accessToken?: string
   ) => {
     const activeToken = await collection.findOne({
       userId,
@@ -20,10 +21,10 @@ export default function accessToken(db: Db) {
       return activeToken.token
     }
 
-    const accessToken = randomUUID()
+    const token = process.env.TEST && accessToken ? accessToken : randomUUID()
 
     await collection.insertOne({
-      token: accessToken,
+      token,
       expire: getSessionExpirationDate(),
       userId,
       isActive: true,

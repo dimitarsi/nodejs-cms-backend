@@ -4,6 +4,7 @@ module.exports = {
   testTimeout: 30 * 1000,
   testEnvironment: "node",
   setupFiles: ["./tests/setup.ts"],
+  globalTeardown: "./tests/teardown.ts",
   moduleNameMapper: {
     "@db": "<rootDir>/src/connect/db",
     "@middleware/auth": "<rootDir>/src/middleware/auth.ts",

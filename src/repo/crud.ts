@@ -1,4 +1,10 @@
-import { Collection, Filter, ObjectId, OptionalUnlessRequiredId } from "mongodb"
+import {
+  Collection,
+  Filter,
+  ObjectId,
+  OptionalUnlessRequiredId,
+  Document,
+} from "mongodb"
 
 export const baseCrudMethods = <T extends Record<string, any>>(
   collection: Collection<T>,
@@ -15,28 +21,22 @@ export const baseCrudMethods = <T extends Record<string, any>>(
     collectionName() {
       return collection.collectionName
     },
-    async getAll(page = 1, pageSize = 20) {
-      const cursor = await collection.find(notDeleted, {
+    async getAll(page = 1, pageSize = 20, projection?: Document) {
+      let cursor = collection.find(notDeleted, {
         skip: pageSize * (page - 1),
         limit: pageSize,
       })
+
+      // apply projection
+      if (projection) {
+        cursor = cursor.project(projection)
+      }
 
       const [items, count] = await Promise.all([
         cursor.toArray(),
         collection.countDocuments(notDeleted),
       ])
       cursor.close()
-
-      console.log(
-        ">> Query",
-        notDeleted,
-        collection.collectionName,
-        {
-          skip: pageSize * (page - 1),
-          limit: pageSize,
-        },
-        { items }
-      )
 
       const totalPages = Math.ceil(count / pageSize)
       return {
@@ -84,10 +84,10 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         result: await collection.deleteOne(filterById),
       }
     },
-    async deleteAll() {
-      return await collection.deleteMany({})
+    deleteAll() {
+      return collection.deleteMany({})
     },
-    async getById(id: ObjectId | string | number) {
+    getById(id: ObjectId | string | number, projection?: Document | undefined) {
       let query: any = { _id: -1 }
       try {
         if (typeof id === "string" || typeof id === "number") {
@@ -99,10 +99,13 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         query = { slug: id }
       }
 
-      return await collection.findOne<T>({
-        ...query,
-        ...notDeleted,
-      })
+      return collection.findOne<T>(
+        {
+          ...query,
+          ...notDeleted,
+        },
+        projection ? { projection } : undefined
+      )
     },
   }
 }
