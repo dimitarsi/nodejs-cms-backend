@@ -7,7 +7,7 @@ import deleteContent from "./actions/delete"
 import auth from "@middleware/auth"
 
 const contentController: FastifyPluginCallback = (instance, options, done) => {
-  instance.register(auth, { isAdmin: true })
+  auth(instance, { isAdmin: true })
 
   getAll(instance)
   getById(instance)

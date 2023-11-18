@@ -12,9 +12,10 @@ export default function createContents(instance: FastifyInstance) {
     Body: Record<string, any>
   }>("/contents", createContentPayload, async (request, reply) => {
     const result = await instance.contents.create(request.body)
+    const entity = await instance.contents.getById(result.insertedId.toString())
 
-    reply.code(201).send({
-      id: result.insertedId.toString(),
-    })
+    reply.header("Location", `/contents/${result.insertedId}`)
+
+    reply.code(201).send(entity)
   })
 }
