@@ -1,58 +1,77 @@
-import { findOrCreateAccessToken, deactivateToken } from "~/repo/accessTokens"
+import { FastifyInstance, RouteShorthandOptions } from "fastify"
 
-import Router from "express"
-import { authenticate } from "~/repo/auth"
-import db from "@db"
+const opts: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: "object",
+      properties: {
+        email: { type: "string" },
+        password: { type: "string" },
+      },
+    },
+  },
+}
 
-const router = Router()
+const logoutOptions: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: "object",
+      properties: {
+        accessToken: { type: "string" },
+      },
+    },
+  },
+}
 
-router.post("/login", async (req, res) => {
-  const body = req.body
-  const { userId, isLoggedIn, isAdmin } = await authenticate(
-    body.email,
-    body.password
-  )
+export default function auth(
+  instance: FastifyInstance,
+  options: never,
+  done: Function
+) {
+  instance.post<{
+    Body: { email: string; password: string }
+  }>("/login", opts, async function login(req, res) {
+    const body = req.body
+    const { userId, isLoggedIn, isAdmin } = await instance.auth.authenticate(
+      body.email,
+      body.password
+    )
 
-  if (isLoggedIn && userId) {
-    const accessToken = await findOrCreateAccessToken(userId, { isAdmin })
+    if (isLoggedIn && userId) {
+      const accessToken = await instance.accessToken.findOrCreateAccessToken(
+        userId,
+        {
+          isAdmin,
+        }
+      )
 
-    res.json({
-      accessToken,
-    })
-  } else {
-    res.statusCode = 401
-    res.json({
-      error: "Unrecognized user",
-    })
-  }
-})
+      res.code(200).send({
+        accessToken,
+      })
+    } else {
+      res.code(401).send({
+        error: "Unrecognized user",
+      })
+    }
+  })
 
-router.post("/logout", async (req, res) => {
-  const { accessToken } = req.body
+  instance.post<{
+    Body: { accessToken: string }
+  }>("/logout", logoutOptions, async function logout(req, res) {
+    const { accessToken } = req.body
 
-  const success = await deactivateToken(accessToken)
+    const success = await instance.accessToken.deactivateToken(accessToken)
 
-  if (success) {
-    res.json({
-      success: true,
-    })
-  } else {
-    res.statusCode = 400
-    res.json({
-      success: false,
-    })
-  }
-})
+    if (success) {
+      res.code(200).send({
+        success: true,
+      })
+    } else {
+      res.code(400).send({
+        success: false,
+      })
+    }
+  })
 
-router.post("/logout-all", async (req, res) => {
-  try {
-    db.collection("accessTokens").deleteMany()
-    res.json({
-      success: true,
-    })
-  } catch (e) {
-    res.status(400).json({ success: false })
-  }
-})
-
-export default router
+  done()
+}

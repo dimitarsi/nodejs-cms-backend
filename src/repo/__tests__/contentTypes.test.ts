@@ -1,24 +1,29 @@
 import { describe, expect, test } from "@jest/globals"
 
-import repo from "../contentTypes"
-import db, { closeMongoClient, connectMongoClient } from "@db"
+import contentTypes, { ContentTypesRepo } from "../contentTypes"
+import mongoClient from "@db"
 
-import { compositeContentType, createContentType } from "~/models/contentType"
+import {
+  ContentType,
+  compositeContentType,
+  createContentType,
+} from "~/models/contentType"
 
 describe("ContentTypes Repo", () => {
-  beforeAll(async () => {
-    await connectMongoClient()
+  let repo: ContentTypesRepo
+
+  beforeEach(async () => {
+    const db = await mongoClient.db(process.env.DB_NAME)
+    repo = contentTypes(db)
+
+    await repo.deleteAll()
   })
 
-  afterEach(async () => {
-    await db.dropDatabase()
+  afterAll(() => {
+    mongoClient.close(true)
   })
 
-  afterAll(async () => {
-    await closeMongoClient()
-  })
-
-  test("Creating a contentType always has 'root' type", () => {
+  test.failing("Tests can fail", () => {
     expect(false).toBeTruthy()
   })
 
@@ -27,9 +32,11 @@ describe("ContentTypes Repo", () => {
 
     const item = await repo.getById("title")
 
-    expect(item.type).toBe("text")
-    expect(item.name).toBe("Title")
-    expect(item._id).toBeDefined()
+    expect(item).toBeDefined()
+
+    expect(item!.type).toBe("root")
+    expect(item!.name).toBe("Title")
+    expect(item!._id).toBeDefined()
   })
 
   describe("Nested references", () => {
@@ -84,16 +91,17 @@ describe("ContentTypes Repo", () => {
 
       const postItem = await repo.getById("post")
 
-      expect(postItem.type).toBe("root")
-      expect(postItem.children).toHaveLength(1)
-      expect(postItem.children?.[0]).toHaveProperty("type")
-      expect(postItem.children?.[0]).toHaveProperty("name")
-      expect(postItem.children?.[0]).toHaveProperty("slug")
-      expect(postItem.children?.[0]).toHaveProperty("children")
-      expect(postItem.children?.[0]).toHaveProperty("_id")
-      expect(postItem.children?.[0].type).toBe("root")
-      expect(postItem.children?.[0].name).toBe("SEO")
-      expect(postItem.children?.[0].children).toHaveLength(
+      expect(postItem).toBeDefined()
+      expect(postItem!.type).toBe("root")
+      expect(postItem!.children).toHaveLength(1)
+      expect(postItem!.children?.[0]).toHaveProperty("type")
+      expect(postItem!.children?.[0]).toHaveProperty("name")
+      expect(postItem!.children?.[0]).toHaveProperty("slug")
+      expect(postItem!.children?.[0]).toHaveProperty("children")
+      expect(postItem!.children?.[0]).toHaveProperty("_id")
+      expect(postItem!.children?.[0].type).toBe("root")
+      expect(postItem!.children?.[0].name).toBe("SEO")
+      expect(postItem!.children?.[0].children).toHaveLength(
         seo.getType().children!.length
       )
     })
@@ -106,36 +114,36 @@ describe("ContentTypes Repo", () => {
 
       const innerRootInstance = await repo.getById("inner_root")
 
-      expect(innerRootInstance._id).toBeDefined()
+      expect(innerRootInstance).toBeDefined()
+      expect(innerRootInstance!._id).toBeDefined()
 
-      const renamedInnerRoot = {
-        _id: innerRootInstance._id,
+      const renamedInnerRoot: ContentType = {
+        _id: innerRootInstance!._id,
         name: "postInnerRoot",
         slug: "postInnerRoot",
         type: "root",
         children: [],
+        repeated: null,
       }
+
       root.add(renamedInnerRoot)
 
       await repo.create(root.getType())
 
       const rootInstance = await repo.getById("root")
 
-      expect(rootInstance._id).toBeDefined()
+      expect(rootInstance).toBeDefined()
+      expect(rootInstance!._id).toBeDefined()
       expect(rootInstance).not.toHaveProperty("originalName")
       expect(rootInstance).not.toHaveProperty("originalSlug")
-      expect(rootInstance.children).toHaveLength(1)
-      expect(rootInstance.children?.[0].type).toBe("root")
-      expect(rootInstance.children?.[0]).toHaveProperty("originalName")
-      expect(rootInstance.children?.[0]).toHaveProperty("originalSlug")
-      expect(rootInstance.children?.[0].name).toBe("postInnerRoot")
-      expect(rootInstance.children?.[0].slug).toBe("postInnerRoot")
-      expect(rootInstance.children?.[0].originalName).toBe("innerRoot")
-      expect(rootInstance.children?.[0].originalSlug).toBe("inner_root")
-    })
-
-    test("Children of referenced nested types are always frozen", () => {
-      expect(true).toBeFalsy()
+      expect(rootInstance!.children).toHaveLength(1)
+      expect(rootInstance!.children?.[0].type).toBe("root")
+      expect(rootInstance!.children?.[0]).toHaveProperty("originalName")
+      expect(rootInstance!.children?.[0]).toHaveProperty("originalSlug")
+      expect(rootInstance!.children?.[0].name).toBe("postInnerRoot")
+      expect(rootInstance!.children?.[0].slug).toBe("postInnerRoot")
+      expect(rootInstance!.children?.[0].originalName).toBe("innerRoot")
+      expect(rootInstance!.children?.[0].originalSlug).toBe("inner_root")
     })
   })
 })

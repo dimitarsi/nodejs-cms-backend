@@ -1,7 +1,12 @@
-import { Collection, Filter, ObjectId, OptionalUnlessRequiredId } from "mongodb"
-import db from "@db"
+import {
+  Collection,
+  Filter,
+  ObjectId,
+  OptionalUnlessRequiredId,
+  Document,
+} from "mongodb"
 
-const baseCrudMethods = <T extends Record<string, any>>(
+export const baseCrudMethods = <T extends Record<string, any>>(
   collection: Collection<T>,
   options = { softDelete: false }
 ) => {
@@ -16,11 +21,16 @@ const baseCrudMethods = <T extends Record<string, any>>(
     collectionName() {
       return collection.collectionName
     },
-    async getAll(page = 1, pageSize = 20) {
-      const cursor = await collection.find(notDeleted, {
+    async getAll(page = 1, pageSize = 20, projection?: Document) {
+      let cursor = collection.find(notDeleted, {
         skip: pageSize * (page - 1),
         limit: pageSize,
       })
+
+      // apply projection
+      if (projection) {
+        cursor = cursor.project(projection)
+      }
 
       const [items, count] = await Promise.all([
         cursor.toArray(),
@@ -40,7 +50,6 @@ const baseCrudMethods = <T extends Record<string, any>>(
         },
       }
     },
-    // async create(data: OptionalUnlessRequiredId<T>) {
     async create(data: OptionalUnlessRequiredId<T>) {
       return await collection.insertOne(data)
     },
@@ -57,21 +66,7 @@ const baseCrudMethods = <T extends Record<string, any>>(
         { $set: data }
       )
     },
-    async deleteById(id: string | number) {
-      const filterById: Filter<any> = { _id: new ObjectId(id) }
-
-      if (options.softDelete) {
-        const updateFilter: any = {
-          $set: { deletedOn: new Date() },
-        }
-        return await collection.updateOne(filterById, updateFilter)
-      }
-      return await collection.deleteOne(filterById)
-    },
-    async deleteAll() {
-      return await collection.deleteMany({})
-    },
-    async getById(id: ObjectId | string | number) {
+    async deleteById(id: string | number): Promise<DeleteResult | null> {
       let query: any = { _id: -1 }
       try {
         if (typeof id === "string" || typeof id === "number") {
@@ -83,13 +78,55 @@ const baseCrudMethods = <T extends Record<string, any>>(
         query = { slug: id }
       }
 
-      return await collection.findOne<T>({
-        ...query,
-        ...notDeleted,
-      })
+      if (options.softDelete) {
+        const updateFilter: any = {
+          $set: { deletedOn: new Date() },
+        }
+
+        return {
+          type: "softDelete",
+          result: await collection.updateOne(query, updateFilter),
+        }
+      }
+      return {
+        type: "hardDelete",
+        result: await collection.deleteOne(query),
+      }
+    },
+    deleteAll() {
+      return collection.deleteMany({})
+    },
+    getById(id: ObjectId | string | number, projection?: Document | undefined) {
+      let query: any = { _id: -1 }
+      try {
+        if (typeof id === "string" || typeof id === "number") {
+          query = { _id: new ObjectId(id) }
+        } else {
+          query = { _id: id }
+        }
+      } catch (_e) {
+        query = { slug: id }
+      }
+
+      return collection.findOne<T>(
+        {
+          ...query,
+          ...notDeleted,
+        },
+        projection ? { projection } : undefined
+      )
     },
   }
 }
+
+export type DeleteResult =
+  | { type: "softDelete"; result: Awaited<ReturnType<Collection["updateOne"]>> }
+  | {
+      type: "hardDelete"
+      result: Awaited<ReturnType<Collection["deleteOne"]>>
+    }
+
+export type CrudRepo = ReturnType<typeof baseCrudMethods>
 
 export const defaultExtend = (
   crudMethods: ReturnType<typeof baseCrudMethods>,
@@ -97,9 +134,8 @@ export const defaultExtend = (
 ) => crudMethods
 
 export default <T extends Object>(
-  collectionName: string,
+  collection: Collection<T>,
   options = { softDelete: false }
 ) => {
-  const collection = db.collection<T>(collectionName)
   return baseCrudMethods<T>(collection, options)
 }

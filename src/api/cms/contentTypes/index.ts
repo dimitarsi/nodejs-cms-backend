@@ -1,16 +1,21 @@
-import express from "express"
-import { Validator } from "~/core/api/request"
-import defaultController from "~/core/api/controller"
-import validate from "./schema"
-import contentTypesRepo from "@repo/contentTypes"
+import { FastifyPluginCallback } from "fastify"
+import getAll from "./actions/getAll"
+import getById from "./actions/getById"
+import create from "./actions/create"
+import updateContentType from "./actions/update"
+import deleteContentType from "./actions/delete"
+import auth from "@middleware/auth"
 
-const app = express()
+const contentTypes: FastifyPluginCallback = (instance, options, done) => {
+  auth(instance, { isAdmin: true })
 
-const validateCreate: Validator = (req: express.Request) => undefined
-  // validate(req.body).then(_result => undefined).catch(error => error);
+  getAll(instance)
+  getById(instance)
+  create(instance)
+  updateContentType(instance)
+  deleteContentType(instance)
 
-defaultController(app, contentTypesRepo, {
-  create: validateCreate,
-})
+  done()
+}
 
-export default app
+export default contentTypes

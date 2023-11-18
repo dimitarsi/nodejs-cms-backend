@@ -1,20 +1,21 @@
-import { Router } from "express"
+import fastifyPlugin from "fastify-plugin"
+import { FastifyInstance } from "fastify"
 import user from "./user"
-import stories from "./content"
+import content from "./content"
 import contentTypes from "./contentTypes"
-import auth from "~/middleware/auth"
-import uploadHandler from "./files"
-// import components from './components'
+import uploads from "./uploads"
 
-const router = Router()
+async function cmsAPI(
+  fastify: FastifyInstance,
+  options: never,
+  done: Function
+) {
+  fastify.register(user)
+  fastify.register(content)
+  fastify.register(contentTypes)
+  fastify.register(uploads, { uploadDir: "uploads" })
 
-router.use(auth({ isAdmin: true }))
+  done()
+}
 
-router.use("/users", user)
-router.use("/content", stories)
-router.use("/content_types", contentTypes)
-router.use("/attachments", uploadHandler)
-// router.use('/components', components)
-router.use("/check", (_, res) => res.status(200).send())
-
-export default router
+export default fastifyPlugin(cmsAPI)

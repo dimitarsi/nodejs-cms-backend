@@ -1,8 +1,7 @@
 import { ObjectId } from "mongodb"
 import slugify from "~/helpers/slugify"
 
-export interface ContentType {
-  _id?: ObjectId
+export interface CreateContentType {
   name: string
   slug: string
   type:
@@ -17,6 +16,10 @@ export interface ContentType {
     | "reference"
   repeated: null | { min?: number; max?: number }
   children: ContentType[]
+}
+
+export interface ContentType extends CreateContentType {
+  _id?: ObjectId
   /**
    * Flag the ContentType as freezed, meaning should not be allowed to change.
    * This is enforced only on the client, as a measure when referencing other "root"

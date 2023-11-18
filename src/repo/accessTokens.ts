@@ -1,78 +1,100 @@
-import db from "@db"
 import { randomUUID } from "crypto"
-import { loginSession } from "@config"
+import { Db, ObjectId } from "mongodb"
+import { AccessToken } from "~/models/accessToken"
+import { getSessionExpirationDate } from "~/helpers/date"
 
-export const getExpirationDate = () => {
-  return new Date(Date.now() + loginSession)
-}
+export default function accessToken(db: Db) {
+  const collection = db.collection<AccessToken>("accessTokens")
 
-export interface AccessToken {
-  token: string
-  expire: Date
-  userId: string
-  isActive: boolean
-  isAdmin: boolean
-}
-
-export const findOrCreateAccessToken = async (
-  userId: string,
-  data: { isAdmin: boolean | undefined | null }
-) => {
-  const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
-    userId,
-    expire: { $gt: new Date() },
-    isActive: true,
-  })
-
-  if (activeToken) {
-    return activeToken.token
-  }
-
-  const accessToken = randomUUID()
-
-  await db.collection<AccessToken>("accessTokens").insertOne({
-    token: accessToken,
-    expire: getExpirationDate(),
-    userId,
-    isActive: true,
-    isAdmin: Boolean(data?.isAdmin),
-  })
-
-  return accessToken
-}
-
-export const deactivateToken = async (accessToken: string) => {
-  const data = await db.collection<AccessToken>("accessTokens").updateOne(
-    {
-      token: accessToken,
+  const findOrCreateAccessToken = async (
+    userId: string,
+    data: { isAdmin: boolean | undefined | null },
+    accessToken?: string
+  ) => {
+    const activeToken = await collection.findOne({
+      userId,
       expire: { $gt: new Date() },
       isActive: true,
-    },
-    {
-      $set: { isActive: false },
+    })
+
+    if (activeToken) {
+      return activeToken.token
     }
-  )
 
-  return data.modifiedCount > 0
-}
+    const token = process.env.TEST && accessToken ? accessToken : randomUUID()
 
-export const findToken = async (token: string) => {
-  const activeToken = await db.collection<AccessToken>("accessTokens").findOne({
-    token,
-    expire: { $gt: new Date() },
-    isActive: true,
-  })
+    await collection.insertOne({
+      token,
+      expire: getSessionExpirationDate(),
+      userId,
+      isActive: true,
+      isAdmin: Boolean(data?.isAdmin),
+    })
 
-  return activeToken
-}
+    return accessToken
+  }
 
-export const deleteAll = async () => {
-  return await db.collection<AccessToken>("accessTokens").deleteMany({})
-}
+  const deactivateToken = async (accessToken: string) => {
+    const data = await collection.updateOne(
+      {
+        token: accessToken,
+        expire: { $gt: new Date() },
+        isActive: true,
+      },
+      {
+        $set: { isActive: false },
+      }
+    )
 
-export default {
-  findOrCreateAccessToken,
-  deactivateToken,
-  findToken,
-  deleteAll,
+    return data.modifiedCount > 0
+  }
+
+  const findToken = async (token: string) => {
+    const activeToken = await collection.findOne({
+      token,
+      expire: { $gt: new Date() },
+      isActive: true,
+    })
+
+    return activeToken
+  }
+
+  const findAdminToken = async (token: string) => {
+    const query = {
+      token,
+      expire: { $gt: new Date() },
+      isActive: true,
+      isAdmin: true,
+    }
+    const activeToken = await collection.findOne(query)
+
+    return activeToken
+  }
+
+  const deleteAll = async () => {
+    return await collection.deleteMany({})
+  }
+
+  const touchToken = async (activeTokenId: ObjectId) => {
+    return await collection.updateOne(
+      {
+        _id: activeTokenId,
+        expire: { $gt: new Date() },
+      },
+      {
+        $set: {
+          expire: getSessionExpirationDate(),
+        },
+      }
+    )
+  }
+
+  return {
+    findOrCreateAccessToken,
+    deactivateToken,
+    findToken,
+    deleteAll,
+    findAdminToken,
+    touchToken,
+  }
 }

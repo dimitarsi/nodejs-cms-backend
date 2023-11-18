@@ -1,37 +1,32 @@
-import { validateCreateUser } from "@api/cms/user/schema"
+import Ajv from "ajv"
+import { Db } from "mongodb"
+import addFormats from "ajv-formats"
 import userRepo from "~/repo/users"
-import ajv from "~/schema/core"
+import { userCreatePayload } from "~/schema/cms-api"
 
-const validateEmailIsUnique = ajv.compile({
-  type: "object",
-  $async: true,
-  properties: {
-    email: {
-      type: "string",
-      format: "email",
-      found: {in:"users:email", notIn: true}
-    }
-  }
-})
+const ajv = new Ajv()
+addFormats(ajv)
+const validateUser = ajv.compile(userCreatePayload)
 
-export default async function seedUsers() {
-  const data = [{
-    firstName: 'Admin',
-    lastName: 'Root',
-    isAdmin: true,
-    isActive: true,
-    email: "admin@gmail.com",
-    password: "1234567890"
-  }]
+export default async function seedUsers(db: Db) {
+  const data = [
+    {
+      firstName: "Admin",
+      lastName: "Root",
+      isAdmin: true,
+      isActive: true,
+      email: "admin@gmail.com",
+      password: "1234567890",
+    },
+  ]
 
-  for(const userData of data) {
-    const valid = await validateEmailIsUnique(userData)
+  for (const userData of data) {
+    const valid = await validateUser(userData)
 
     if (valid) {
-      await userRepo.create(userData)    
+      await userRepo(db).create(userData)
     } else {
-      console.error(validateCreateUser.errors)
+      console.error(validateUser.errors)
     }
   }
-
 }
