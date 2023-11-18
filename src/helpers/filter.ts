@@ -1,1 +1,1 @@
-export const identity = (item: any) => Boolean(item)
+export const identity = <T>(item: T) => Boolean(item)

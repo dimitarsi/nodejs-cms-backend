@@ -1,5 +1,5 @@
 import { Db, ObjectId } from "mongodb"
-import makeRepo from "./crud"
+import makeRepo from "~/core/lib/crud"
 import { Content } from "~/models/content"
 
 const withUpdateConfigId = (data: Record<string, any>) => {

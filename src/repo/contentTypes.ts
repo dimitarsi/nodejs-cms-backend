@@ -1,5 +1,5 @@
 import { ContentType, freezeAllChildren } from "~/models/contentType"
-import makeRepo from "./crud"
+import makeRepo from "~/core/lib/crud"
 import { Db, ObjectId, OptionalId } from "mongodb"
 
 export type ContentTypesRepo = ReturnType<typeof contentTypes>

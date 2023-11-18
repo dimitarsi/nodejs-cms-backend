@@ -1,5 +1,5 @@
 import { UserWithPermissions as User } from "~/models/user"
-import makeRepo from "./crud"
+import makeRepo from "~/core/lib/crud"
 import { Db, ObjectId, Document } from "mongodb"
 import bcrypt from "bcrypt"
 import { rounds } from "@config"

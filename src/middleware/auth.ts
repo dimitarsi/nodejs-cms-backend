@@ -89,8 +89,6 @@ export default function (
       activeToken = await instance.accessToken.findToken(tokenValue)
     }
 
-    // const activeToken = await instance.accessToken.findAdminToken(tokenValue)
-
     if (!activeToken) {
       reply.code(403)
       return reply.send({ error: "Unauthorized" })
