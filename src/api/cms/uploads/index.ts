@@ -51,7 +51,7 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = async (
         mimetype: f.mimetype,
         ext: parsed.ext,
         fileId: id,
-        path: `${options.uploadDir}${`${id}${parsed.ext}`}`,
+        path: `${options.uploadDir}/${`${id}${parsed.ext}`}`,
         absolutePath: location,
       })
 
@@ -61,7 +61,6 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = async (
           res(true)
         })
         fsStream.on("error", (e) => {
-          console.log(">> Stream Error", e)
           rej(e)
         })
       })
@@ -70,12 +69,9 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = async (
       openPipes.push(openPipe)
     }
 
-    console.log("..save many", bulkSave)
-
     try {
       await Promise.all([instance.media.insertMany(bulkSave), ...openPipes])
     } catch (e) {
-      console.log(e)
       reply.code(500).send({
         error: "Error saving files",
         message: "Could not save all files",

@@ -5,9 +5,11 @@ const opts: RouteShorthandOptions = {
     body: {
       type: "object",
       properties: {
-        email: { type: "string" },
-        password: { type: "string" },
+        email: { type: "string", format: "email" },
+        password: { type: "string", minLength: 8 },
       },
+      required: ["email", "password"],
+      additionalProperties: false,
     },
   },
 }
@@ -17,8 +19,9 @@ const logoutOptions: RouteShorthandOptions = {
     body: {
       type: "object",
       properties: {
-        accessToken: { type: "string" },
+        accessToken: { type: "string", format: "uuid" },
       },
+      required: ["accessToken"],
     },
   },
 }
