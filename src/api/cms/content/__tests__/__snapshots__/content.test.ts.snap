@@ -4,7 +4,6 @@ exports[`Content Only Admin users can create, update, delete and inspect content
 {
   "active": true,
   "config": [],
-  "createdOn": "2023-11-18T09:30:26.540Z",
   "data": {},
   "depth": 1,
   "folderLocation": "/",
@@ -12,6 +11,5 @@ exports[`Content Only Admin users can create, update, delete and inspect content
   "name": "foo",
   "slug": "foo",
   "type": "document",
-  "updatedOn": "2023-11-18T09:30:26.540Z",
 }
 `;

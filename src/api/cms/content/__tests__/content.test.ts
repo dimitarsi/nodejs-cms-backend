@@ -105,7 +105,7 @@ describe("Content", () => {
         expect(resp.body).toHaveProperty("slug")
         expect(resp.body).toHaveProperty("data")
 
-        const { _id, ...body } = resp.body
+        const { _id, createdOn, updatedOn, ...body } = resp.body
         expect(body).toMatchSnapshot()
 
         expect(resp.headers["location"]).toMatch(/^\/contents\/(.+)$/)
