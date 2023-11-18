@@ -17,7 +17,7 @@ const filesPlugin: FastifyPluginCallback<PluginOptions> = async (
 
   instance.register(import("@fastify/multipart"))
 
-  auth(instance, { isAdmin: true }, () => {})
+  auth(instance, { isAdmin: true })
 
   fsPromise
     .mkdir(location)
