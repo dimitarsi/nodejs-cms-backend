@@ -15,12 +15,12 @@ export default function createContentType(instance: FastifyInstance) {
     const result = await instance.contentTypes.create(request.body)
 
     if (result.insertedId) {
+      const entity = await instance.contentTypes.getById(result.insertedId)
+
       reply
         .code(201)
-        .header("Localtion", `/content-types/${result.insertedId}`)
-        .send({
-          id: result.insertedId,
-        })
+        .header("Location", `/content-types/${result.insertedId}`)
+        .send(entity)
     } else {
       reply.code(422).send({
         message: "Cannot create contentType",

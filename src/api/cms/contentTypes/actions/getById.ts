@@ -11,7 +11,7 @@ export default function getById(instance: FastifyInstance) {
   instance.get<{
     Params: { idOrSlug: string }
   }>("/content-types/:idOrSlug", getByIdOptions, async (request, reply) => {
-    const contentsByid = await instance.contents.getById(
+    const contentsByid = await instance.contentTypes.getById(
       request.params.idOrSlug
     )
 

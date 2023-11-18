@@ -67,7 +67,16 @@ export const baseCrudMethods = <T extends Record<string, any>>(
       )
     },
     async deleteById(id: string | number): Promise<DeleteResult | null> {
-      const filterById: Filter<any> = { _id: new ObjectId(id) }
+      let query: any = { _id: -1 }
+      try {
+        if (typeof id === "string" || typeof id === "number") {
+          query = { _id: new ObjectId(id) }
+        } else {
+          query = { _id: id }
+        }
+      } catch (_e) {
+        query = { slug: id }
+      }
 
       if (options.softDelete) {
         const updateFilter: any = {
@@ -76,12 +85,12 @@ export const baseCrudMethods = <T extends Record<string, any>>(
 
         return {
           type: "softDelete",
-          result: await collection.updateOne(filterById, updateFilter),
+          result: await collection.updateOne(query, updateFilter),
         }
       }
       return {
         type: "hardDelete",
-        result: await collection.deleteOne(filterById),
+        result: await collection.deleteOne(query),
       }
     },
     deleteAll() {
