@@ -92,7 +92,7 @@ export default function contents(db: Db) {
           page,
           perPage: options.perPage,
           count,
-          totalPage: totalPages,
+          totalPages,
           nextPage: page >= totalPages ? null : page + 1,
         },
       }

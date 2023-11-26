@@ -45,7 +45,7 @@ export const baseCrudMethods = <T extends Record<string, any>>(
           page,
           perPage: pageSize,
           count,
-          totalPage: totalPages,
+          totalPages,
           nextPage: page >= totalPages ? null : page + 1,
         },
       }
