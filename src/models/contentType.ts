@@ -16,6 +16,7 @@ export interface CreateContentType {
     | "reference"
   repeated: null | { min?: number; max?: number }
   children: ContentType[]
+  defaultValue: any
 }
 
 export interface ContentType extends CreateContentType {
@@ -55,6 +56,7 @@ export const createContentType = (
   type,
   repeated,
   children: [],
+  defaultValue: undefined,
 })
 
 export const freezeAllChildren = (
@@ -80,6 +82,7 @@ export const compositeContentType = (name: string, isRoot = false) => {
     children: [],
     freezed: false,
     repeated: null,
+    defaultValue: undefined,
   }
 
   const chainable = {

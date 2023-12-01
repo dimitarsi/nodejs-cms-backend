@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify"
 import { schemaRef } from "~/schema/cms-api"
+import createContentCaseFrom from "~/cases/content/create"
 
 const createContentPayload = {
   schema: {
@@ -11,11 +12,15 @@ export default function createContents(instance: FastifyInstance) {
   instance.post<{
     Body: Record<string, any>
   }>("/contents", createContentPayload, async (request, reply) => {
-    const result = await instance.contents.create(request.body)
-    const entity = await instance.contents.getById(result.insertedId.toString())
+    const body = request.body
+    const contents = await createContentCaseFrom(instance)
+    const entity = await contents.createContent(body)
 
-    reply.header("Location", `/contents/${result.insertedId}`)
-
-    reply.code(201).send(entity)
+    if (entity && entity.id) {
+      reply.header("Location", `/contents/${entity.id}`)
+      reply.code(201).send(entity)
+    } else {
+      reply.code(422).send()
+    }
   })
 }

@@ -17,7 +17,9 @@ const dbName = process.env.DB_NAME || "plenty_cms"
 
   if (process.argv.includes("--reseed")) {
     removeData(db)
-      .then(() => seed(db))
+      .then(() => {
+        return seed(db)
+      })
       .then(() => {
         console.log("Done")
         process.exit(0)

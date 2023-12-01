@@ -1,6 +1,8 @@
+import contentTypesRepo from "~/repo/contentTypes"
 import { type Db, type ObjectId } from "mongodb"
 import contentRepo from "~/repo/contents"
 import slugify from "~/helpers/slugify"
+import createContentCaseFrom from "~/cases/content/create"
 
 export const createContent =
   (db: Db) =>
@@ -13,9 +15,11 @@ export const createContent =
       return
     }
 
-    const repo = contentRepo(db)
+    const contents = contentRepo(db)
+    const contentTypes = contentTypesRepo(db)
+    const usecase = createContentCaseFrom({ contents, contentTypes })
 
-    return await repo.create({
+    return await usecase.createContent({
       name: name,
       slug: slugify(name),
       configId: configId,

@@ -21,6 +21,7 @@ export default async (db: Db) => {
           configId,
           `Seed Post ${(i + 1).toString().padStart(2, "0")}`
         )
+
         console.log("New Content Added - " + (i + 1))
       }
     }

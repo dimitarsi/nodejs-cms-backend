@@ -38,13 +38,16 @@ async function repo(
 
 export default repo as FastifyPluginAsync<PluginOptions>
 
+export type ContentsRepo = ReturnType<typeof contents>
+export type ContentTypesRepo = ReturnType<typeof contentTypes>
+
 declare module "fastify" {
   interface FastifyInstance {
-    contents: ReturnType<typeof contents>
+    contents: ContentsRepo
     accessToken: ReturnType<typeof accessTokens>
     media: ReturnType<typeof media>
     users: ReturnType<typeof users>
     auth: ReturnType<typeof auth>
-    contentTypes: ReturnType<typeof contentTypes>
+    contentTypes: ContentTypesRepo
   }
 }
