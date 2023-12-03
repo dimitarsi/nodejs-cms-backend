@@ -33,15 +33,16 @@ export const contentCreatePayload = {
   properties: {
     name: { type: "string" },
     slug: { type: "string" },
-    type: { type: "string" }, // enum: ["document", "folder"]
+    // type: { type: "string" }, // enum: ["document", "folder"]
     folderLocation: { type: "string" },
     folderTarget: { type: "string" },
     depth: { type: "number", nullable: true },
     configId: { type: "string", nullable: true },
+    // data: { type: "null" },
     data: {
       type: "object",
       required: [],
-      // nullable: true,
+      nullable: true,
       additionalProperties: true,
       properties: {},
     },

@@ -6,12 +6,12 @@ import app from "../../../../app"
 const createContent = () => ({
   name: "foo",
   slug: "foo",
-  type: "document",
+  isFolder: false,
   folderLocation: "/",
   folderTarget: "/",
   depth: 1,
   configId: "",
-  data: {},
+  data: null,
 })
 
 describe("Content", () => {
@@ -55,7 +55,7 @@ describe("Content", () => {
           folderTarget: "/",
           depth: 1,
           configId: "fake-config-id",
-          data: {},
+          data: null,
         })
         .expect(403)
     })

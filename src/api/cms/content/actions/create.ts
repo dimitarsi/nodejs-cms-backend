@@ -16,8 +16,8 @@ export default function createContents(instance: FastifyInstance) {
     const contents = await createContentCaseFrom(instance)
     const entity = await contents.createContent(body)
 
-    if (entity && entity.id) {
-      reply.header("Location", `/contents/${entity.id}`)
+    if (entity && entity._id) {
+      reply.header("Location", `/contents/${entity._id}`)
       reply.code(201).send(entity)
     } else {
       reply.code(422).send()

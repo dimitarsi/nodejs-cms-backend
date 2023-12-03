@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify"
+import getContentCaseFrom from "~/cases/content/getById"
 import { schemaRef } from "~/schema/cms-api"
 
 const getByIdOptions = {
@@ -11,12 +12,13 @@ export default function (instance: FastifyInstance) {
   instance.get<{
     Params: { idOrSlug: string }
   }>("/contents/:idOrSlug", getByIdOptions, async (request, reply) => {
-    const contentsByid = await instance.contents.getById(
-      request.params.idOrSlug
-    )
+    const useCase = getContentCaseFrom(instance)
+    const entity = await useCase.byId(request.params.idOrSlug, {
+      validateData: true,
+    })
 
-    if (contentsByid) {
-      reply.send(contentsByid)
+    if (entity) {
+      reply.send(entity)
     } else {
       reply.code(404).send({
         message: "Not found",

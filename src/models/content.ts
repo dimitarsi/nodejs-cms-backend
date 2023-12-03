@@ -35,17 +35,25 @@ export type DataTypes =
   | RefDataType
   | ComponentDataType
 
-export interface CreateContentPayload {
+export interface BaseContentData<D = any> {
   name: string
   slug: string
-  type: "document" | "folder"
-  folderLocation: string
-  folderTarget: ""
-  depth?: number
-  id?: String
-  configId?: string | ObjectId
+  // type: ContentType["type"]
+  // repeated: ContentType["repeated"]
   config?: ContentType
-  data: object
+  children: BaseContentData[]
+  outdated?: boolean
+  data: D
 }
+
+export interface TopLevelContentData {
+  isFolder: boolean
+  folderLocation: string
+  folderTarget: string
+  folderDepth: number
+  configId?: string | ObjectId
+}
+
+export type CreateContentPayload = TopLevelContentData & BaseContentData
 
 export type Content = BaseModel & CreateContentPayload

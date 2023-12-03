@@ -4,12 +4,12 @@ exports[`Content Only Admin users can create, update, delete and inspect content
 {
   "active": true,
   "config": [],
-  "data": {},
+  "data": null,
   "depth": 1,
   "folderLocation": "/",
   "folderTarget": "/",
   "name": "foo",
   "slug": "foo",
-  "type": "document",
+  "type": "root",
 }
 `;
