@@ -8,10 +8,10 @@ const createContent = () => ({
   slug: "foo",
   isFolder: false,
   folderLocation: "/",
-  folderTarget: "/",
+  folderTarget: "",
   depth: 1,
-  configId: "",
-  data: null,
+  // configId: "",
+  // data: null,
 })
 
 describe("Content", () => {
@@ -100,10 +100,10 @@ describe("Content", () => {
 
         expect(resp.body).toBeDefined()
         expect(resp.body).toHaveProperty("_id")
-        expect(resp.body).toHaveProperty("type")
+        // expect(resp.body).toHaveProperty("type")
         expect(resp.body).toHaveProperty("name")
         expect(resp.body).toHaveProperty("slug")
-        expect(resp.body).toHaveProperty("data")
+        // expect(resp.body).toHaveProperty("data")
 
         const { _id, createdOn, updatedOn, ...body } = resp.body
         expect(body).toMatchSnapshot()

@@ -33,6 +33,7 @@ export const contentCreatePayload = {
   properties: {
     name: { type: "string" },
     slug: { type: "string" },
+    isFolder: { type: "boolean" },
     // type: { type: "string" }, // enum: ["document", "folder"]
     folderLocation: { type: "string" },
     folderTarget: { type: "string" },
@@ -51,11 +52,11 @@ export const contentCreatePayload = {
   required: [
     "name",
     "slug",
-    "type",
-    "folderLocation",
-    "folderTarget",
-    "configId",
-    "data",
+    "isFolder",
+    // "folderLocation",
+    // "folderTarget",
+    // "configId",
+    // "data",
   ],
 }
 

@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify"
 import { schemaRef } from "~/schema/cms-api"
-import createContentCaseFrom from "~/cases/content/create"
+import createContentCaseFrom from "~/cases/content"
 
 const createContentPayload = {
   schema: {

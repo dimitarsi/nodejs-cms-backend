@@ -8,13 +8,6 @@ const withUpdateConfigId = (data: Record<string, any>) => {
 
   let folderConfig = {}
 
-  if (folderLocation) {
-    folderConfig = {
-      folderLocation,
-      depth: folderLocation.split("/").length - 1 || 1,
-    }
-  }
-
   return {
     ...folderConfig, // calculates the depth, in case we need it
     ...config,

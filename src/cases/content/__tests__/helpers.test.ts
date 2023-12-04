@@ -1,6 +1,7 @@
 import { describe, test, expect } from "@jest/globals"
 import {
   diff,
+  emptyDataOrNull,
   isSameRepeated,
   keyBy,
   mergeChildren,
@@ -351,4 +352,25 @@ describe("Content case helpers", () => {
       ).toEqual(testCase.expected)
     }
   )
+
+  test.each([
+    [{ data: undefined, expected: true }],
+    [
+      {
+        data: null,
+        expected: true,
+      },
+    ],
+    [{ data: {}, expected: true }],
+    [{ data: { __foo: "bar" }, expected: true }],
+    [{ data: [], expected: true }],
+    [{ data: "", expected: true }],
+    [{ data: 0, expected: false }],
+    [{ data: ["foo"], expected: false }],
+    [{ data: { foo: "bar" }, expected: false }],
+    [{ data: 42, expected: false }],
+    [{ data: "random string", expected: false }],
+  ])(`helpers - emptyDataOrNull - %s`, (testCase) => {
+    expect(emptyDataOrNull(testCase.data)).toEqual(testCase.expected)
+  })
 })

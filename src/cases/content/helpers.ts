@@ -126,3 +126,14 @@ export const diff = (keysA: string[], keysB: string[]): string[] => {
 
   return missingKeys
 }
+
+export const emptyDataOrNull = (data: any) => {
+  if (typeof data === "number") {
+    return false
+  }
+
+  return (
+    !data ||
+    Object.keys(data).filter((k) => k.startsWith("__") === false).length === 0
+  )
+}
