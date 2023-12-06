@@ -106,6 +106,7 @@ const schemaDefinitions = {
     idOrSlugParamStrict,
     contentCreatePayload,
     contentTypeCreatePayload,
+    contentUpdatePayload,
   },
 }
 

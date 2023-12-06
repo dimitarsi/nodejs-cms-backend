@@ -5,31 +5,7 @@ import createContentCaseFrom from "~/cases/content"
 const updateOptions = {
   schema: {
     params: schemaRef("idOrSlugParamStrict"),
-    body: {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        slug: { type: "string" },
-        configId: { type: "string" },
-        isFolder: { type: "boolean" },
-        folderLocation: { type: "string" },
-        folderTarget: { type: "string" },
-        children: {
-          type: "array",
-          items: {
-            type: "object",
-          },
-        },
-        data: {
-          type: "object",
-          nullable: true,
-          additionalProperties: true,
-          required: [],
-        },
-      },
-      required: [],
-      additionalProperties: false,
-    },
+    body: schemaRef("contentUpdatePayload"),
   },
 }
 
