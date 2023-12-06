@@ -4,7 +4,8 @@ exports[`Content Only Admin users can create, update, delete and inspect content
 {
   "active": true,
   "config": [],
-  "depth": 1,
+  "data": null,
+  "folderDepth": 1,
   "folderTarget": "",
   "isFolder": false,
   "name": "foo",

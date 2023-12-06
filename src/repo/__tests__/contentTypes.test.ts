@@ -124,6 +124,7 @@ describe("ContentTypes Repo", () => {
         type: "root",
         children: [],
         repeated: null,
+        defaultValue: null,
       }
 
       root.add(renamedInnerRoot)

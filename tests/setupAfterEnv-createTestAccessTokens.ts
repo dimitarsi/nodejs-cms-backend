@@ -25,8 +25,6 @@ import accessToken from "~/repo/accessTokens"
       },
       process.env.TEST_NON_ADMIN_ACCESS_TOKEN
     )
-
-    console.log(">> Done", { createNonAdminToken })
   } catch (e) {
     console.error(">> Error while setting up access token for tests", e)
   }

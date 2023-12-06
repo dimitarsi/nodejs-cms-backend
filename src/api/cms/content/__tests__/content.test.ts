@@ -2,16 +2,17 @@ import { describe } from "@jest/globals"
 import { MongoClient } from "mongodb"
 import supertest from "supertest"
 import app from "../../../../app"
+import { CreateContentPayload } from "~/models/content"
 
-const createContent = () => ({
+const createContent = (): CreateContentPayload => ({
   name: "foo",
   slug: "foo",
   isFolder: false,
   folderLocation: "/",
   folderTarget: "",
-  depth: 1,
-  // configId: "",
-  // data: null,
+  folderDepth: 1,
+  children: [],
+  data: null,
 })
 
 describe("Content", () => {
@@ -47,16 +48,7 @@ describe("Content", () => {
 
       await supertest(app.server)
         .post("/contents")
-        .send({
-          name: "content",
-          slug: "content",
-          type: "document",
-          folderLocation: "/",
-          folderTarget: "/",
-          depth: 1,
-          configId: "fake-config-id",
-          data: null,
-        })
+        .send(createContent())
         .expect(403)
     })
 
@@ -91,6 +83,10 @@ describe("Content", () => {
 
       test("POST /contents", async () => {
         await app.ready()
+
+        const data = createContent()
+
+        expect(data.isFolder).toBeDefined()
 
         const resp = await supertest(app.server)
           .post("/contents")

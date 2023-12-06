@@ -8,7 +8,7 @@ const updateOptions = {
     body: {
       type: "object",
       properties: {
-        title: { type: "string" },
+        name: { type: "string" },
         slug: { type: "string" },
         configId: { type: "string" },
         isFolder: { type: "boolean" },
@@ -28,7 +28,7 @@ const updateOptions = {
         },
       },
       required: [],
-      additionalProperties: true,
+      additionalProperties: false,
     },
   },
 }

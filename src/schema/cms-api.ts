@@ -34,12 +34,10 @@ export const contentCreatePayload = {
     name: { type: "string" },
     slug: { type: "string" },
     isFolder: { type: "boolean" },
-    // type: { type: "string" }, // enum: ["document", "folder"]
     folderLocation: { type: "string" },
     folderTarget: { type: "string" },
-    depth: { type: "number", nullable: true },
+    folderDepth: { type: "number", nullable: true },
     configId: { type: "string", nullable: true },
-    // data: { type: "null" },
     data: {
       type: "object",
       required: [],
@@ -49,15 +47,29 @@ export const contentCreatePayload = {
     },
   },
   additionalProperties: false,
-  required: [
-    "name",
-    "slug",
-    "isFolder",
-    // "folderLocation",
-    // "folderTarget",
-    // "configId",
-    // "data",
-  ],
+  required: ["name", "slug", "isFolder"],
+}
+
+export const contentUpdatePayload = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    slug: { type: "string" },
+    isFolder: { type: "boolean" },
+    folderLocation: { type: "string" },
+    folderTarget: { type: "string" },
+    folderDepth: { type: "number", nullable: true },
+    configId: { type: "string", nullable: true },
+    data: {
+      type: "object",
+      required: [],
+      nullable: true,
+      additionalProperties: true,
+      properties: {},
+    },
+  },
+  additionalProperties: false,
+  required: [],
 }
 
 export const contentTypeCreatePayload = {
