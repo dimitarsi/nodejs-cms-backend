@@ -3,13 +3,10 @@ import makeRepo from "~/core/lib/crud"
 import { Content } from "~/models/content"
 
 const withUpdateConfigId = (data: Record<string, any>) => {
-  const { configId = "", folderLocation, ...splat } = data
+  const { configId = "", ...splat } = data
   const config = configId ? { configId: new ObjectId(configId) } : {}
 
-  let folderConfig = {}
-
   return {
-    ...folderConfig, // calculates the depth, in case we need it
     ...config,
     ...splat,
   }
@@ -76,8 +73,6 @@ export default function contents(db: Db) {
       cursor.close()
 
       const totalPages = Math.ceil(count / options.perPage)
-
-      console.log(">> Items", items.length, count)
 
       return {
         items,

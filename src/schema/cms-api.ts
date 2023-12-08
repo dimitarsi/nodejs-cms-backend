@@ -16,6 +16,17 @@ const pageQuery: JSONSchemaType<{ page: number; perPage: number }> = {
   additionalProperties: false,
 }
 
+const filtersAndPageQuery: JSONSchemaType<{ page: number; perPage: number }> = {
+  type: "object",
+  properties: {
+    page: { type: "number", default: 1, minimum: 1 },
+    perPage: { type: "number", default: 20, minimum: 1, maximum: 100 },
+    folder: { type: "string" },
+  },
+  required: [],
+  additionalProperties: false,
+}
+
 export const userCreatePayload: JSONSchemaType<User> = {
   type: "object",
   properties: {
@@ -102,6 +113,7 @@ const schemaDefinitions = {
     idParamStrict,
     hashQueryStrict,
     pageQuery,
+    filtersAndPageQuery,
     userCreatePayload,
     idOrSlugParamStrict,
     contentCreatePayload,

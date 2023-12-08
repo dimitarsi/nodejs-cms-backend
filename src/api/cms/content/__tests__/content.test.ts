@@ -99,6 +99,11 @@ describe("Content", () => {
         // expect(resp.body).toHaveProperty("type")
         expect(resp.body).toHaveProperty("name")
         expect(resp.body).toHaveProperty("slug")
+        expect(resp.body).toHaveProperty("isFolder")
+        expect(resp.body).toHaveProperty("folderTarget")
+        expect(resp.body).toHaveProperty("folderLocation")
+        expect(resp.body).toHaveProperty("folderDepth")
+        expect(resp.body.folderDepth).toBe(0)
         // expect(resp.body).toHaveProperty("data")
 
         const { _id, createdOn, updatedOn, ...body } = resp.body
@@ -161,6 +166,35 @@ describe("Content", () => {
           })
           .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
           .expect(200)
+      })
+
+      test("PATCH /contents/:idOrSlug - changing foder also updates the depth", async () => {
+        await app.ready()
+
+        const data = createContent()
+
+        // Ensure entity exists
+        const resp = await supertest(app.server)
+          .post("/contents")
+          .send(data)
+          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .expect(201)
+
+        expect(resp.body).toBeDefined()
+        expect(resp.body.folderDepth).toBe(0)
+
+        const response = await supertest(app.server)
+          .patch(`/contents/${resp.body.slug}`)
+          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .send({
+            name: "Hello World",
+            folderLocation: "/posts",
+          })
+          .expect(200)
+
+        expect(response.body.folderDepth).toBe(1)
+        expect(response.body.name).toBe("Hello World")
+        expect(response.body.slug).toBe(data.slug)
       })
 
       test("DELETE /contents/:id", async () => {
@@ -307,6 +341,46 @@ describe("Content", () => {
           .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
           .expect(403)
       })
+    })
+  })
+
+  describe("Quering content types", () => {
+    test("find content by folder - `/contents?folder=/posts`", async () => {
+      await app.ready()
+
+      const data = createContent()
+      const dataInFolder = createContent()
+
+      await supertest(app.server)
+        .post("/contents")
+        .send(data)
+        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .expect(201)
+
+      dataInFolder.slug = "test-folder-query"
+      dataInFolder.folderLocation = "/posts"
+      // dataInFolder.folderDepth = 2
+
+      await supertest(app.server)
+        .post("/contents")
+        .send(dataInFolder)
+        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .expect(201)
+
+      await supertest(app.server)
+        .get(`/contents/${dataInFolder.slug}`)
+        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .expect(200)
+
+      const response = await supertest(app.server)
+        .get(`/contents?folder=/posts`)
+        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .expect(200)
+
+      expect(response.body.items).toHaveLength(1)
+      expect(response.body.pagination.count).toBe(1)
+      expect(response.body.items[0].slug).toBe(dataInFolder.slug)
+      expect(response.body.items[0].folderDepth).toBe(1)
     })
   })
 })

@@ -42,14 +42,12 @@ export default function createContentCaseFrom(repo: {
       return validateContentWithConfig(entity, config)
     },
     async createContent(payload: Record<string, any>) {
-      if (payload.isFolder) {
-        const depth = Math.min(
-          1,
-          (payload.folderLocation || "/").split("/").length - 1
-        )
+      const path = payload.folderLocation.replace(/^\//, "")
+      // get non null parts
+      const parts = path.split("/").filter((part: string) => part)
 
+      if (payload.isFolder) {
         payload = {
-          depth,
           ...getDefaultPayload(payload.slug),
           ...payload,
         }
@@ -61,7 +59,11 @@ export default function createContentCaseFrom(repo: {
         payload.data = config ? generateFromConfig(config) : null
       }
 
-      const result = await repo.contents.create(payload)
+      const result = await repo.contents.create({
+        ...payload,
+        folderDepth: parts.length,
+      })
+
       return await repo.contents.getById(result.insertedId.toString())
     },
     async updateContent(idOrSlug: string, payload: Record<string, any>) {
@@ -77,7 +79,18 @@ export default function createContentCaseFrom(repo: {
         payload.data = config ? generateFromConfig(config) : null
       }
 
-      await repo.contents.update(idOrSlug, payload)
+      if (typeof payload.folderLocation !== "undefined") {
+        const path = payload.folderLocation.replace(/^\//, "")
+        // get non null parts
+        const parts = path.split("/").filter((part: string) => part)
+
+        await repo.contents.update(idOrSlug, {
+          ...payload,
+          folderDepth: parts.length,
+        })
+      } else {
+        await repo.contents.update(idOrSlug, payload)
+      }
 
       return await repo.contents.getById(idOrSlug)
     },
