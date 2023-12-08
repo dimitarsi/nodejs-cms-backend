@@ -1,8 +1,7 @@
 import { FastifyInstance } from "fastify"
-import Ajv, { JSONSchemaType } from "ajv"
+import { JSONSchemaType } from "ajv"
 import createStrict from "./createStrict"
 import { User } from "~/models/user"
-import { Content, CreateContentPayload } from "~/models/content"
 
 const schemaId = (url: string) => `cms-api/${url}`
 

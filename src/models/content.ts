@@ -50,10 +50,11 @@ export interface TopLevelContentData {
   isFolder: boolean
   folderLocation: string
   folderTarget: string
-  folderDepth: number
   configId?: string | ObjectId
 }
 
 export type CreateContentPayload = TopLevelContentData & BaseContentData
 
-export type Content = BaseModel & CreateContentPayload
+export type ComputedContentFields = { folderDepth: number }
+
+export type Content = BaseModel & CreateContentPayload & ComputedContentFields

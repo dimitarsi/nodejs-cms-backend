@@ -10,7 +10,6 @@ const createContent = (): CreateContentPayload => ({
   isFolder: false,
   folderLocation: "/",
   folderTarget: "",
-  folderDepth: 1,
   children: [],
   data: null,
 })
