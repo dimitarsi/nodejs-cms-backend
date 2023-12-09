@@ -105,7 +105,7 @@ export const keyBy = <D extends Record<string, any>, K extends keyof D>(
   data: D[],
   key: K
 ) => {
-  return data.reduce((acc, elem) => {
+  return (data || []).reduce((acc, elem) => {
     return {
       ...acc,
       [elem[key]]: elem,
