@@ -50,6 +50,47 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         },
       }
     },
+    async searchAll(
+      page = 1,
+      options: {
+        perPage: number
+        filter?: Record<string, any>
+        projection?: Document
+      } = {
+        perPage: 20,
+      }
+    ) {
+      const filter = options.filter || {}
+
+      let cursor = await collection.find(filter, {
+        skip: options.perPage * (page - 1),
+        limit: options.perPage,
+      })
+
+      // apply projection
+      if (options.projection) {
+        cursor = cursor.project(options.projection)
+      }
+
+      const [items, count] = await Promise.all([
+        cursor.toArray(),
+        collection.countDocuments(filter),
+      ])
+      cursor.close()
+
+      const totalPages = Math.ceil(count / options.perPage)
+
+      return {
+        items,
+        pagination: {
+          page,
+          perPage: options.perPage,
+          count,
+          totalPages,
+          nextPage: page >= totalPages ? null : page + 1,
+        },
+      }
+    },
     async create(data: OptionalUnlessRequiredId<T>) {
       return await collection.insertOne(data)
     },

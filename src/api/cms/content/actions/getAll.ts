@@ -38,7 +38,7 @@ export default function getAll(instance: FastifyInstance) {
         : {}),
     }
 
-    const result = await instance.contents.getAll(request.query.page, {
+    const result = await instance.contents.searchAll(request.query.page, {
       perPage: request.query.perPage,
       filter,
     })

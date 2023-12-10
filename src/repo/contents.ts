@@ -53,38 +53,6 @@ export default function contents(db: Db) {
         ...withUpdateConfigId(data),
       })
     },
-    async getAll(
-      page = 1,
-      options: { perPage: number; filter?: Record<string, any> } = {
-        perPage: 20,
-      }
-    ) {
-      const filter = options.filter || {}
-
-      const cursor = await collection.find(filter, {
-        skip: options.perPage * (page - 1),
-        limit: options.perPage,
-      })
-
-      const [items, count] = await Promise.all([
-        cursor.toArray(),
-        collection.countDocuments(filter),
-      ])
-      cursor.close()
-
-      const totalPages = Math.ceil(count / options.perPage)
-
-      return {
-        items,
-        pagination: {
-          page,
-          perPage: options.perPage,
-          count,
-          totalPages,
-          nextPage: page >= totalPages ? null : page + 1,
-        },
-      }
-    },
     async getById(id: string) {
       let query: any = { _id: -1 }
 

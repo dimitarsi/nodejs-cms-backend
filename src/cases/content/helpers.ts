@@ -8,7 +8,7 @@ export const generateFromConfig = (config: ContentType): BaseContentData => {
     name: config.name,
     slug: config.slug,
     config: { ...config, children: [] },
-    children: config.children.length
+    children: config.children?.length
       ? config.children.map(generateFromConfig)
       : [],
     data: config.repeated ? [data] : data,

@@ -102,8 +102,9 @@ describe("Content", () => {
         expect(resp.body).toHaveProperty("folderTarget")
         expect(resp.body).toHaveProperty("folderLocation")
         expect(resp.body).toHaveProperty("folderDepth")
+        expect(resp.body).not.toHaveProperty("children")
         expect(resp.body.folderDepth).toBe(0)
-        // expect(resp.body).toHaveProperty("data")
+        expect(resp.body).toHaveProperty("data")
 
         const { _id, createdOn, updatedOn, ...body } = resp.body
         expect(body).toMatchSnapshot()
@@ -135,6 +136,7 @@ describe("Content", () => {
 
         expect(resultFromId.body._id).toBeDefined()
         expect(resultFromSlug.body._id).toBeDefined()
+        expect(resultFromSlug.body).not.toHaveProperty("children")
         expect(resultFromId.body._id).toBe(resultFromSlug.body._id)
       })
 
