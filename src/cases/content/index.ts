@@ -6,6 +6,7 @@ import {
   validateContentWithConfig,
 } from "./helpers"
 import util from "util"
+import type { CreateContentPayload } from "~/models/content"
 
 const getDefaultPayload = (slug: string) => ({
   folderLocation: "/",
@@ -55,10 +56,11 @@ export default function createContentCaseFrom(repo: {
 
       return validateContentWithConfig(entity, config)
     },
-    async createContent(payload: Record<string, any>) {
+    async createContent(payload: CreateContentPayload) {
       const path = payload.folderLocation.replace(/^\//, "")
       // get non null parts
       const parts = path.split("/").filter((part: string) => part)
+      let data = null
 
       if (payload.isFolder) {
         payload = {
@@ -70,23 +72,26 @@ export default function createContentCaseFrom(repo: {
           new ObjectId(payload.configId)
         )
 
-        // console.log(">> payload.data", {
-        //   configId: payload.configId,
-        //   config,
-        //   generated: config ? generateFromConfig(config) : null,
-        // })
-
-        payload.data = config ? generateFromConfig(config) : null
+        data = config ? generateFromConfig(config) : null
+      } else {
+        data = payload
       }
 
       const result = await repo.contents.create({
         ...payload,
+        children: data?.children,
+        data: data?.data,
         folderDepth: parts.length,
       })
 
       return await repo.contents.getById(result.insertedId.toString())
     },
-    async updateContent(idOrSlug: string, payload: Record<string, any>) {
+    async updateContent(
+      idOrSlug: string,
+      payload: Partial<CreateContentPayload>
+    ) {
+      let data = null
+
       if (
         !payload.isFolder &&
         payload.configId &&
@@ -96,7 +101,9 @@ export default function createContentCaseFrom(repo: {
           new ObjectId(payload.configId)
         )
 
-        payload.data = config ? generateFromConfig(config) : null
+        data = config ? generateFromConfig(config) : null
+      } else {
+        data = payload
       }
 
       if (typeof payload.folderLocation !== "undefined") {
@@ -106,6 +113,8 @@ export default function createContentCaseFrom(repo: {
 
         await repo.contents.update(idOrSlug, {
           ...payload,
+          children: data?.children,
+          data: data?.data,
           folderDepth: parts.length,
         })
       } else {

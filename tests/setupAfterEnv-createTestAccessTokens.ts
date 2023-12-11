@@ -16,8 +16,6 @@ import accessToken from "~/repo/accessTokens"
       process.env.TEST_ADMIN_ACCESS_TOKEN
     )
 
-    console.log(">> Done", { createAdminToken })
-
     const createNonAdminToken = await repo.findOrCreateAccessToken(
       "2",
       {

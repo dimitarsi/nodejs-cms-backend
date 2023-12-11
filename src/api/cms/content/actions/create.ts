@@ -1,6 +1,7 @@
-import { FastifyInstance } from "fastify"
+import type { FastifyInstance } from "fastify"
 import { schemaRef } from "~/schema/cms-api"
 import createContentCaseFrom from "~/cases/content"
+import type { CreateContentPayload } from "~/models/content"
 
 const createContentPayload = {
   schema: {
@@ -10,7 +11,7 @@ const createContentPayload = {
 
 export default function createContents(instance: FastifyInstance) {
   instance.post<{
-    Body: Record<string, any>
+    Body: CreateContentPayload
   }>("/contents", createContentPayload, async (request, reply) => {
     const body = request.body
     const contents = await createContentCaseFrom(instance)

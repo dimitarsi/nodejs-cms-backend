@@ -24,6 +24,9 @@ export const createContent =
       slug: slugify(name),
       configId: configId,
       folderLocation: "/",
+      isFolder: false,
+      folderTarget: "/",
+      children: [],
       data,
     })
   }

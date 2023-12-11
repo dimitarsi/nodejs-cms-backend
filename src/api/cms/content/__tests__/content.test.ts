@@ -102,7 +102,7 @@ describe("Content", () => {
         expect(resp.body).toHaveProperty("folderTarget")
         expect(resp.body).toHaveProperty("folderLocation")
         expect(resp.body).toHaveProperty("folderDepth")
-        expect(resp.body).not.toHaveProperty("children")
+        expect(resp.body).toHaveProperty("children")
         expect(resp.body.folderDepth).toBe(0)
         expect(resp.body).toHaveProperty("data")
 
@@ -136,7 +136,7 @@ describe("Content", () => {
 
         expect(resultFromId.body._id).toBeDefined()
         expect(resultFromSlug.body._id).toBeDefined()
-        expect(resultFromSlug.body).not.toHaveProperty("children")
+        expect(resultFromSlug.body).toHaveProperty("children")
         expect(resultFromId.body._id).toBe(resultFromSlug.body._id)
       })
 
