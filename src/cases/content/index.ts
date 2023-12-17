@@ -5,7 +5,6 @@ import {
   generateFromConfig,
   validateContentWithConfig,
 } from "./helpers"
-import util from "util"
 import type { CreateContentPayload } from "~/models/content"
 
 const getDefaultPayload = (slug: string) => ({
@@ -41,19 +40,6 @@ export default function createContentCaseFrom(repo: {
         return entity
       }
 
-      console.log(
-        ">>> entity",
-        util.inspect(
-          {
-            entity,
-            config,
-          },
-          { depth: 10 }
-        )
-      )
-
-      // return entity
-
       return validateContentWithConfig(entity, config)
     },
     async createContent(payload: CreateContentPayload) {
@@ -79,7 +65,7 @@ export default function createContentCaseFrom(repo: {
 
       const result = await repo.contents.create({
         ...payload,
-        children: data?.children,
+        children: data?.children || [],
         data: data?.data,
         folderDepth: parts.length,
       })
@@ -113,7 +99,7 @@ export default function createContentCaseFrom(repo: {
 
         await repo.contents.update(idOrSlug, {
           ...payload,
-          children: data?.children,
+          children: data?.children || [],
           data: data?.data,
           folderDepth: parts.length,
         })

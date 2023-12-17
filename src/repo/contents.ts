@@ -1,8 +1,14 @@
 import { Db, ObjectId } from "mongodb"
 import makeRepo from "~/core/lib/crud"
-import { Content } from "~/models/content"
+import {
+  Content,
+  ContentWithConfig,
+  CreateContentPayload,
+  UpdateContentPayload,
+} from "~/models/content"
+import { ContentType } from "~/models/contentType"
 
-const withUpdateConfigId = (data: Record<string, any>) => {
+const withUpdateConfigId = (data: Partial<UpdateContentPayload>) => {
   const { configId = "", ...splat } = data
   const config = configId ? { configId: new ObjectId(configId) } : {}
 
@@ -17,7 +23,11 @@ const withUpdateConfigId = (data: Record<string, any>) => {
  * @param data
  * @returns
  */
-const unwrapConfigField = (data: Content): Content => {
+const unwrapConfigField = <
+  T extends { config: Array<ContentType> | ContentType }
+>(
+  data: T
+) => {
   const { config, ...splat } = data
 
   if (config && Array.isArray(config) && config.length >= 1) {
@@ -28,7 +38,7 @@ const unwrapConfigField = (data: Content): Content => {
 }
 
 export default function contents(db: Db) {
-  const crud = makeRepo<Content>(db.collection("contents"), {
+  const crud = makeRepo(db.collection("contents"), {
     softDelete: false,
   })
 
@@ -37,7 +47,7 @@ export default function contents(db: Db) {
 
   return {
     ...crud,
-    create(data: Partial<Omit<Content, "id">>) {
+    create(data: UpdateContentPayload) {
       const normalized = withUpdateConfigId(data)
 
       return crud.create({
@@ -47,7 +57,7 @@ export default function contents(db: Db) {
         ...normalized,
       } as any)
     },
-    update(id: string, data: Record<string, any>) {
+    update(id: string, data: Partial<UpdateContentPayload>) {
       return crud.update(id, {
         updatedOn: new Date(),
         ...withUpdateConfigId(data),
@@ -83,7 +93,7 @@ export default function contents(db: Db) {
       const data: any[] = await cursor.toArray()
       cursor.close()
 
-      return data.map(unwrapConfigField)[0]
+      return data.map(unwrapConfigField)[0] as ContentWithConfig
     },
   }
 }

@@ -16,13 +16,13 @@ export const generateFromConfig = (config: ContentType): BaseContentData => {
 }
 
 export const validateContentWithConfig = (
-  data: BaseContentData,
+  data: BaseContentData<any, ContentType>,
   config: ContentType
 ): BaseContentData => {
   let outdated = false
 
-  const isSameSlug = data.config?.slug === config.slug
-  const isSameType = data.config?.type === config.type
+  const isSameSlug = data.config.slug === config.slug
+  const isSameType = data.config.type === config.type
 
   if (!isSameSlug || !isSameType || !isSameRepeated(data.config, config)) {
     outdated = true

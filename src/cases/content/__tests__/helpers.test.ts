@@ -1,4 +1,4 @@
-import type { BaseContentData, CreateContentPayload } from "~/models/content"
+import type { BaseContentData, ContentWithConfig } from "~/models/content"
 import { describe, test, expect } from "@jest/globals"
 import {
   diff,
@@ -381,6 +381,7 @@ describe("Content case helpers", () => {
           isFolder: false,
           folderLocation: "/",
           folderTarget: "/",
+          folderDepth: 0,
           children: [
             {
               name: "Title",
@@ -389,8 +390,10 @@ describe("Content case helpers", () => {
                 name: "Title",
                 slug: "title",
                 type: "text",
+                // children: [],
+                // defaultValue: null,
                 repeated: null,
-              },
+              } as ContentType,
               data: "hello-world",
             } as BaseContentData,
           ],
@@ -402,7 +405,7 @@ describe("Content case helpers", () => {
             children: [],
             defaultValue: null,
           },
-        } as CreateContentPayload,
+        } as Omit<ContentWithConfig, "updatedOn" | "createdOn" | "active">,
         config: {
           repeated: null,
           name: "Foo",
@@ -426,6 +429,7 @@ describe("Content case helpers", () => {
           folderLocation: "/",
           folderTarget: "/",
           outdated: false,
+          folderDepth: 0,
           children: [
             {
               name: "Title",
@@ -439,7 +443,7 @@ describe("Content case helpers", () => {
               },
               data: "hello-world",
               outdated: false,
-            } as BaseContentData & { children: [] },
+            },
           ],
           config: {
             repeated: null,

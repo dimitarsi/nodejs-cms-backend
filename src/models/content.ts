@@ -35,12 +35,10 @@ export type DataTypes =
   | RefDataType
   | ComponentDataType
 
-export interface BaseContentData<D = any> {
+export interface BaseContentData<D = any, C = ContentType> {
   name: string
   slug: string
-  // type: ContentType["type"]
-  // repeated: ContentType["repeated"]
-  config?: ContentType
+  config: C
   children: BaseContentData[]
   outdated?: boolean
   data: D
@@ -53,8 +51,15 @@ export interface TopLevelContentData {
   configId?: string | ObjectId
 }
 
-export type CreateContentPayload = TopLevelContentData & BaseContentData
+export type CreateContentPayload = TopLevelContentData &
+  Omit<BaseContentData, "config">
 
-export type ComputedContentFields = { folderDepth: number }
+export type ComputedContentFields = {
+  folderDepth: number
+}
 
-export type Content = BaseModel & CreateContentPayload & ComputedContentFields
+export type UpdateContentPayload = CreateContentPayload & ComputedContentFields
+
+export type Content = BaseModel & UpdateContentPayload
+
+export type ContentWithConfig = Content & { config: ContentType }

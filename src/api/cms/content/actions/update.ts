@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify"
 import { schemaRef } from "~/schema/cms-api"
 import createContentCaseFrom from "~/cases/content"
+import { CreateContentPayload } from "~/models/content"
 
 const updateOptions = {
   schema: {
@@ -11,7 +12,7 @@ const updateOptions = {
 
 export default function update(instance: FastifyInstance) {
   instance.patch<{
-    Body: Record<string, any>
+    Body: CreateContentPayload
     Params: { idOrSlug: string }
   }>("/contents/:idOrSlug", updateOptions, async (request, reply) => {
     const contents = await createContentCaseFrom(instance)

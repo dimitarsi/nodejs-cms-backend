@@ -3,7 +3,7 @@
 exports[`Content Only Admin users can create, update, delete and inspect content types As Admin user POST /contents 1`] = `
 {
   "active": true,
-  "children": null,
+  "children": [],
   "config": [],
   "data": null,
   "folderDepth": 0,
