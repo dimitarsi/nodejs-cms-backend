@@ -70,6 +70,15 @@ export const contentUpdatePayload = {
     folderTarget: { type: "string" },
     folderDepth: { type: "number", nullable: true },
     configId: { type: "string", nullable: true },
+    children: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: true,
+        properties: {},
+        required: [],
+      },
+    },
     data: {
       type: "object",
       required: [],

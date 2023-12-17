@@ -76,22 +76,6 @@ export default function createContentCaseFrom(repo: {
       idOrSlug: string,
       payload: Partial<CreateContentPayload>
     ) {
-      let data = null
-
-      if (
-        !payload.isFolder &&
-        payload.configId &&
-        emptyDataOrNull(payload.data)
-      ) {
-        const config = await repo.contentTypes.getById(
-          new ObjectId(payload.configId)
-        )
-
-        data = config ? generateFromConfig(config) : null
-      } else {
-        data = payload
-      }
-
       if (typeof payload.folderLocation !== "undefined") {
         const path = payload.folderLocation.replace(/^\//, "")
         // get non null parts
@@ -99,8 +83,6 @@ export default function createContentCaseFrom(repo: {
 
         await repo.contents.update(idOrSlug, {
           ...payload,
-          children: data?.children || [],
-          data: data?.data,
           folderDepth: parts.length,
         })
       } else {
