@@ -1,17 +1,22 @@
 import { Db, ObjectId } from "mongodb"
+import crud from "~/core/lib/crud"
 import { MediaDocument } from "~/models/media"
 
 const collectionName = "files"
 
 export default function media(db: Db) {
+  const collection = db.collection(collectionName)
+
   const insertMany = async (data: MediaDocument[]) => {
-    const resp = await db.collection(collectionName).insertMany(data)
+    const resp = await collection.insertMany(data)
 
     return resp
   }
 
+  const mediaCrud = crud(collection)
+
   const getPath = async (fileId: string) => {
-    const res = await db.collection(collectionName).findOne<MediaDocument>({
+    const res = await collection.findOne<MediaDocument>({
       fileId: fileId,
     })
 
@@ -48,17 +53,26 @@ export default function media(db: Db) {
 
   // TODO: remove the file as well, in the controller
   const deleteById = async (id: string) => {
-    return await db.collection(collectionName).findOneAndDelete({
+    return await collection.findOneAndDelete({
       _id: new ObjectId(id),
     })
   }
 
   // TODO: remove the files as well, in the controller
   const deleteAll = async () => {
-    return await db.collection(collectionName).deleteMany({})
+    return await collection.deleteMany({})
   }
 
   return {
+    getAll: (page = 1, pageSize = 20, projection?: Document | undefined) => {
+      return mediaCrud.getAll(page, pageSize, {
+        ...projection,
+        absolutePath: 0,
+        path: 0,
+        location: 0,
+      })
+    },
+    searchAll: mediaCrud.searchAll,
     insertMany,
     getPath,
     updateMedia,
