@@ -1,11 +1,6 @@
 import { Db, ObjectId } from "mongodb"
 import makeRepo from "~/core/lib/crud"
-import {
-  Content,
-  ContentWithConfig,
-  CreateContentPayload,
-  UpdateContentPayload,
-} from "~/models/content"
+import { ContentWithConfig, UpdateContentPayload } from "~/models/content"
 import { ContentType } from "~/models/contentType"
 
 const withUpdateConfigId = (data: Partial<UpdateContentPayload>) => {
@@ -43,7 +38,8 @@ export default function contents(db: Db) {
   })
 
   const collection = crud.getCollection()
-  const contentTypesDbName = crud.collectionName()
+  // TODO: use a config file for the DB names
+  const contentTypesDbName = "contentTypes" // crud.collectionName()
 
   return {
     ...crud,
