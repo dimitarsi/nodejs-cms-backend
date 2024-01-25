@@ -15,5 +15,9 @@ export default async function teardown() {
 
   console.log(">> delete users", { result })
 
+  const deleteAccessTokens = await db.collection("accessTokens").deleteMany({})
+
+  console.log(">> delete access tokens", { deleteAccessTokens })
+
   await conn.close()
 }

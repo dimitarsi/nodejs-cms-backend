@@ -3,7 +3,7 @@ import { schemaRef } from "~/schema/cms-api"
 
 const getAllOptions: RouteShorthandOptions = {
   schema: {
-    querystring: schemaRef("pageQuery"),
+    querystring: schemaRef("filtersAndPageQuery"),
     // @ts-ignore
     tags: ["user"],
     description: "This is a description for the activate endpoint",
@@ -30,10 +30,17 @@ const getAllOptions: RouteShorthandOptions = {
 
 export default function getAll(instance: FastifyInstance) {
   instance.get<{
-    Querystring: { page: number; perPage: number }
+    Querystring: { page: number; perPage: number; folder?: string }
   }>("/contents", getAllOptions, async (request, reply) => {
-    const result = await instance.contents.getAll(request.query.page, {
+    const filter = {
+      ...(request.query.folder
+        ? { folderLocation: `${decodeURIComponent(request.query.folder)}` }
+        : {}),
+    }
+
+    const result = await instance.contents.searchAll(request.query.page, {
       perPage: request.query.perPage,
+      filter,
     })
 
     if (!result) {

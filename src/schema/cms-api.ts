@@ -1,8 +1,7 @@
 import { FastifyInstance } from "fastify"
-import Ajv, { JSONSchemaType } from "ajv"
+import { JSONSchemaType } from "ajv"
 import createStrict from "./createStrict"
 import { User } from "~/models/user"
-import { Content, CreateContentPayload } from "~/models/content"
 
 const schemaId = (url: string) => `cms-api/${url}`
 
@@ -11,6 +10,17 @@ const pageQuery: JSONSchemaType<{ page: number; perPage: number }> = {
   properties: {
     page: { type: "number", default: 1, minimum: 1 },
     perPage: { type: "number", default: 20, minimum: 1, maximum: 100 },
+  },
+  required: [],
+  additionalProperties: false,
+}
+
+const filtersAndPageQuery: JSONSchemaType<{ page: number; perPage: number }> = {
+  type: "object",
+  properties: {
+    page: { type: "number", default: 1, minimum: 1 },
+    perPage: { type: "number", default: 20, minimum: 1, maximum: 100 },
+    folder: { type: "string" },
   },
   required: [],
   additionalProperties: false,
@@ -33,12 +43,11 @@ export const contentCreatePayload = {
   properties: {
     name: { type: "string" },
     slug: { type: "string" },
-    // type: { type: "string" }, // enum: ["document", "folder"]
+    isFolder: { type: "boolean" },
     folderLocation: { type: "string" },
     folderTarget: { type: "string" },
-    depth: { type: "number", nullable: true },
+    folderDepth: { type: "number", nullable: true },
     configId: { type: "string", nullable: true },
-    // data: { type: "null" },
     data: {
       type: "object",
       required: [],
@@ -48,15 +57,38 @@ export const contentCreatePayload = {
     },
   },
   additionalProperties: false,
-  required: [
-    "name",
-    "slug",
-    "type",
-    "folderLocation",
-    "folderTarget",
-    "configId",
-    "data",
-  ],
+  required: ["name", "slug", "isFolder"],
+}
+
+export const contentUpdatePayload = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    slug: { type: "string" },
+    isFolder: { type: "boolean" },
+    folderLocation: { type: "string" },
+    folderTarget: { type: "string" },
+    folderDepth: { type: "number", nullable: true },
+    configId: { type: "string", nullable: true },
+    children: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: true,
+        properties: {},
+        required: [],
+      },
+    },
+    data: {
+      type: "object",
+      required: [],
+      nullable: true,
+      additionalProperties: true,
+      properties: {},
+    },
+  },
+  additionalProperties: false,
+  required: [],
 }
 
 export const contentTypeCreatePayload = {
@@ -89,10 +121,12 @@ const schemaDefinitions = {
     idParamStrict,
     hashQueryStrict,
     pageQuery,
+    filtersAndPageQuery,
     userCreatePayload,
     idOrSlugParamStrict,
     contentCreatePayload,
     contentTypeCreatePayload,
+    contentUpdatePayload,
   },
 }
 

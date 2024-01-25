@@ -1,22 +1,13 @@
 import { Db, ObjectId } from "mongodb"
 import makeRepo from "~/core/lib/crud"
-import { Content } from "~/models/content"
+import { ContentWithConfig, UpdateContentPayload } from "~/models/content"
+import { ContentType } from "~/models/contentType"
 
-const withUpdateConfigId = (data: Record<string, any>) => {
-  const { configId = "", folderLocation, ...splat } = data
+const withUpdateConfigId = (data: Partial<UpdateContentPayload>) => {
+  const { configId = "", ...splat } = data
   const config = configId ? { configId: new ObjectId(configId) } : {}
 
-  let folderConfig = {}
-
-  if (folderLocation) {
-    folderConfig = {
-      folderLocation,
-      depth: folderLocation.split("/").length - 1 || 1,
-    }
-  }
-
   return {
-    ...folderConfig, // calculates the depth, in case we need it
     ...config,
     ...splat,
   }
@@ -27,7 +18,11 @@ const withUpdateConfigId = (data: Record<string, any>) => {
  * @param data
  * @returns
  */
-const unwrapConfigField = (data: Content): Content => {
+const unwrapConfigField = <
+  T extends { config: Array<ContentType> | ContentType }
+>(
+  data: T
+) => {
   const { config, ...splat } = data
 
   if (config && Array.isArray(config) && config.length >= 1) {
@@ -38,16 +33,17 @@ const unwrapConfigField = (data: Content): Content => {
 }
 
 export default function contents(db: Db) {
-  const crud = makeRepo<Content>(db.collection("contents"), {
+  const crud = makeRepo(db.collection("contents"), {
     softDelete: false,
   })
 
   const collection = crud.getCollection()
-  const contentTypesDbName = crud.collectionName()
+  // TODO: use a config file for the DB names
+  const contentTypesDbName = "contentTypes" // crud.collectionName()
 
   return {
     ...crud,
-    create(data: Partial<Omit<Content, "id">>) {
+    create(data: UpdateContentPayload) {
       const normalized = withUpdateConfigId(data)
 
       return crud.create({
@@ -57,45 +53,11 @@ export default function contents(db: Db) {
         ...normalized,
       } as any)
     },
-    update(id: string, data: Record<string, any>) {
+    update(id: string, data: Partial<UpdateContentPayload>) {
       return crud.update(id, {
         updatedOn: new Date(),
         ...withUpdateConfigId(data),
       })
-    },
-    async getAll(
-      page = 1,
-      options: { perPage: number; filter?: Record<string, any> } = {
-        perPage: 20,
-      }
-    ) {
-      const filter = options.filter || {}
-
-      const cursor = await collection.find(filter, {
-        skip: options.perPage * (page - 1),
-        limit: options.perPage,
-      })
-
-      const [items, count] = await Promise.all([
-        cursor.toArray(),
-        collection.countDocuments(filter),
-      ])
-      cursor.close()
-
-      const totalPages = Math.ceil(count / options.perPage)
-
-      console.log(">> Items", items.length, count)
-
-      return {
-        items,
-        pagination: {
-          page,
-          perPage: options.perPage,
-          count,
-          totalPages,
-          nextPage: page >= totalPages ? null : page + 1,
-        },
-      }
     },
     async getById(id: string) {
       let query: any = { _id: -1 }
@@ -127,7 +89,7 @@ export default function contents(db: Db) {
       const data: any[] = await cursor.toArray()
       cursor.close()
 
-      return data.map(unwrapConfigField)[0]
+      return data.map(unwrapConfigField)[0] as ContentWithConfig
     },
   }
 }

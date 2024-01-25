@@ -8,7 +8,7 @@ export const generateFromConfig = (config: ContentType): BaseContentData => {
     name: config.name,
     slug: config.slug,
     config: { ...config, children: [] },
-    children: config.children.length
+    children: config.children?.length
       ? config.children.map(generateFromConfig)
       : [],
     data: config.repeated ? [data] : data,
@@ -16,13 +16,13 @@ export const generateFromConfig = (config: ContentType): BaseContentData => {
 }
 
 export const validateContentWithConfig = (
-  data: BaseContentData,
+  data: BaseContentData<any, ContentType>,
   config: ContentType
 ): BaseContentData => {
   let outdated = false
 
-  const isSameSlug = data.config?.slug === config.slug
-  const isSameType = data.config?.type === config.type
+  const isSameSlug = data.config.slug === config.slug
+  const isSameType = data.config.type === config.type
 
   if (!isSameSlug || !isSameType || !isSameRepeated(data.config, config)) {
     outdated = true
@@ -105,7 +105,7 @@ export const keyBy = <D extends Record<string, any>, K extends keyof D>(
   data: D[],
   key: K
 ) => {
-  return data.reduce((acc, elem) => {
+  return (data || []).reduce((acc, elem) => {
     return {
       ...acc,
       [elem[key]]: elem,
@@ -125,4 +125,15 @@ export const diff = (keysA: string[], keysB: string[]): string[] => {
   }
 
   return missingKeys
+}
+
+export const emptyDataOrNull = (data: any) => {
+  if (typeof data === "number") {
+    return false
+  }
+
+  return (
+    !data ||
+    Object.keys(data).filter((k) => k.startsWith("__") === false).length === 0
+  )
 }

@@ -1,16 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ContentTypes Only Admin users can create, update, delete and inspect content types As Admin user GET /content-types/:idOrSlug 1`] = `
-{
-  "children": [],
-  "freezed": false,
-  "name": "test01",
-  "repeated": false,
-  "slug": "test01",
-  "type": "root",
-}
-`;
-
 exports[`ContentTypes Only Admin users can create, update, delete and inspect content types As Admin user POST /content-types 1`] = `
 {
   "children": [],

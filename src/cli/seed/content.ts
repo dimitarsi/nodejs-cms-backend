@@ -2,7 +2,7 @@ import contentTypesRepo from "~/repo/contentTypes"
 import { type Db, type ObjectId } from "mongodb"
 import contentRepo from "~/repo/contents"
 import slugify from "~/helpers/slugify"
-import createContentCaseFrom from "~/cases/content/create"
+import createContentCaseFrom from "~/cases/content"
 
 export const createContent =
   (db: Db) =>
@@ -24,6 +24,9 @@ export const createContent =
       slug: slugify(name),
       configId: configId,
       folderLocation: "/",
+      isFolder: false,
+      folderTarget: "/",
+      children: [],
       data,
     })
   }

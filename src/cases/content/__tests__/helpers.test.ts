@@ -1,12 +1,15 @@
+import type { BaseContentData, ContentWithConfig } from "~/models/content"
 import { describe, test, expect } from "@jest/globals"
 import {
   diff,
+  emptyDataOrNull,
+  generateFromConfig,
   isSameRepeated,
   keyBy,
   mergeChildren,
   validateContentWithConfig,
 } from "../helpers"
-import { BaseContentData } from "~/models/content"
+import type { ContentType } from "~/models/contentType"
 
 describe("Content case helpers", () => {
   test("Can diff keys - union", () => {
@@ -117,6 +120,21 @@ describe("Content case helpers", () => {
     expect(mergeChildren(testCase.childrenA, testCase.childrenB)).toEqual(
       testCase.expected
     )
+  })
+
+  test.each([
+    [{}, true],
+    [{ __proto: function () {} }, true],
+    [{ __foobar: function () {} }, true],
+    [{ _data: function () {} }, false],
+    [{ data: null }, false],
+    [0, false],
+    [[], true],
+    [[1, 2, 3], false],
+    ["", true],
+    ["abc", false],
+  ])("emptyDataOrNull - '%s'", (testCase, expected) => {
+    expect(emptyDataOrNull(testCase)).toEqual(expected)
   })
 
   test.each([
@@ -351,4 +369,152 @@ describe("Content case helpers", () => {
       ).toEqual(testCase.expected)
     }
   )
+
+  test.each([
+    [
+      "Keep the structure and add `children` and `outdated` properties",
+      {
+        content: {
+          name: "Root Element",
+          slug: "root-element",
+          data: null,
+          isFolder: false,
+          folderLocation: "/",
+          folderTarget: "/",
+          folderDepth: 0,
+          children: [
+            {
+              name: "Title",
+              slug: "title",
+              config: {
+                name: "Title",
+                slug: "title",
+                type: "text",
+                // children: [],
+                // defaultValue: null,
+                repeated: null,
+              } as ContentType,
+              data: "hello-world",
+            } as BaseContentData,
+          ],
+          config: {
+            repeated: null,
+            name: "Foo",
+            slug: "foo",
+            type: "root",
+            children: [],
+            defaultValue: null,
+          },
+        } as Omit<ContentWithConfig, "updatedOn" | "createdOn" | "active">,
+        config: {
+          repeated: null,
+          name: "Foo",
+          slug: "foo",
+          type: "root",
+          children: [
+            {
+              name: "Title",
+              slug: "title",
+              type: "text",
+              repeated: null,
+            },
+          ],
+          defaultValue: null,
+        } as ContentType,
+        expected: {
+          name: "Root Element",
+          slug: "root-element",
+          data: null,
+          isFolder: false,
+          folderLocation: "/",
+          folderTarget: "/",
+          outdated: false,
+          folderDepth: 0,
+          children: [
+            {
+              name: "Title",
+              slug: "title",
+              children: [],
+              config: {
+                name: "Title",
+                slug: "title",
+                type: "text",
+                repeated: null,
+              },
+              data: "hello-world",
+              outdated: false,
+            },
+          ],
+          config: {
+            repeated: null,
+            name: "Foo",
+            slug: "foo",
+            type: "root",
+            children: [],
+            defaultValue: null,
+          },
+        },
+      },
+    ],
+  ])(
+    "`validateContentWithConfig` return data structure - %s",
+    (_descr, testCase) => {
+      expect(
+        validateContentWithConfig(testCase.content, testCase.config)
+      ).toEqual(testCase.expected)
+    }
+  )
+
+  test.each([
+    [{ data: undefined, expected: true }],
+    [
+      {
+        data: null,
+        expected: true,
+      },
+    ],
+    [{ data: {}, expected: true }],
+    [{ data: { __foo: "bar" }, expected: true }],
+    [{ data: [], expected: true }],
+    [{ data: "", expected: true }],
+    [{ data: 0, expected: false }],
+    [{ data: ["foo"], expected: false }],
+    [{ data: { foo: "bar" }, expected: false }],
+    [{ data: 42, expected: false }],
+    [{ data: "random string", expected: false }],
+  ])(`helpers - emptyDataOrNull - %s`, (testCase) => {
+    expect(emptyDataOrNull(testCase.data)).toEqual(testCase.expected)
+  })
+
+  test.each([
+    [
+      "no nested children",
+      {
+        config: {
+          type: "root",
+          name: "Top Level",
+          slug: "top-level",
+          children: [],
+          defaultValue: null,
+          repeated: null,
+        } as ContentType,
+        expected: {
+          name: "Top Level",
+          slug: "top-level",
+          children: [],
+          config: {
+            type: "root",
+            name: "Top Level",
+            slug: "top-level",
+            children: [],
+            defaultValue: null,
+            repeated: null,
+          },
+          data: "",
+        },
+      },
+    ],
+  ])("`generateFromConfig()` - %s", (_descr, testCase) => {
+    expect(generateFromConfig(testCase.config)).toMatchObject(testCase.expected)
+  })
 })

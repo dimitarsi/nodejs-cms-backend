@@ -6,23 +6,26 @@ import accessToken from "~/repo/accessTokens"
   const db = await conn.db(process.env.DB_NAME)
 
   const repo = accessToken(db)
-  await repo.deleteAll()
 
-  await repo.findOrCreateAccessToken(
-    "1",
-    {
-      isAdmin: true,
-    },
-    process.env.TEST_ADMIN_ACCESS_TOKEN
-  )
+  try {
+    const createAdminToken = await repo.findOrCreateAccessToken(
+      "1",
+      {
+        isAdmin: true,
+      },
+      process.env.TEST_ADMIN_ACCESS_TOKEN
+    )
 
-  await repo.findOrCreateAccessToken(
-    "2",
-    {
-      isAdmin: false,
-    },
-    process.env.TEST_NON_ADMIN_ACCESS_TOKEN
-  )
+    const createNonAdminToken = await repo.findOrCreateAccessToken(
+      "2",
+      {
+        isAdmin: false,
+      },
+      process.env.TEST_NON_ADMIN_ACCESS_TOKEN
+    )
+  } catch (e) {
+    console.error(">> Error while setting up access token for tests", e)
+  }
 
   await conn.close()
 })()

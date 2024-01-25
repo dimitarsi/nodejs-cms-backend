@@ -31,7 +31,7 @@ export default function accessToken(db: Db) {
       isAdmin: Boolean(data?.isAdmin),
     })
 
-    return accessToken
+    return token
   }
 
   const deactivateToken = async (accessToken: string) => {
