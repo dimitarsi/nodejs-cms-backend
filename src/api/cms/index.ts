@@ -4,6 +4,7 @@ import user from "./user"
 import content from "./content"
 import contentTypes from "./contentTypes"
 import uploads from "./uploads"
+import projects from "./projects"
 
 async function cmsAPI(
   fastify: FastifyInstance,
@@ -14,6 +15,7 @@ async function cmsAPI(
   fastify.register(content)
   fastify.register(contentTypes)
   fastify.register(uploads, { uploadDir: "uploads" })
+  fastify.register(projects)
 
   done()
 }

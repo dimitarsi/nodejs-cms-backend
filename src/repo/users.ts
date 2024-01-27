@@ -49,6 +49,7 @@ export default function users(db: Db) {
         password: bcrypt.hashSync(data.password, rounds),
         activationHash: v4(),
         hashExpiration: getActivationExpirationDate(),
+        projects: data.projects,
       })
     },
     update: (

@@ -94,7 +94,7 @@ export const baseCrudMethods = <T extends Record<string, any>>(
     async create(data: OptionalUnlessRequiredId<T>) {
       return await collection.insertOne(data)
     },
-    async update(id: string | number, data: Partial<T>) {
+    async update(id: ObjectId | string | number, data: Partial<T>) {
       let query: any = { _id: -1 }
       try {
         query = { $or: [{ _id: new ObjectId(id) }, { slug: id }] }

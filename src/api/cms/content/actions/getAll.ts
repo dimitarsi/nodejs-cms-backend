@@ -1,4 +1,4 @@
-import { FastifyInstance, RouteShorthandOptions } from "fastify"
+import type { FastifyInstance, RouteShorthandOptions } from "fastify"
 import { schemaRef } from "~/schema/cms-api"
 
 const getAllOptions: RouteShorthandOptions = {

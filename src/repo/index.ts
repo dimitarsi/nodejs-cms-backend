@@ -6,6 +6,7 @@ import media from "./media"
 import auth from "./auth"
 import accessTokens from "./accessTokens"
 import mongoClient from "@db"
+import projects from "./projects"
 
 interface PluginOptions {
   dbName: string
@@ -24,6 +25,7 @@ async function repo(
   instance.decorate("media", media(db))
   instance.decorate("auth", auth(db))
   instance.decorate("accessToken", accessTokens(db))
+  instance.decorate("projects", projects(db))
 
   instance.addHook("onClose", () => {
     mongoClient.close()
@@ -40,14 +42,20 @@ export default repo as FastifyPluginAsync<PluginOptions>
 
 export type ContentsRepo = ReturnType<typeof contents>
 export type ContentTypesRepo = ReturnType<typeof contentTypes>
+export type UsersRepo = ReturnType<typeof users>
+export type AccessTokenRepo = ReturnType<typeof accessTokens>
+export type ProjectsRepo = ReturnType<typeof projects>
+export type AuthRepo = ReturnType<typeof auth>
+export type MediaRepo = ReturnType<typeof media>
 
 declare module "fastify" {
   interface FastifyInstance {
     contents: ContentsRepo
-    accessToken: ReturnType<typeof accessTokens>
-    media: ReturnType<typeof media>
-    users: ReturnType<typeof users>
-    auth: ReturnType<typeof auth>
+    accessToken: AccessTokenRepo
+    media: MediaRepo
+    users: UsersRepo
+    auth: AuthRepo
     contentTypes: ContentTypesRepo
+    projects: ProjectsRepo
   }
 }
