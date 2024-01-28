@@ -33,16 +33,20 @@ export default function inviteUser(instance: FastifyInstance) {
     // User may or may not have a registered account!
     // Sent Email?
 
-    const usersCase = createUserCaseFrom(
-      instance.users,
-      instance.accessToken,
-      instance.projects
-    )
+    // const usersCase = createUserCaseFrom(
+    //   instance.users,
+    //   instance.accessToken,
+    //   instance.projects
+    // )
 
-    await usersCase.inviteUserToProject(
-      request.body.userEmail,
-      request.body.projectId
-    )
+    // await usersCase.inviteUserToProject(
+    //   request.body.userEmail,
+    //   request.body.projectId
+    // )
+    await instance.invitations.create({
+      userEmail: request.body.userEmail,
+      projectId: request.body.projectId,
+    })
 
     reply.status(201).send({
       success: true,

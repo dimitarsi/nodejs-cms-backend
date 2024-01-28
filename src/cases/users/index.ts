@@ -1,11 +1,18 @@
+import { ensureObjectId } from "~/helpers/objectid"
 import { v4 } from "uuid"
 import { ObjectId } from "mongodb"
-import type { UsersRepo, AccessTokenRepo, ProjectsRepo } from "~/repo"
+import type {
+  UsersRepo,
+  AccessTokenRepo,
+  ProjectsRepo,
+  InvitationsRepo,
+} from "~/repo"
 
 function createUserCaseFrom(
   users: UsersRepo,
   accessToken: AccessTokenRepo,
-  projects: ProjectsRepo
+  projects: ProjectsRepo,
+  invitations: InvitationsRepo
 ) {
   const getProjectsFromToken = async (tokenHeader: string) => {
     const token = await accessToken.findToken(tokenHeader)
@@ -28,31 +35,6 @@ function createUserCaseFrom(
     return await projects.getAllByIds(user.projects)
   }
 
-  const inviteUserToProject = async (
-    inviteEmail: string,
-    projectId: string | ObjectId
-  ) => {
-    const inviteToken = v4()
-    const expires = new Date()
-    expires.setDate(expires.getDate() + 7) // 1 week
-
-    const invitation = { inviteToken: inviteToken.toString(), expires }
-
-    let byId = {}
-
-    try {
-      byId = { _id: new ObjectId(projectId) }
-    } catch (e) {
-      byId = { _id: projectId }
-    }
-
-    await projects.getCollection().updateOne(byId, {
-      $set: {
-        "invites.$": invitation,
-      },
-    })
-  }
-
   const acceptInvitation = async (
     tokenHeader: string,
     invitationToken: string
@@ -65,16 +47,19 @@ function createUserCaseFrom(
       return []
     }
 
-    const project = await projects.getCollection().findOne({
+    const user = await users.getById(token?._id)
+
+    const invitation = await invitations.getCollection().findOne({
       invites: {
         $elemMatch: {
           token: invitationToken,
+          userEmail: user?.email || "n/a",
           expires: { $gt: new Date() },
         },
       },
     })
 
-    if (!project) {
+    if (!invitation) {
       return null
     }
 
@@ -85,25 +70,17 @@ function createUserCaseFrom(
       },
       {
         $set: {
-          "projects.$": project?._id,
+          "projects.$": ensureObjectId(invitation?.projectId),
         },
       }
     )
 
     // remove the invitaiton
-    await projects.getCollection().updateOne(
-      { _id: project._id },
-      {
-        $pull: {
-          invites: { token: invitationToken },
-        },
-      }
-    )
+    await invitations.deleteInvitation(invitation._id)
   }
 
   return {
     getProjectsFromToken,
-    inviteUserToProject,
     acceptInvitation,
   }
 }

@@ -27,7 +27,8 @@ export default function join(instance: FastifyInstance) {
       const usersCase = createUserCaseFrom(
         instance.users,
         instance.accessToken,
-        instance.projects
+        instance.projects,
+        instance.invitations
       )
 
       const accessTokenHeader = request.headers["x-access-token"] as string
