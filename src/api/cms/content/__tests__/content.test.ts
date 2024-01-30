@@ -27,40 +27,38 @@ describe("Content", () => {
   const usersRepo = users(db)
   const accessTokensRepo = accessTokens(db)
 
-  const removeAllData = async () => {
-    await usersRepo.deleteAll()
-    await accessTokensRepo.deleteAll()
+  const removeAllData = async (prefix: string) => {
+    // console.log(">> Remove all Data", prefix)
+    // await usersRepo.deleteAll()
+    // await accessTokensRepo.deleteAll()
   }
 
-  const removeAllDataAndSeed = async () => {
-    await removeAllData()
-    await seedUsers(db)
-
-    const adminUser = (await usersRepo
-      .getCollection()
-      .findOne({ isAdmin: true })) as WithId<User>
-
-    const nonAdminUser = (await usersRepo
-      .getCollection()
-      .findOne({ isAdmin: false })) as WithId<User>
-
-    const createAdminToken = accessTokensRepo.findOrCreateAccessToken(
-      adminUser._id,
-      { isAdmin: true },
-      process.env.TEST_ADMIN_ACCESS_TOKEN
-    )
-    const createNonAdminToken = accessTokensRepo.findOrCreateAccessToken(
-      nonAdminUser._id,
-      { isAdmin: false },
-      process.env.TEST_NON_ADMIN_ACCESS_TOKEN
-    )
-
-    await Promise.all([createAdminToken, createNonAdminToken])
+  const removeAllDataAndSeed = async (prefix: string) => {
+    // await removeAllData(`${prefix}, beforeSeed`)
+    // console.log(">> Seed all data", prefix)
+    // await seedUsers(db)
+    // const adminUser = (await usersRepo
+    //   .getCollection()
+    //   .findOne({ isAdmin: true })) as WithId<User>
+    // const nonAdminUser = (await usersRepo
+    //   .getCollection()
+    //   .findOne({ isAdmin: false })) as WithId<User>
+    // const createAdminToken = accessTokensRepo.findOrCreateAccessToken(
+    //   adminUser._id,
+    //   { isAdmin: true },
+    //   process.env.TEST_ADMIN_ACCESS_TOKEN
+    // )
+    // const createNonAdminToken = accessTokensRepo.findOrCreateAccessToken(
+    //   nonAdminUser._id,
+    //   { isAdmin: false },
+    //   process.env.TEST_NON_ADMIN_ACCESS_TOKEN
+    // )
+    // await Promise.all([createAdminToken, createNonAdminToken])
   }
 
-  afterAll(() => {
-    app.close()
-    mongoClient.close()
+  afterAll(async () => {
+    await app.close()
+    await mongoClient.close()
   })
 
   afterEach(async () => {
@@ -109,8 +107,10 @@ describe("Content", () => {
 
   describe("Only Admin users can create, update, delete and inspect content types", () => {
     describe("As Admin user", () => {
-      beforeEach(async () => await removeAllDataAndSeed())
-      afterAll(async () => await removeAllData())
+      beforeEach(
+        async () => await removeAllDataAndSeed("beforeEach - As Admin user")
+      )
+      // afterAll(async () => await removeAllData("afterAll - As Admin user"))
 
       test("GET /contents", async () => {
         await app.ready()
@@ -277,8 +277,10 @@ describe("Content", () => {
     })
 
     describe("As non-Admin user", () => {
-      beforeEach(async () => await removeAllDataAndSeed())
-      afterAll(async () => await removeAllData())
+      beforeEach(
+        async () => await removeAllDataAndSeed("beforeEach - As non-Admin user")
+      )
+      // afterAll(async () => await removeAllData("afterAll - As non-Admin user"))
 
       test("GET /contents", async () => {
         await app.ready()
@@ -390,8 +392,13 @@ describe("Content", () => {
   })
 
   describe("Quering content types", () => {
-    beforeEach(async () => await removeAllDataAndSeed())
-    afterAll(async () => await removeAllData())
+    beforeEach(
+      async () =>
+        await removeAllDataAndSeed("beforeEach - Quering content types")
+    )
+    // afterAll(
+    //   async () => await removeAllData("afterAll - Quering content types")
+    // )
 
     test("find content by folder - `/contents?folder=/posts`", async () => {
       await app.ready()
