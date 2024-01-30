@@ -4,7 +4,7 @@ import { AccessToken } from "~/models/accessToken"
 import { getSessionExpirationDate } from "~/helpers/date"
 import { ensureObjectId } from "~/helpers/objectid"
 
-export default function accessToken(db: Db) {
+export default function accessTokens(db: Db) {
   const collection = db.collection<AccessToken>("accessTokens")
 
   const findOrCreateAccessToken = async (

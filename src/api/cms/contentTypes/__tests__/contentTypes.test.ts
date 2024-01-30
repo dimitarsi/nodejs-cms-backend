@@ -1,8 +1,12 @@
-import { MongoClient } from "mongodb"
+import { MongoClient, type WithId } from "mongodb"
 import { compositeContentType } from "./../../../../models/contentType"
 import { describe, test, expect } from "@jest/globals"
 import supertest from "supertest"
 import app from "../../../../app"
+import users from "~/repo/users"
+import accessTokens from "~/repo/accessTokens"
+import seedUsers from "~/cli/seed/users"
+import { User } from "~/models/user"
 
 describe("ContentTypes", () => {
   const mongoClient = new MongoClient(
@@ -66,6 +70,25 @@ describe("ContentTypes", () => {
   })
 
   describe("Only Admin users can create, update, delete and inspect content types", () => {
+    const usersRepo = users(db)
+    const accessTokensRepo = accessTokens(db)
+
+    beforeEach(async () => {
+      await usersRepo.deleteAll()
+      await accessTokensRepo.deleteAll()
+
+      await seedUsers(db)
+      const user = (await usersRepo
+        .getCollection()
+        .findOne({ isAdmin: true })) as WithId<User>
+
+      await accessTokensRepo.findOrCreateAccessToken(
+        user._id,
+        { isAdmin: true },
+        process.env.TEST_ADMIN_ACCESS_TOKEN
+      )
+    })
+
     describe("As Admin user", () => {
       test("GET /content-types", async () => {
         await app.ready()
