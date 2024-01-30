@@ -4,6 +4,8 @@ import { type Db } from "mongodb"
 import mediaRepo from "~/repo/media"
 import contentRepo from "~/repo/contents"
 import contentTypesRepo from "~/repo/contentTypes"
+import usersRepo from "~/repo/users"
+import projectsRepo from "~/repo/projects"
 
 export default async function removeData(db: Db) {
   const mediaDir = path.join(process.cwd(), "./uploads/")
@@ -23,7 +25,8 @@ export default async function removeData(db: Db) {
   return Promise.all([
     contentTypesRepo(db).deleteAll(),
     contentRepo(db).deleteAll(),
-    // usersRepo.deleteAll(),
+    usersRepo(db).deleteAll(),
+    projectsRepo(db).deleteAll(),
     // authRepo.deleteAll(),
     // accessTokens.deleteAll(),
     mediaRepo(db).deleteAll(),

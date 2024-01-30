@@ -23,6 +23,7 @@ export default function createUser(instance: FastifyInstance) {
       lastName: body.lastName,
       email: body.email,
       password: body.password,
+      projects: [],
     })
 
     if (!result) {

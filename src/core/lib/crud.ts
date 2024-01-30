@@ -91,8 +91,8 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         },
       }
     },
-    async create(data: OptionalUnlessRequiredId<T>) {
-      return await collection.insertOne(data)
+    async create(data: Omit<T, "_id">) {
+      return await collection.insertOne(data as OptionalUnlessRequiredId<T>)
     },
     async update(id: ObjectId | string | number, data: Partial<T>) {
       let query: any = { _id: -1 }

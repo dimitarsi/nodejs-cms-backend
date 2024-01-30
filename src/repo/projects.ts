@@ -2,7 +2,7 @@ import { ObjectId, type Db } from "mongodb"
 import type { Project } from "~/models/project"
 import makeRepo from "~/core/lib/crud"
 
-export default function users(db: Db) {
+export default function projects(db: Db) {
   const collection = db.collection<Project>("projects")
   const crud = makeRepo(collection)
 

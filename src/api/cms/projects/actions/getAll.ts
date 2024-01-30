@@ -16,7 +16,8 @@ export default function createProject(instance: FastifyInstance) {
     const userCase = createUserCaseFrom(
       instance.users,
       instance.accessToken,
-      instance.projects
+      instance.projects,
+      instance.invitations
     )
 
     const projects = await userCase.getProjectsFromToken(accessTokenHeader)
@@ -40,6 +41,8 @@ export default function createProject(instance: FastifyInstance) {
         .send({ message: "Not Found or User is not assigned to any projects" })
       return
     }
+
+    reply.send(projects)
 
     // const projects = await instance.projects.getAllByIds(user.projects)
   })

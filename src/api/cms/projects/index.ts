@@ -9,15 +9,19 @@ export default function projects(
   options: never,
   done: Function
 ) {
-  instance.register(() => {
+  instance.register((instance, _options, done) => {
     auth(instance, { isAdmin: false })
     getAll(instance)
+
+    done()
   })
 
-  instance.register(() => {
+  instance.register((instance, _options, done) => {
     auth(instance, { isAdmin: true })
     createProject(instance)
     invite(instance)
+
+    done()
   })
 
   done()

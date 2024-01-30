@@ -33,6 +33,7 @@ export const userCreatePayload: JSONSchemaType<User> = {
     lastName: { type: "string" },
     password: { type: "string", minLength: 8 },
     email: { type: "string", format: "email" },
+    projects: { type: "array", items: { type: "string" } },
   },
   required: ["firstName", "lastName", "password", "email"],
 }

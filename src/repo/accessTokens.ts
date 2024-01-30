@@ -2,17 +2,18 @@ import { randomUUID } from "crypto"
 import { Db, ObjectId } from "mongodb"
 import { AccessToken } from "~/models/accessToken"
 import { getSessionExpirationDate } from "~/helpers/date"
+import { ensureObjectId } from "~/helpers/objectid"
 
 export default function accessToken(db: Db) {
   const collection = db.collection<AccessToken>("accessTokens")
 
   const findOrCreateAccessToken = async (
-    userId: string,
+    userId: string | ObjectId,
     data: { isAdmin: boolean | undefined | null },
     accessToken?: string
   ) => {
     const activeToken = await collection.findOne({
-      userId,
+      userId: ensureObjectId(userId),
       expire: { $gt: new Date() },
       isActive: true,
     })
@@ -26,7 +27,7 @@ export default function accessToken(db: Db) {
     await collection.insertOne({
       token,
       expire: getSessionExpirationDate(),
-      userId,
+      userId: ensureObjectId(userId),
       isActive: true,
       isAdmin: Boolean(data?.isAdmin),
     })

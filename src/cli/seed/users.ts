@@ -17,6 +17,16 @@ export default async function seedUsers(db: Db) {
       isActive: true,
       email: "admin@gmail.com",
       password: "1234567890",
+      projects: [],
+    },
+    {
+      firstName: "John",
+      lastName: "Doe",
+      isAdmin: false,
+      isActive: true,
+      email: "john.doe@gmail.com",
+      password: "1234567890",
+      projects: [],
     },
   ]
 
