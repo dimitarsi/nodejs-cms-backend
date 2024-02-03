@@ -9,13 +9,11 @@ import {
   createContentType,
 } from "~/models/contentType"
 
-describe("ContentTypes Repo", () => {
-  let repo: ContentTypesRepo
+describe("ContentTypes Repo", async () => {
+  const db = await mongoClient.db(`${process.env.DB_NAME}-repo`)
+  let repo = contentTypes(db)
 
   beforeEach(async () => {
-    const db = await mongoClient.db(`${process.env.DB_NAME}-repo`)
-    repo = contentTypes(db)
-
     await repo.deleteAll()
   })
 

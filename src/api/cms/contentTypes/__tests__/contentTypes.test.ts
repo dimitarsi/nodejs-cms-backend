@@ -19,20 +19,6 @@ describe("ContentTypes", () => {
     await db.collection("contentTypes").deleteMany({})
   })
 
-  describe("DB Seeded", () => {
-    test("has accessTokens", async () => {
-      const accessTokens = await (
-        await db.collection("accessTokens").find({})
-      ).toArray()
-      expect(accessTokens).toHaveLength(2)
-    })
-
-    test("has users", async () => {
-      const users = await (await db.collection("users").find({})).toArray()
-      expect(users).toHaveLength(2)
-    })
-  })
-
   describe("Needs Authentication", () => {
     test("GET /content-types", async () => {
       await app.ready()

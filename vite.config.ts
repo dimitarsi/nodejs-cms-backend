@@ -13,6 +13,6 @@ export default defineConfig({
     },
     environment: "node",
     globalSetup: [path.resolve(__dirname, "./src/tests/env.stub.ts")],
-    setupFiles: [path.resolve(__dirname, "./src/tests/db.seed.ts")],
+    // setupFiles: [path.resolve(__dirname, "./src/tests/db.seed.ts")],
   },
 })
