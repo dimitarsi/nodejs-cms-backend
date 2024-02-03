@@ -69,8 +69,8 @@ function createUserCaseFrom(
         _id: new ObjectId(token.userId),
       },
       {
-        $set: {
-          "projects.$": ensureObjectId(invitation?.projectId),
+        $push: {
+          projects: ensureObjectId(invitation?.projectId),
         },
       }
     )

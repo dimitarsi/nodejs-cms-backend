@@ -1,4 +1,7 @@
-export default {
+import type { ObjectId } from "mongodb"
+import type { DomainSettings } from "~/models/project"
+
+const defaultCreateProjectPayload = {
   name: "Main Project",
   active: true,
   domains: [
@@ -7,6 +10,15 @@ export default {
       defaultLocale: "en_EN",
       supportedLanguages: ["en"],
     },
-  ], //DomainSettings[]
+  ] as DomainSettings[],
   // owner: "", // Ref to use
 }
+
+export const createProjectPayload = (userId: ObjectId) => {
+  return {
+    ...defaultCreateProjectPayload,
+    owner: userId.toString(),
+  }
+}
+
+export default defaultCreateProjectPayload

@@ -1,15 +1,70 @@
-import { describe, test, afterAll, expect } from "vitest"
+import { describe, test, afterAll, beforeAll, afterEach, expect } from "vitest"
 import request from "supertest"
-import createProjectPayload from "~/cli/seed/data/createProject"
-import projects from "~/repo/projects"
+import { createProjectPayload } from "~/cli/seed/data/createProject"
 import app from "~/app"
-import { MongoClient } from "mongodb"
+import { MongoClient, ObjectId, WithId } from "mongodb"
+import accessTokens from "~/repo/accessTokens"
+import users from "~/repo/users"
+import { createUserPayload } from "~/cli/seed/data/createUser"
 
-describe("Projects", () => {
+describe("Projects", async () => {
   const slug = "slug"
 
+  const mongoClient = new MongoClient(
+    process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
+  )
+  const db = await mongoClient.db(process.env.DB_NAME)
+  const accessTokensRepo = accessTokens(db)
+  const usersRepo = users(db)
+
+  const PROJECTS_API_ADMIN_TOKEN = "projects-API-admin-token"
+  const PROJECTS_API_NON_ADMIN_TOKEN = "projects-API-non-admin-token"
+
+  let adminUserId: ObjectId, nonAdminUserId: ObjectId
+
+  // Seed tokens
+  beforeAll(async () => {
+    await Promise.all([
+      usersRepo.create(createUserPayload("projects.admin@gmail.com")),
+      usersRepo.create(createUserPayload("projects.non-admin@gmail.com")),
+    ])
+
+    const [adminUser, nonAdminUser] = await Promise.all([
+      usersRepo.getByEmail("projects.admin@gmail.com"),
+      usersRepo.getByEmail("projects.non-admin@gmail.com"),
+    ])
+
+    adminUserId = adminUser?._id!
+    nonAdminUserId = nonAdminUser?._id!
+
+    await Promise.all([
+      accessTokensRepo.findOrCreateAccessToken(
+        adminUserId,
+        {
+          isAdmin: true,
+        },
+        PROJECTS_API_ADMIN_TOKEN
+      ),
+      accessTokensRepo.findOrCreateAccessToken(
+        nonAdminUserId,
+        {
+          isAdmin: false,
+        },
+        PROJECTS_API_NON_ADMIN_TOKEN
+      ),
+    ])
+  })
+
   afterAll(async () => {
+    await accessTokensRepo.deactivateToken(PROJECTS_API_ADMIN_TOKEN)
+    await accessTokensRepo.deactivateToken(PROJECTS_API_NON_ADMIN_TOKEN)
+
     await app.close()
+    await mongoClient.close()
+  })
+
+  afterEach(async () => {
+    await db.collection("contents").deleteMany({})
   })
 
   describe("Needs authentication", () => {
@@ -17,7 +72,7 @@ describe("Projects", () => {
       await app.ready()
       await request(app.server)
         .post("/projects")
-        .send(createProjectPayload)
+        .send(createProjectPayload(adminUserId))
         .expect(403)
     })
 
@@ -43,53 +98,42 @@ describe("Projects", () => {
   })
 
   describe("Only Admins can create, delete, update and inspect projects", () => {
-    const adminAccessToken: string = process.env.TEST_ADMIN_ACCESS_TOKEN!
-    const nonAdminAccessToken: string = process.env.TEST_NON_ADMIN_ACCESS_TOKEN!
-
     describe("As Admin", () => {
-      test("GET /projects", async () => {
+      test.only("POST /projects", async () => {
+        await app.ready()
+
+        const resp = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(adminUserId))
+          .expect(201)
+      })
+
+      test.only("GET /projects", async () => {
         await app.ready()
 
         const resp = await request(app.server)
           .get("/projects")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
           .expect(200)
 
-        // expect(resp.body).toHaveProperty("pagination")
-        // expect(resp.body).toHaveProperty("items")
         expect(resp.body.length).toBeGreaterThan(0)
         expect(resp.body[0]).toHaveProperty("name")
         expect(resp.body[0]).toHaveProperty("owner")
         expect(resp.body[0].active).toBeTruthy()
       })
 
-      test("POST /projects", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = projects(db)
-
-        await app.ready()
-
-        const resp = await request(app.server)
-          .post("/projects")
-          .set("X-Access-Token", adminAccessToken)
-          .send(createProjectPayload)
-          .expect(201)
-      })
-
       test.skip("PATCH /projects", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = projects(db)
-
         await app.ready()
         const resp = await request(app.server)
           .post("/projects")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
           .send(createProjectPayload)
           .expect(201)
 
         await request(app.server)
           .patch(`/projects/${resp.body._id}`)
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
           .send({
             email: "foo@bar.com",
             firstName: "Hello",

@@ -5,6 +5,7 @@ import bcrypt from "bcrypt"
 import { rounds } from "@config"
 import { v4 } from "uuid"
 import { getActivationExpirationDate } from "~/helpers/date"
+import { ensureObjectId } from "~/helpers/objectid"
 
 function shouldUpdatePassword(
   data: Partial<User>
@@ -86,6 +87,16 @@ export default function users(db: Db) {
         { _id: new ObjectId(id) },
         {
           $set: { isActive: true },
+        }
+      )
+    },
+    setProjectOwner(userId: string, projectId: string) {
+      return collection.findOneAndUpdate(
+        {
+          _id: new ObjectId(userId),
+        },
+        {
+          $push: { projects: ensureObjectId(projectId) },
         }
       )
     },

@@ -31,6 +31,11 @@ export default function createProject(instance: FastifyInstance) {
       owner: ensureObjectId(token.userId),
     } as Project)
 
+    await instance.users.setProjectOwner(
+      token.userId.toString(),
+      project.insertedId.toString()
+    )
+
     reply.status(201).send(project)
   })
 }

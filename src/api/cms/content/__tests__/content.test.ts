@@ -1,8 +1,9 @@
-import { describe, test, afterAll, afterEach, expect } from "vitest"
-import { MongoClient } from "mongodb"
+import { describe, test, beforeAll, afterAll, afterEach, expect } from "vitest"
+import { MongoClient, ObjectId } from "mongodb"
 import supertest from "supertest"
-import app from "../../../../app"
+import app from "~/app"
 import { CreateContentPayload } from "~/models/content"
+import accessTokens from "~/repo/accessTokens"
 
 const createContent = (): CreateContentPayload => ({
   name: "foo",
@@ -14,14 +15,40 @@ const createContent = (): CreateContentPayload => ({
   data: null,
 })
 
-describe("Content", () => {
+describe("Content", async () => {
   const mongoClient = new MongoClient(
     process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
   )
-  const db = mongoClient.db(process.env.DB_NAME)
+  const db = await mongoClient.db(process.env.DB_NAME)
+  const accessTokensRepo = accessTokens(db)
+
+  const CONENT_API_ADMIN_TOKEN = "content-API-admin-token"
+  const CONENT_API_NON_ADMIN_TOKEN = "content-API-non-admin-token"
+
+  // Seed tokens
+  beforeAll(async () => {
+    await Promise.all([
+      accessTokensRepo.findOrCreateAccessToken(
+        new ObjectId(),
+        {
+          isAdmin: true,
+        },
+        CONENT_API_ADMIN_TOKEN
+      ),
+      accessTokensRepo.findOrCreateAccessToken(
+        new ObjectId(),
+        {
+          isAdmin: false,
+        },
+        CONENT_API_NON_ADMIN_TOKEN
+      ),
+    ])
+  })
 
   afterAll(async () => {
-    // await teardown()
+    await accessTokensRepo.deactivateToken(CONENT_API_ADMIN_TOKEN)
+    await accessTokensRepo.deactivateToken(CONENT_API_NON_ADMIN_TOKEN)
+
     await app.close()
     await mongoClient.close()
   })
@@ -77,7 +104,7 @@ describe("Content", () => {
 
         supertest(app.server)
           .get("/contents")
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -91,7 +118,7 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -120,19 +147,19 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         const resultFromSlug = await supertest(app.server)
           .get(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
 
         const resultFromId = await supertest(app.server)
           .get(`/contents/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
 
         expect(resultFromId.body._id).toBeDefined()
@@ -148,14 +175,14 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .patch(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
           })
@@ -166,7 +193,7 @@ describe("Content", () => {
           .send({
             name: "Hello World 2",
           })
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -179,7 +206,7 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(data)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -187,7 +214,7 @@ describe("Content", () => {
 
         const response = await supertest(app.server)
           .patch(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
             folderLocation: "/posts",
@@ -206,14 +233,14 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/contents/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -224,14 +251,14 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
     })
@@ -242,7 +269,7 @@ describe("Content", () => {
 
         supertest(app.server)
           .get("/contents")
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -252,7 +279,7 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -263,19 +290,19 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .get(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
 
         await supertest(app.server)
           .get(`/contents/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -286,14 +313,14 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .patch(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .send({
             name: "Hello World",
           })
@@ -304,7 +331,7 @@ describe("Content", () => {
           .send({
             name: "Hello World 2",
           })
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -315,14 +342,14 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/contents/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -333,14 +360,14 @@ describe("Content", () => {
         const resp = await supertest(app.server)
           .post("/contents")
           .send(createContent())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/contents/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
     })
@@ -356,7 +383,7 @@ describe("Content", () => {
       await supertest(app.server)
         .post("/contents")
         .send(data)
-        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(201)
 
       dataInFolder.slug = "test-folder-query"
@@ -366,17 +393,17 @@ describe("Content", () => {
       await supertest(app.server)
         .post("/contents")
         .send(dataInFolder)
-        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(201)
 
       await supertest(app.server)
         .get(`/contents/${dataInFolder.slug}`)
-        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(200)
 
       const response = await supertest(app.server)
         .get(`/contents?folder=/posts`)
-        .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(200)
 
       expect(response.body.items).toHaveLength(1)

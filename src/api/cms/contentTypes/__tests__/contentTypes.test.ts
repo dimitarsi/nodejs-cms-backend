@@ -1,16 +1,44 @@
-import { describe, test, afterAll, afterEach, expect } from "vitest"
-import { MongoClient } from "mongodb"
+import { describe, test, afterAll, beforeAll, afterEach, expect } from "vitest"
+import { MongoClient, ObjectId } from "mongodb"
 import { compositeContentType } from "~/models/contentType"
 import supertest from "supertest"
 import app from "~/app"
+import accessTokens from "~/repo/accessTokens"
 
-describe("ContentTypes", () => {
+describe("ContentTypes", async () => {
   const mongoClient = new MongoClient(
     process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
   )
-  const db = mongoClient.db(process.env.DB_NAME)
+  const db = await mongoClient.db(process.env.DB_NAME)
+  const accessTokensRepo = accessTokens(db)
+
+  const CONENT_TYPES_API_ADMIN_TOKEN = "content-types-API-admin-token"
+  const CONENT_TYPES_API_NON_ADMIN_TOKEN = "content-types-API-non-admin-token"
+
+  // Seed tokens
+  beforeAll(async () => {
+    await Promise.all([
+      accessTokensRepo.findOrCreateAccessToken(
+        new ObjectId(),
+        {
+          isAdmin: true,
+        },
+        CONENT_TYPES_API_ADMIN_TOKEN
+      ),
+      accessTokensRepo.findOrCreateAccessToken(
+        new ObjectId(),
+        {
+          isAdmin: false,
+        },
+        CONENT_TYPES_API_NON_ADMIN_TOKEN
+      ),
+    ])
+  })
 
   afterAll(async () => {
+    await accessTokensRepo.deactivateToken(CONENT_TYPES_API_ADMIN_TOKEN)
+    await accessTokensRepo.deactivateToken(CONENT_TYPES_API_NON_ADMIN_TOKEN)
+
     await app.close()
     await mongoClient.close()
   })
@@ -72,7 +100,7 @@ describe("ContentTypes", () => {
 
         supertest(app.server)
           .get("/content-types")
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -82,7 +110,7 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -106,19 +134,19 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         const resultFromSlug = await supertest(app.server)
           .get(`/content-types/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
 
         const resultFromId = await supertest(app.server)
           .get(`/content-types/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
 
         expect(resultFromId.body._id).toBeDefined()
@@ -133,14 +161,14 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .patch(`/content-types/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
           })
@@ -151,7 +179,7 @@ describe("ContentTypes", () => {
           .send({
             name: "Hello World 2",
           })
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -162,14 +190,14 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/content-types/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -180,14 +208,14 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/content-types/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
     })
@@ -198,7 +226,7 @@ describe("ContentTypes", () => {
 
         supertest(app.server)
           .get("/content-types")
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -208,7 +236,7 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -219,19 +247,19 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .get(`/content-types/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
 
         await supertest(app.server)
           .get(`/content-types/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -242,14 +270,14 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .patch(`/content-types/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .send({
             name: "Hello World",
           })
@@ -260,7 +288,7 @@ describe("ContentTypes", () => {
           .send({
             name: "Hello World 2",
           })
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -271,14 +299,14 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/content-types/${resp.body._id}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -289,14 +317,14 @@ describe("ContentTypes", () => {
         const resp = await supertest(app.server)
           .post("/content-types")
           .send(compositeContentType("test01").getType())
-          .set("X-Access-Token", process.env.TEST_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/content-types/${resp.body.slug}`)
-          .set("X-Access-Token", process.env.TEST_NON_ADMIN_ACCESS_TOKEN!)
+          .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
     })

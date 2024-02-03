@@ -1,6 +1,6 @@
 import { describe, expect, test, beforeEach, afterAll, afterEach } from "vitest"
 
-import contentTypes, { ContentTypesRepo } from "../contentTypes"
+import contentTypes from "../contentTypes"
 import mongoClient from "@db"
 
 import {
