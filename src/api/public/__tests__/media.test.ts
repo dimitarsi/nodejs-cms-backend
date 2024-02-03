@@ -1,6 +1,6 @@
 import supertest from "supertest"
-import app from "../../../app"
-import { expect, describe, test } from "@jest/globals"
+import app from "~/app"
+import { expect, describe, test, afterAll } from "vitest"
 
 describe("Media", () => {
   afterAll(() => {

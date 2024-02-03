@@ -1,16 +1,34 @@
-import { describe, test } from "@jest/globals"
-import app from "../../../../app"
+import { describe, test, afterAll, expect } from "vitest"
 import request from "supertest"
 import createProjectPayload from "~/cli/seed/data/createProject"
-import users from "~/repo/users"
-import mongoClient from "@db"
 import projects from "~/repo/projects"
+import app from "~/app"
+import { MongoClient } from "mongodb"
 
 describe("Projects", () => {
   const slug = "slug"
 
-  afterAll(() => {
-    app.close()
+  const mongoClient = new MongoClient(
+    process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
+  )
+  const db = mongoClient.db(process.env.DB_NAME)
+
+  afterAll(async () => {
+    await app.close()
+  })
+
+  describe("DB Seeded", () => {
+    test("has accessTokens", async () => {
+      const accessTokens = await (
+        await db.collection("accessTokens").find({})
+      ).toArray()
+      expect(accessTokens).toHaveLength(2)
+    })
+
+    test("has users", async () => {
+      const users = await (await db.collection("users").find({})).toArray()
+      expect(users).toHaveLength(2)
+    })
   })
 
   describe("Needs authentication", () => {

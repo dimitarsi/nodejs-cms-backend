@@ -23,8 +23,19 @@ export default function (
     }
 
     if (!activeToken) {
+      const allTokens = await instance.accessToken.findAll()
+      instance.log.info(
+        allTokens,
+        `debug all tokens - total ${allTokens.length}`
+      )
+      instance.log.error(
+        { token: tokenValue, isAdmin: options.isAdmin },
+        "User failed to provide valid token"
+      )
       reply.code(403)
-      return reply.send({ error: "Unauthorized" })
+      return reply.send({
+        error: `Unauthorized - not active token - '${tokenValue}'`,
+      })
     } else {
       instance.accessToken.touchToken(activeToken._id)
     }

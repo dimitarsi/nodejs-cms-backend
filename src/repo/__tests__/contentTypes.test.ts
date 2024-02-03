@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals"
+import { describe, expect, test, beforeEach, afterAll, afterEach } from "vitest"
 
 import contentTypes, { ContentTypesRepo } from "../contentTypes"
 import mongoClient from "@db"
@@ -13,7 +13,7 @@ describe("ContentTypes Repo", () => {
   let repo: ContentTypesRepo
 
   beforeEach(async () => {
-    const db = await mongoClient.db(process.env.DB_NAME)
+    const db = await mongoClient.db(`${process.env.DB_NAME}-repo`)
     repo = contentTypes(db)
 
     await repo.deleteAll()
@@ -21,10 +21,6 @@ describe("ContentTypes Repo", () => {
 
   afterAll(() => {
     mongoClient.close(true)
-  })
-
-  test.failing("Tests can fail", () => {
-    expect(false).toBeTruthy()
   })
 
   test("Can create and find simple content Types", async () => {

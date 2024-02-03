@@ -50,6 +50,16 @@ export default function accessTokens(db: Db) {
     return data.modifiedCount > 0
   }
 
+  const findAll = async () => {
+    const tokens = await (await collection.find({})).toArray()
+
+    return tokens.map((at) => ({
+      token: at.token,
+      isActive: at.isActive,
+      isAdmin: at.isAdmin,
+    }))
+  }
+
   const findToken = async (token: string) => {
     const activeToken = await collection.findOne({
       token,
@@ -97,5 +107,6 @@ export default function accessTokens(db: Db) {
     deleteAll,
     findAdminToken,
     touchToken,
+    findAll,
   }
 }

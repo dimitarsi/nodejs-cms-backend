@@ -1,10 +1,10 @@
-import { describe, test } from "@jest/globals"
-import app from "../../../app"
+import { describe, test, afterAll } from "vitest"
+import app from "~/app"
 import supertest from "supertest"
 
 describe("Authentication endpoints", () => {
-  afterAll(() => {
-    app.close()
+  afterAll(async () => {
+    await app.close()
   })
 
   describe("POST /login", () => {

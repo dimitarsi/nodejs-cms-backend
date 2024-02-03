@@ -1,3 +1,4 @@
+import { test, describe, expect } from "vitest"
 import slugify from "../slugify"
 
 describe("slugify", () => {

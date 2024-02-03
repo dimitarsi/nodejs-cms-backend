@@ -1,15 +1,33 @@
-import { describe, test } from "@jest/globals"
-import app from "../../../../app"
+import { describe, test, expect, beforeAll, afterAll, afterEach } from "vitest"
+import app from "~/app"
 import request from "supertest"
-import createUserPayload from "~/cli/seed/data/createUser"
-import users from "~/repo/users"
-import mongoClient from "@db"
+import { createUserPayload } from "~/cli/seed/data/createUser"
+import { MongoClient } from "mongodb"
 
 describe("Authentication", () => {
   const slug = "slug"
 
-  afterAll(() => {
-    app.close()
+  const mongoClient = new MongoClient(
+    process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
+  )
+  const db = mongoClient.db(process.env.DB_NAME)
+
+  afterAll(async () => {
+    await app.close()
+  })
+
+  describe(`DB Seeded - ${process.env.DB_NAME}`, () => {
+    test("has accessTokens", async () => {
+      const accessTokens = await (
+        await db.collection("accessTokens").find({})
+      ).toArray()
+      expect(accessTokens).toHaveLength(2)
+    })
+
+    test("has users", async () => {
+      const users = await (await db.collection("users").find({})).toArray()
+      expect(users).toHaveLength(2)
+    })
   })
 
   describe("Needs authentication", () => {
@@ -17,7 +35,7 @@ describe("Authentication", () => {
       await app.ready()
       await request(app.server)
         .post("/users")
-        .send(createUserPayload)
+        .send(createUserPayload("plenty.test.006@gmail.com"))
         .expect(403)
     })
 
@@ -46,6 +64,8 @@ describe("Authentication", () => {
     const adminAccessToken: string = process.env.TEST_ADMIN_ACCESS_TOKEN!
     const nonAdminAccessToken: string = process.env.TEST_NON_ADMIN_ACCESS_TOKEN!
 
+    afterEach(() => {})
+
     describe("As Admin", () => {
       test("GET /users", async () => {
         await app.ready()
@@ -59,16 +79,11 @@ describe("Authentication", () => {
       })
 
       test("POST /users", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.000@gmail.com"))
           .expect(201)
 
         expect(resp.body).toHaveProperty("_id")
@@ -81,16 +96,11 @@ describe("Authentication", () => {
       })
 
       test("POST /users - can create only one user with the same email", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test@gmail.com"))
           .expect(201)
 
         expect(resp.body).toHaveProperty("_id")
@@ -104,21 +114,16 @@ describe("Authentication", () => {
         await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test@gmail.com"))
           .expect(422)
       })
 
       test("PATCH /users", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.004@gmail.com"))
           .expect(201)
 
         await request(app.server)
@@ -143,16 +148,11 @@ describe("Authentication", () => {
       })
 
       test("GET /users/:id - is Forbidden", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.003@gmail.com"))
           .expect(201)
 
         await request(app.server)
@@ -162,30 +162,21 @@ describe("Authentication", () => {
       })
 
       test("POST /users - is Forbidden", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
         await request(app.server)
           .post("/users")
           .set("X-Access-Token", nonAdminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.005@gmail.com"))
           .expect(403)
       })
 
       test("POST /users - can create only one user with the same email - is Forbidden", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
+
         const resp = await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.002@gmail.com"))
           .expect(201)
 
         expect(resp.body).toHaveProperty("_id")
@@ -199,21 +190,16 @@ describe("Authentication", () => {
         await request(app.server)
           .post("/users")
           .set("X-Access-Token", nonAdminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.002@gmail.com"))
           .expect(403)
       })
 
       test("PATCH /users - is Forbidden", async () => {
-        const db = await mongoClient.db(process.env.DB_NAME)
-        const repo = users(db)
-
-        await repo.deleteAll()
-
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
           .set("X-Access-Token", adminAccessToken)
-          .send(createUserPayload)
+          .send(createUserPayload("plenty.test.001@gmail.com"))
           .expect(201)
 
         await request(app.server)

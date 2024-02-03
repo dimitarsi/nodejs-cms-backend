@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ContentTypes Only Admin users can create, update, delete and inspect content types As Admin user POST /content-types 1`] = `
+exports[`ContentTypes > Only Admin users can create, update, delete and inspect content types > As Admin user > POST /content-types 1`] = `
 {
   "children": [],
   "freezed": false,

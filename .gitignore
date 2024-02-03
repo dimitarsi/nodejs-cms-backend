@@ -2,4 +2,7 @@ node_modules
 dist
 /uploads/*
 !/uploads/.gitkeep
-.env.tests
+.env
+.env.test
+.env.*
+*.log

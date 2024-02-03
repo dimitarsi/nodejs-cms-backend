@@ -1,51 +1,14 @@
-import { MongoClient, type WithId } from "mongodb"
-import { compositeContentType } from "./../../../../models/contentType"
-import { describe, test, expect } from "@jest/globals"
+import { describe, test, afterAll, afterEach, expect } from "vitest"
+import { MongoClient } from "mongodb"
+import { compositeContentType } from "~/models/contentType"
 import supertest from "supertest"
-import app from "../../../../app"
-import users from "~/repo/users"
-import accessTokens from "~/repo/accessTokens"
-import seedUsers from "~/cli/seed/users"
-import { User } from "~/models/user"
-import removeData from "~/cli/seed/remove"
+import app from "~/app"
 
 describe("ContentTypes", () => {
   const mongoClient = new MongoClient(
     process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
   )
   const db = mongoClient.db(process.env.DB_NAME)
-
-  const usersRepo = users(db)
-  const accessTokensRepo = accessTokens(db)
-
-  const removeAllData = async (prefix: string) => {
-    // console.log(">> Remove all Data", prefix)
-    // await usersRepo.deleteAll()
-    // await accessTokensRepo.deleteAll()
-  }
-
-  const removeAllDataAndSeed = async (prefix: string) => {
-    // await removeAllData(`${prefix}, beforeSeed`)
-    // console.log(">> Seed all data", prefix)
-    // await seedUsers(db)
-    // const adminUser = (await usersRepo
-    //   .getCollection()
-    //   .findOne({ isAdmin: true })) as WithId<User>
-    // const nonAdminUser = (await usersRepo
-    //   .getCollection()
-    //   .findOne({ isAdmin: false })) as WithId<User>
-    // const createAdminToken = accessTokensRepo.findOrCreateAccessToken(
-    //   adminUser._id,
-    //   { isAdmin: true },
-    //   process.env.TEST_ADMIN_ACCESS_TOKEN
-    // )
-    // const createNonAdminToken = accessTokensRepo.findOrCreateAccessToken(
-    //   nonAdminUser._id,
-    //   { isAdmin: false },
-    //   process.env.TEST_NON_ADMIN_ACCESS_TOKEN
-    // )
-    // await Promise.all([createAdminToken, createNonAdminToken])
-  }
 
   afterAll(async () => {
     await app.close()
@@ -54,6 +17,20 @@ describe("ContentTypes", () => {
 
   afterEach(async () => {
     await db.collection("contentTypes").deleteMany({})
+  })
+
+  describe("DB Seeded", () => {
+    test("has accessTokens", async () => {
+      const accessTokens = await (
+        await db.collection("accessTokens").find({})
+      ).toArray()
+      expect(accessTokens).toHaveLength(2)
+    })
+
+    test("has users", async () => {
+      const users = await (await db.collection("users").find({})).toArray()
+      expect(users).toHaveLength(2)
+    })
   })
 
   describe("Needs Authentication", () => {
@@ -104,10 +81,6 @@ describe("ContentTypes", () => {
 
   describe("Only Admin users can create, update, delete and inspect content types", () => {
     describe("As Admin user", () => {
-      beforeEach(
-        async () => await removeAllDataAndSeed("beforeEach - As Admin User")
-      )
-
       test("GET /content-types", async () => {
         await app.ready()
 
@@ -234,10 +207,6 @@ describe("ContentTypes", () => {
     })
 
     describe("As non-Admin user", () => {
-      beforeEach(
-        async () => await removeAllDataAndSeed("beforeEach - As non-Admin User")
-      )
-
       test("GET /content-types", async () => {
         await app.ready()
 

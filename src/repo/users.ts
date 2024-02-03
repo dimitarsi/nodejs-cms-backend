@@ -21,6 +21,9 @@ export default function users(db: Db) {
     getById: (idOrSlug: string | number | ObjectId) => {
       return crud.getById(idOrSlug, { password: 0 })
     },
+    getByEmail: (email: string) => {
+      return collection.findOne({ email })
+    },
     getAll: (
       page: number = 1,
       pageSize: number = 20,

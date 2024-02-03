@@ -30,11 +30,19 @@ export default async function seedUsers(db: Db) {
     },
   ]
 
+  const users = await userRepo(db)
+
   for (const userData of data) {
     const valid = await validateUser(userData)
 
     if (valid) {
-      await userRepo(db).create(userData)
+      const findUser = await users.getByEmail(userData.email)
+
+      if (findUser !== null) {
+        throw "Seed Error - User already exists!"
+      }
+
+      await users.create(userData)
     } else {
       console.error(validateUser.errors)
     }
