@@ -1,12 +1,13 @@
 import { Db, ObjectId } from "mongodb"
 import { ensureObjectId } from "~/helpers/objectid"
+import { ProjectPermission } from "~/models/permissions"
 
 export default function permissions(db: Db) {
-  const collection = db.collection("permissions", {})
+  const collection = db.collection<ProjectPermission>("permissions", {})
 
   const updatePermissionField =
     (field: "read" | "write" | "manage" | "all") =>
-    (
+    async (
       userId: string | ObjectId,
       projectId: string | ObjectId,
       type: "grant" | "revoke"
@@ -21,13 +22,17 @@ export default function permissions(db: Db) {
             }
           : { [field]: accessLevel }
 
-      return collection.findOneAndUpdate(
+      return await collection.findOneAndUpdate(
         {
           userId: ensureObjectId(userId),
           projectId: ensureObjectId(projectId),
         },
         {
           $set: properties,
+        },
+        {
+          upsert: true,
+          includeResultMetadata: true, // prevent return `null` when a new document is created
         }
       )
     }
@@ -65,6 +70,15 @@ export default function permissions(db: Db) {
 
   const hasManagePermission = hasPermissionsLevel([{ manage: true }])
 
+  /**
+   *
+   * @param projectId - prevent accidental deletion of ALL projects permissions
+   * @returns
+   */
+  const deleteAll = (projectId: string | ObjectId) => {
+    return collection.deleteMany({ projectId: ensureObjectId(projectId) })
+  }
+
   return {
     setAdminUser,
     setReadPermissions,
@@ -73,5 +87,6 @@ export default function permissions(db: Db) {
     hasReadPermission,
     hasWritePermission,
     hasManagePermission,
+    deleteAll,
   }
 }
