@@ -197,7 +197,7 @@ describe("Content", async () => {
           .expect(200)
       })
 
-      test("PATCH /contents/:idOrSlug - changing foder also updates the depth", async () => {
+      test("PATCH /contents/:idOrSlug - changing folder also updates the depth", async () => {
         await app.ready()
 
         const data = createContent()

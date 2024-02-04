@@ -10,7 +10,8 @@
     "format": "prettier -w ./src/**/*.ts ./src/*.ts",
     "cli": "node -r ts-node/register ./src/cli/index.ts",
     "seed": "pnpm cli --seed",
-    "re:seed": "pnpm cli --reseed"
+    "re:seed": "pnpm cli --reseed",
+    "test:teardown": "DB_NAME=plenty_cms_test node -r ts-node/register ./src/tests/teardown.cli.ts"
   },
   "keywords": [],
   "author": "",

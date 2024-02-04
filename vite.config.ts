@@ -12,7 +12,10 @@ export default defineConfig({
       "~": path.resolve(__dirname, "./src"),
     },
     environment: "node",
-    globalSetup: [path.resolve(__dirname, "./src/tests/env.stub.ts")],
+    globalSetup: [
+      path.resolve(__dirname, "./src/tests/env.stub.ts"),
+      path.resolve(__dirname, "./src/tests/teardown.ts"),
+    ],
     // setupFiles: [path.resolve(__dirname, "./src/tests/db.seed.ts")],
   },
 })

@@ -2,7 +2,8 @@ import { describe, test, expect, beforeAll, afterAll, afterEach } from "vitest"
 import app from "~/app"
 import request from "supertest"
 import { createUserPayload } from "~/cli/seed/data/createUser"
-import { MongoClient } from "mongodb"
+import { MongoClient, ObjectId } from "mongodb"
+import accessTokens from "~/repo/accessTokens"
 
 describe("Authentication", () => {
   const slug = "slug"
@@ -41,18 +42,50 @@ describe("Authentication", () => {
     })
   })
 
-  describe("Only Admins can create, delete, update and inspect users", () => {
-    const adminAccessToken: string = process.env.TEST_ADMIN_ACCESS_TOKEN!
-    const nonAdminAccessToken: string = process.env.TEST_NON_ADMIN_ACCESS_TOKEN!
+  describe("Only Admins can create, delete, update and inspect users", async () => {
+    const mongoClient = new MongoClient(
+      process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
+    )
+    const db = await mongoClient.db(process.env.DB_NAME)
+    const accessTokensRepo = accessTokens(db)
 
-    afterEach(() => {})
+    const USER_API_ADMIN_TOKEN = "user-api-admin-token"
+    const USER_API_NON_ADMIN_TOKEN = "user-api-non-admin-token"
+
+    // Seed tokens
+    beforeAll(async () => {
+      await Promise.all([
+        accessTokensRepo.findOrCreateAccessToken(
+          new ObjectId(),
+          {
+            isAdmin: true,
+          },
+          USER_API_ADMIN_TOKEN
+        ),
+        accessTokensRepo.findOrCreateAccessToken(
+          new ObjectId(),
+          {
+            isAdmin: false,
+          },
+          USER_API_NON_ADMIN_TOKEN
+        ),
+      ])
+    })
+
+    afterAll(async () => {
+      await accessTokensRepo.deactivateToken(USER_API_ADMIN_TOKEN)
+      await accessTokensRepo.deactivateToken(USER_API_NON_ADMIN_TOKEN)
+
+      await app.close()
+      await mongoClient.close()
+    })
 
     describe("As Admin", () => {
       test("GET /users", async () => {
         await app.ready()
         const resp = await request(app.server)
           .get("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .expect(200)
 
         expect(resp.body).toHaveProperty("pagination")
@@ -63,7 +96,7 @@ describe("Authentication", () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.000@gmail.com"))
           .expect(201)
 
@@ -80,7 +113,7 @@ describe("Authentication", () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test@gmail.com"))
           .expect(201)
 
@@ -94,7 +127,7 @@ describe("Authentication", () => {
 
         await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test@gmail.com"))
           .expect(422)
       })
@@ -103,13 +136,13 @@ describe("Authentication", () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.004@gmail.com"))
           .expect(201)
 
         await request(app.server)
           .patch(`/users/${resp.body._id}`)
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send({
             email: "foo@bar.com",
             firstName: "Hello",
@@ -124,7 +157,7 @@ describe("Authentication", () => {
         await app.ready()
         await request(app.server)
           .get("/users")
-          .set("X-Access-Token", nonAdminAccessToken)
+          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -132,13 +165,13 @@ describe("Authentication", () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.003@gmail.com"))
           .expect(201)
 
         await request(app.server)
           .get(`/users/${resp.body._id}`)
-          .set("X-Access-Token", nonAdminAccessToken)
+          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
@@ -146,7 +179,7 @@ describe("Authentication", () => {
         await app.ready()
         await request(app.server)
           .post("/users")
-          .set("X-Access-Token", nonAdminAccessToken)
+          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.005@gmail.com"))
           .expect(403)
       })
@@ -156,7 +189,7 @@ describe("Authentication", () => {
 
         const resp = await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.002@gmail.com"))
           .expect(201)
 
@@ -170,7 +203,7 @@ describe("Authentication", () => {
 
         await request(app.server)
           .post("/users")
-          .set("X-Access-Token", nonAdminAccessToken)
+          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.002@gmail.com"))
           .expect(403)
       })
@@ -179,13 +212,13 @@ describe("Authentication", () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/users")
-          .set("X-Access-Token", adminAccessToken)
+          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
           .send(createUserPayload("plenty.test.001@gmail.com"))
           .expect(201)
 
         await request(app.server)
           .patch(`/users/${resp.body._id}`)
-          .set("X-Access-Token", nonAdminAccessToken)
+          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
           .send({
             email: "foo@bar.com",
             firstName: "Hello",
