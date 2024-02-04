@@ -3,6 +3,7 @@ import { schemaRef } from "~/schema/cmsAPISchema"
 
 const getAllOptions: RouteShorthandOptions = {
   schema: {
+    // params: schemaRef("projectIdParamStrict"),
     querystring: schemaRef("filtersAndPageQuery"),
     // @ts-ignore
     tags: ["user"],
@@ -30,8 +31,9 @@ const getAllOptions: RouteShorthandOptions = {
 
 export default function getAll(instance: FastifyInstance) {
   instance.get<{
+    Params: { projectId: string }
     Querystring: { page: number; perPage: number; folder?: string }
-  }>("/contents", getAllOptions, async (request, reply) => {
+  }>("/:projectId/contents", getAllOptions, async (request, reply) => {
     const filter = {
       ...(request.query.folder
         ? { folderLocation: `${decodeURIComponent(request.query.folder)}` }

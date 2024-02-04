@@ -2,10 +2,10 @@ import type { FastifyInstance } from "fastify"
 import { WithId } from "mongodb"
 import { AccessToken } from "~/models/accessToken"
 
-export default function (
+export default function projectAccess(
   instance: FastifyInstance,
   options: { accessLevel: "readOrUp" | "writeOrUp" | "manage" },
-  done: Function
+  done: Function = () => {}
 ) {
   instance.addHook<{
     Params: { projectId?: string }
@@ -19,6 +19,12 @@ export default function (
     // Find related userId, regardless of access level
     let activeToken: WithId<AccessToken> | null =
       await instance.accessToken.findToken(tokenValue)
+
+    if (!activeToken) {
+      return reply.code(403).send({
+        error: `Unauthorized - not active token - '${tokenValue}'`,
+      })
+    }
 
     const userId = activeToken?.userId
     const projectId = req.params["projectId"] || null

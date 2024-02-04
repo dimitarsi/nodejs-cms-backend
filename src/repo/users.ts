@@ -49,7 +49,7 @@ export default function users(db: Db) {
         lastName: data.lastName,
         email: data.email,
         isActive: data.isActive,
-        isAdmin: data.isAdmin,
+        // isAdmin: data.isAdmin,
         password: bcrypt.hashSync(data.password, rounds),
         activationHash: v4(),
         hashExpiration: getActivationExpirationDate(),

@@ -9,7 +9,6 @@ export default function accessTokens(db: Db) {
 
   const findOrCreateAccessToken = async (
     userId: string | ObjectId,
-    data: { isAdmin: boolean | undefined | null },
     accessToken?: string
   ) => {
     const activeToken = await collection.findOne({
@@ -29,7 +28,6 @@ export default function accessTokens(db: Db) {
       expire: getSessionExpirationDate(),
       userId: ensureObjectId(userId),
       isActive: true,
-      isAdmin: Boolean(data?.isAdmin),
     })
 
     return token
@@ -56,7 +54,6 @@ export default function accessTokens(db: Db) {
     return tokens.map((at) => ({
       token: at.token,
       isActive: at.isActive,
-      isAdmin: at.isAdmin,
     }))
   }
 
@@ -66,18 +63,6 @@ export default function accessTokens(db: Db) {
       expire: { $gt: new Date() },
       isActive: true,
     })
-
-    return activeToken
-  }
-
-  const findAdminToken = async (token: string) => {
-    const query = {
-      token,
-      expire: { $gt: new Date() },
-      isActive: true,
-      isAdmin: true,
-    }
-    const activeToken = await collection.findOne(query)
 
     return activeToken
   }
@@ -93,6 +78,7 @@ export default function accessTokens(db: Db) {
         expire: { $gt: new Date() },
       },
       {
+        // TODO: refactor to use atomic $curretDate or $$NOW
         $set: {
           expire: getSessionExpirationDate(),
         },
@@ -105,7 +91,6 @@ export default function accessTokens(db: Db) {
     deactivateToken,
     findToken,
     deleteAll,
-    findAdminToken,
     touchToken,
     findAll,
   }

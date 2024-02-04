@@ -21,11 +21,13 @@ export default function (
     let activeToken: WithId<AccessToken> | null
 
     // TODO: `isAdmin` needs to be deprecated in favor of project-level permissions
-    if (options.isAdmin) {
-      activeToken = await instance.accessToken.findAdminToken(tokenValue)
-    } else {
-      activeToken = await instance.accessToken.findToken(tokenValue)
-    }
+    activeToken = await instance.accessToken.findToken(tokenValue)
+
+    // if (options.isAdmin) {
+    //   activeToken = await instance.accessToken.findAdminToken(tokenValue)
+    // } else {
+    //   activeToken = await instance.accessToken.findToken(tokenValue)
+    // }
 
     if (!activeToken) {
       const allTokens = await instance.accessToken.findAll()
@@ -37,8 +39,7 @@ export default function (
         { token: tokenValue, isAdmin: options.isAdmin },
         "User failed to provide valid token"
       )
-      reply.code(403)
-      return reply.send({
+      return reply.code(403).send({
         error: `Unauthorized - not active token - '${tokenValue}'`,
       })
     } else {

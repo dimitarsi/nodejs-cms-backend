@@ -18,7 +18,6 @@ export default function createUser(instance: FastifyInstance) {
 
     const result = await instance.users.create({
       isActive: false,
-      isAdmin: false,
       firstName: body.firstName,
       lastName: body.lastName,
       email: body.email,

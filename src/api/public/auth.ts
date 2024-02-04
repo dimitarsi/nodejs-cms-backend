@@ -35,17 +35,14 @@ export default function auth(
     Body: { email: string; password: string }
   }>("/login", opts, async function login(req, res) {
     const body = req.body
-    const { userId, isLoggedIn, isAdmin } = await instance.auth.authenticate(
+    const { userId, isLoggedIn } = await instance.auth.authenticate(
       body.email,
       body.password
     )
 
     if (isLoggedIn && userId) {
       const accessToken = await instance.accessToken.findOrCreateAccessToken(
-        userId,
-        {
-          isAdmin,
-        }
+        userId
       )
 
       res.code(200).send({

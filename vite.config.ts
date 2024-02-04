@@ -6,6 +6,10 @@ export default defineConfig({
     alias: {
       "@db": path.resolve(__dirname, "./src/connect/db"),
       "@middleware/auth": path.resolve(__dirname, "./src/middleware/auth.ts"),
+      "@middleware/projectAccess": path.resolve(
+        __dirname,
+        "./src/middleware/projectAccess.ts"
+      ),
       "@config": path.resolve(__dirname, "./src/config/config.ts"),
       "@api/cms/": path.resolve(__dirname, "./src/api/cms/"),
       "@": path.resolve(__dirname, "./src"),

@@ -6,13 +6,15 @@ import type { CreateContentPayload } from "~/models/content"
 const createContentPayload = {
   schema: {
     body: schemaRef("contentCreatePayload"),
+    params: schemaRef("projectIdParamStrict"),
   },
 }
 
 export default function createContents(instance: FastifyInstance) {
   instance.post<{
     Body: CreateContentPayload
-  }>("/contents", createContentPayload, async (request, reply) => {
+    Params: { projectId: string }
+  }>("/:projectId/contents", createContentPayload, async (request, reply) => {
     const body = request.body
     const contents = await createContentCaseFrom(instance)
     const entity = await contents.createContent(body)
