@@ -4,6 +4,7 @@ import { type AccessToken } from "~/models/accessToken"
 
 /**
  * @deprecated - user `projectAccess` middleware for fine-grain project oriented user access
+ * or repurpose for generic validation if user is logged in
  */
 export default function (
   instance: FastifyInstance,
