@@ -8,6 +8,7 @@ import accessTokens from "./accessTokens"
 import mongoClient from "@db"
 import projects from "./projects"
 import invitations from "./invitations"
+import permissions from "./permissions"
 
 interface PluginOptions {
   dbName: string
@@ -28,6 +29,7 @@ async function repo(
   instance.decorate("accessToken", accessTokens(db))
   instance.decorate("projects", projects(db))
   instance.decorate("invitations", invitations(db))
+  instance.decorate("permissions", permissions(db))
 
   instance.addHook("onClose", () => {
     mongoClient.close()
@@ -50,6 +52,7 @@ export type ProjectsRepo = ReturnType<typeof projects>
 export type AuthRepo = ReturnType<typeof auth>
 export type MediaRepo = ReturnType<typeof media>
 export type InvitationsRepo = ReturnType<typeof invitations>
+export type PermissionsRepo = ReturnType<typeof permissions>
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -61,5 +64,6 @@ declare module "fastify" {
     contentTypes: ContentTypesRepo
     projects: ProjectsRepo
     invitations: InvitationsRepo
+    permissions: PermissionsRepo
   }
 }

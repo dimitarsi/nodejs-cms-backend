@@ -40,10 +40,38 @@ export default function permissions(db: Db) {
 
   const setManagePermissions = updatePermissionField("manage")
 
+  const hasPermissionsLevel =
+    (levels: Array<{ read: true } | { write: true } | { manage: true }>) =>
+    async (userId: ObjectId | string, projectId: ObjectId | string) => {
+      const result = await collection.findOne({
+        userId: ensureObjectId(userId),
+        projectId: ensureObjectId(projectId),
+        $or: [...levels],
+      })
+
+      return result !== null
+    }
+
+  const hasReadPermission = hasPermissionsLevel([
+    { read: true },
+    { write: true },
+    { manage: true },
+  ])
+
+  const hasWritePermission = hasPermissionsLevel([
+    { write: true },
+    { manage: true },
+  ])
+
+  const hasManagePermission = hasPermissionsLevel([{ manage: true }])
+
   return {
     setAdminUser,
     setReadPermissions,
     setWritePermissions,
     setManagePermissions,
+    hasReadPermission,
+    hasWritePermission,
+    hasManagePermission,
   }
 }

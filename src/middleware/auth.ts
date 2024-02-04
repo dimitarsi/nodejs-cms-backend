@@ -2,6 +2,9 @@ import { type FastifyInstance } from "fastify"
 import { type WithId } from "mongodb"
 import { type AccessToken } from "~/models/accessToken"
 
+/**
+ * @deprecated - user `projectAccess` middleware for fine-grain project oriented user access
+ */
 export default function (
   instance: FastifyInstance,
   options: { isAdmin: boolean },
@@ -16,6 +19,7 @@ export default function (
 
     let activeToken: WithId<AccessToken> | null
 
+    // TODO: `isAdmin` needs to be deprecated in favor of project-level permissions
     if (options.isAdmin) {
       activeToken = await instance.accessToken.findAdminToken(tokenValue)
     } else {
