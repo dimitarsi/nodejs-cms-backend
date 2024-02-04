@@ -3,11 +3,11 @@ import { createContent } from "./content"
 import { seedContentTypes } from "./contentTypes"
 import seedUsers from "./users"
 import seedProjects from "./projects"
-import { ensureObjectId } from "~/helpers/objectid"
 
 export default async function seed(db: Db) {
   let projectId: ObjectId | null = null
   try {
+    console.log(">> Seed users")
     const userIds = await seedUsers(db)
     const adminUser = await db.collection("users").findOne({ isAdmin: true })
     const nonAdminUser = await db
@@ -15,20 +15,23 @@ export default async function seed(db: Db) {
       .findOne({ isAdmin: false })
 
     if (adminUser?._id) {
+      console.log(">> Seed projects")
       const projectIds = await seedProjects(db, adminUser?._id)
       projectId = projectIds?.[0] || null
 
+      console.log(">> Update admin user")
       await db.collection("users").updateOne(
         {
           _id: adminUser._id,
         },
         {
-          projectIds: projectIds.map(ensureObjectId),
+          $push: { projects: projectId },
         }
       )
     }
   } catch (e) {
-    console.error("Failed to seed users")
+    console.error(e)
+    console.error("Failed to seed users `./src/cli/seed/index.ts`")
   }
 
   try {
