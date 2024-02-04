@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 import createContentCaseFrom from "~/cases/content"
 import { CreateContentPayload } from "~/models/content"
 

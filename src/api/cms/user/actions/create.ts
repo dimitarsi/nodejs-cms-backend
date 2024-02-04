@@ -1,6 +1,6 @@
 import { FastifyInstance, RouteShorthandOptions } from "fastify"
 import { User } from "~/models/user"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 const createUserOptions: RouteShorthandOptions = {
   schema: {

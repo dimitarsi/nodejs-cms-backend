@@ -2,7 +2,7 @@ import Ajv from "ajv"
 import { Db } from "mongodb"
 import addFormats from "ajv-formats"
 import userRepo from "~/repo/users"
-import { userCreatePayload } from "~/schema/cms-api"
+import { userCreatePayload } from "~/schema/cmsAPISchema"
 
 const ajv = new Ajv()
 addFormats(ajv)

@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify"
 import { type ContentType } from "~/models/contentType"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 const updateOptions = {
   schema: {

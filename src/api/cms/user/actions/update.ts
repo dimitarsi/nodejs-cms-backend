@@ -1,6 +1,6 @@
 import { FastifyInstance, RouteShorthandOptions } from "fastify"
 import { UpdateResult } from "mongodb"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 import { shouldUpdateFirstAndLastName, shouldUpdatePassword } from "../helpers"
 
 export default function updateUser(instance: FastifyInstance) {

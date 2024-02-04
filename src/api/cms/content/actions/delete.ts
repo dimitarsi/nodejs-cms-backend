@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 const deleteOpts = {
   schema: {

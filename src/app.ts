@@ -5,7 +5,7 @@ import fastify from "fastify"
 import repo from "~/repo"
 import publicApiAuth from "~/api/public"
 import fastifyPlugin from "fastify-plugin"
-import cmsApiSchema from "~/schema/cms-api"
+import cmsApiSchema from "~/schema/cmsAPISchema"
 
 const app = fastify({
   logger: {
