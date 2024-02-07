@@ -5,15 +5,27 @@ import create from "./actions/create"
 import updateContentType from "./actions/update"
 import deleteContentType from "./actions/delete"
 import auth from "@middleware/auth"
+import projectAccess from "@middleware/projectAccess"
 
 const contentTypes: FastifyPluginCallback = (instance, options, done) => {
-  auth(instance, { isAdmin: true })
+  instance.register((instance, _options, done) => {
+    projectAccess(instance, { accessLevel: "readOrUp" })
 
-  getAll(instance)
-  getById(instance)
-  create(instance)
-  updateContentType(instance)
-  deleteContentType(instance)
+    getAll(instance)
+    getById(instance)
+
+    done()
+  })
+
+  instance.register((instance, _options, done) => {
+    projectAccess(instance, { accessLevel: "writeOrUp" })
+
+    create(instance)
+    updateContentType(instance)
+    deleteContentType(instance)
+
+    done()
+  })
 
   done()
 }

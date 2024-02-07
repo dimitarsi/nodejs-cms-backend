@@ -23,19 +23,23 @@ export default function updateContentType(instance: FastifyInstance) {
   instance.patch<{
     Body: Record<string, any>
     Params: { idOrSlug: string }
-  }>("/content-types/:idOrSlug", updateOptions, async (request, reply) => {
-    const result = await instance.contentTypes.update(
-      request.params.idOrSlug,
-      request.body as ContentType
-    )
+  }>(
+    "/:projectId/content-types/:idOrSlug",
+    updateOptions,
+    async (request, reply) => {
+      const result = await instance.contentTypes.update(
+        request.params.idOrSlug,
+        request.body as ContentType
+      )
 
-    if (result.matchedCount) {
-      return reply.code(200).send()
+      if (result.matchedCount) {
+        return reply.code(200).send()
+      }
+
+      return reply.code(422).send({
+        error: "Entry to updated",
+        message: "Could not update the entry",
+      })
     }
-
-    return reply.code(422).send({
-      error: "Entry to updated",
-      message: "Could not update the entry",
-    })
-  })
+  )
 }

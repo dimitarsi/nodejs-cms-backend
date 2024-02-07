@@ -3,7 +3,8 @@ import { FastifyInstance } from "fastify"
 export default function getAll(instance: FastifyInstance) {
   instance.get<{
     Querystring: { page: number; perPage: number; search: string }
-  }>("/content-types", async (request, reply) => {
+    Params: { projectId: string }
+  }>("/:projectId/content-types", async (request, reply) => {
     const filter = {
       ...(request.query.search
         ? { $text: { $search: `${decodeURIComponent(request.query.search)}` } }

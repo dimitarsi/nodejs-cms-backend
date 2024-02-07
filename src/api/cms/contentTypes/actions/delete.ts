@@ -9,10 +9,14 @@ const idOrSlugOptions = {
 
 export default function deleteContentType(instance: FastifyInstance) {
   instance.delete<{
-    Params: { idOrSlug: string }
-  }>("/content-types/:idOrSlug", idOrSlugOptions, async (request, replay) => {
-    await instance.contentTypes.deleteById(request.params.idOrSlug)
+    Params: { idOrSlug: string; projectId: string }
+  }>(
+    "/:projectId/content-types/:idOrSlug",
+    idOrSlugOptions,
+    async (request, replay) => {
+      await instance.contentTypes.deleteById(request.params.idOrSlug)
 
-    replay.code(200).send()
-  })
+      replay.code(200).send()
+    }
+  )
 }

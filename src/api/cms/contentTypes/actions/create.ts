@@ -11,7 +11,9 @@ const createOptions = {
 export default function createContentType(instance: FastifyInstance) {
   instance.post<{
     Body: CreateContentType
-  }>("/content-types", createOptions, async (request, reply) => {
+    Params: { projectId: string }
+  }>("/:projectId/content-types", createOptions, async (request, reply) => {
+    const projectId = request.params.projectId
     const result = await instance.contentTypes.create(request.body)
 
     if (result.insertedId) {
@@ -19,7 +21,7 @@ export default function createContentType(instance: FastifyInstance) {
 
       reply
         .code(201)
-        .header("Location", `/content-types/${result.insertedId}`)
+        .header("Location", `/${projectId}/content-types/${result.insertedId}`)
         .send(entity)
     } else {
       reply.code(422).send({
