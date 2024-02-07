@@ -13,6 +13,9 @@ const getAllOptions: RouteShorthandOptions = {
   },
 }
 
+/**
+ * @deprecated - Users should not be able to list other users. Move this endpoint to `/project/:projectId/users` to see all users for a project
+ */
 export function getAllUsers(instance: FastifyInstance) {
   instance.get<{
     Querystring: { page: number; perPage: number }

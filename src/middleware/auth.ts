@@ -20,7 +20,6 @@ export default function (
 
     let activeToken: WithId<AccessToken> | null
 
-    // TODO: `isAdmin` needs to be deprecated in favor of project-level permissions
     activeToken = await instance.accessToken.findToken(tokenValue)
 
     // if (options.isAdmin) {

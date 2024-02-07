@@ -13,9 +13,12 @@ function shouldUpdatePassword(
   return data.password !== undefined
 }
 
-export default function users(db: Db) {
+export default function users(
+  db: Db,
+  options: Parameters<typeof makeRepo>[1] = { softDelete: false }
+) {
   const collection = db.collection<User>("users")
-  const crud = makeRepo(collection)
+  const crud = makeRepo(collection, options)
 
   return {
     ...crud,
@@ -41,10 +44,13 @@ export default function users(db: Db) {
       })
 
       if (user !== null) {
-        return null
+        return {
+          status: "duplicated",
+          userId: null,
+        }
       }
 
-      return crud.create({
+      const result = await crud.create({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -55,6 +61,11 @@ export default function users(db: Db) {
         hashExpiration: getActivationExpirationDate(),
         projects: data.projects,
       })
+
+      return {
+        status: result.acknowledged ? "ok" : "error",
+        userId: result.insertedId,
+      }
     },
     update: (
       id: string | number,
@@ -73,7 +84,7 @@ export default function users(db: Db) {
     selfActivate: async (id: string, hash: string) => {
       return await collection.findOneAndUpdate(
         {
-          _id: new ObjectId(id),
+          _id: ensureObjectId(id),
           activationHash: hash,
           hashExpiration: { $gt: new Date() },
         },

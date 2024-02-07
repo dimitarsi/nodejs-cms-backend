@@ -20,6 +20,7 @@ export default defineConfig({
       path.resolve(__dirname, "./src/tests/env.stub.ts"),
       path.resolve(__dirname, "./src/tests/teardown.ts"),
     ],
+    testTimeout: 50 * 1000, // 50s timeout
     // setupFiles: [path.resolve(__dirname, "./src/tests/db.seed.ts")],
   },
 })
