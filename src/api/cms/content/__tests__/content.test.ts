@@ -23,7 +23,7 @@ describe("Content", async () => {
   const db = await mongoClient.db(process.env.DB_NAME)
   const accessTokensRepo = accessTokens(db)
   const permissionsRepo = permissions(db)
-  const projectId = new ObjectId()
+  const projectId = new ObjectId().toString()
   const adminUserId = new ObjectId()
   const nonAdminUserId = new ObjectId()
 
@@ -62,16 +62,14 @@ describe("Content", async () => {
     test("GET /:projectId/contents", async () => {
       await app.ready()
 
-      await supertest(app.server)
-        .get(`/${projectId.toString()}/contents`)
-        .expect(403)
+      await supertest(app.server).get(`/${projectId}/contents`).expect(403)
     })
 
     test("GET /:projectId/contents/:id", async () => {
       await app.ready()
 
       await supertest(app.server)
-        .get(`/${projectId.toString()}/contents/foobar`)
+        .get(`/${projectId}/contents/foobar`)
         .expect(403)
     })
 
@@ -79,7 +77,7 @@ describe("Content", async () => {
       await app.ready()
 
       await supertest(app.server)
-        .post(`/${projectId.toString()}/contents`)
+        .post(`/${projectId}/contents`)
         .send(createContent())
         .expect(403)
     })
@@ -88,7 +86,7 @@ describe("Content", async () => {
       await app.ready()
 
       await supertest(app.server)
-        .patch(`/${projectId.toString()}/contents/foobar`)
+        .patch(`/${projectId}/contents/foobar`)
         .send({
           hello: "world",
         })
@@ -99,7 +97,7 @@ describe("Content", async () => {
       await app.ready()
 
       await supertest(app.server)
-        .delete(`/${projectId.toString()}/contents/foobar`)
+        .delete(`/${projectId}/contents/foobar`)
         .expect(403)
     })
   })
@@ -110,7 +108,7 @@ describe("Content", async () => {
         await app.ready()
 
         supertest(app.server)
-          .get(`/${projectId.toString()}/contents`)
+          .get(`/${projectId}/contents`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
@@ -123,7 +121,7 @@ describe("Content", async () => {
         expect(data.isFolder).toBeDefined()
 
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -143,7 +141,9 @@ describe("Content", async () => {
         const { _id, createdOn, updatedOn, ...body } = resp.body
         expect(body).toMatchSnapshot()
 
-        expect(resp.headers["location"]).toMatch(/^\/contents\/(.+)$/)
+        expect(resp.headers["location"]).toMatch(
+          new RegExp(`^\/${projectId}\/contents\/(.+)$`)
+        )
       })
 
       test("GET /:projectId/contents/:idOrSlug", async () => {
@@ -151,7 +151,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -159,12 +159,12 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         const resultFromSlug = await supertest(app.server)
-          .get(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .get(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
 
         const resultFromId = await supertest(app.server)
-          .get(`/${projectId.toString()}/contents/${resp.body._id}`)
+          .get(`/${projectId}/contents/${resp.body._id}`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
 
@@ -179,7 +179,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -187,7 +187,7 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .patch(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .patch(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
@@ -195,7 +195,7 @@ describe("Content", async () => {
           .expect(200)
 
         await supertest(app.server)
-          .patch(`/${projectId.toString()}/contents/${resp.body._id}`)
+          .patch(`/${projectId}/contents/${resp.body._id}`)
           .send({
             name: "Hello World 2",
           })
@@ -210,7 +210,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(data)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -219,7 +219,7 @@ describe("Content", async () => {
         expect(resp.body.folderDepth).toBe(0)
 
         const response = await supertest(app.server)
-          .patch(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .patch(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
@@ -237,7 +237,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -245,7 +245,7 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/${projectId.toString()}/contents/${resp.body._id}`)
+          .delete(`/${projectId}/contents/${resp.body._id}`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
@@ -255,7 +255,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -263,7 +263,7 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .delete(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(200)
       })
@@ -274,7 +274,7 @@ describe("Content", async () => {
         await app.ready()
 
         supertest(app.server)
-          .get(`/${projectId.toString()}/contents`)
+          .get(`/${projectId}/contents`)
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
@@ -283,7 +283,7 @@ describe("Content", async () => {
         await app.ready()
 
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
@@ -294,7 +294,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -302,12 +302,12 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .get(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .get(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
 
         await supertest(app.server)
-          .get(`/${projectId.toString()}/contents/${resp.body._id}`)
+          .get(`/${projectId}/contents/${resp.body._id}`)
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
@@ -317,7 +317,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -325,7 +325,7 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .patch(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .patch(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .send({
             name: "Hello World",
@@ -333,7 +333,7 @@ describe("Content", async () => {
           .expect(403)
 
         await supertest(app.server)
-          .patch(`/${projectId.toString()}/contents/${resp.body._id}`)
+          .patch(`/${projectId}/contents/${resp.body._id}`)
           .send({
             name: "Hello World 2",
           })
@@ -346,7 +346,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -354,7 +354,7 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/${projectId.toString()}/contents/${resp.body._id}`)
+          .delete(`/${projectId}/contents/${resp.body._id}`)
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
@@ -364,7 +364,7 @@ describe("Content", async () => {
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post(`/${projectId.toString()}/contents`)
+          .post(`/${projectId}/contents`)
           .send(createContent())
           .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
           .expect(201)
@@ -372,7 +372,7 @@ describe("Content", async () => {
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/${projectId.toString()}/contents/${resp.body.slug}`)
+          .delete(`/${projectId}/contents/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
@@ -387,7 +387,7 @@ describe("Content", async () => {
       const dataInFolder = createContent()
 
       await supertest(app.server)
-        .post(`/${projectId.toString()}/contents`)
+        .post(`/${projectId}/contents`)
         .send(data)
         .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(201)
@@ -397,18 +397,18 @@ describe("Content", async () => {
       // dataInFolder.folderDepth = 2
 
       await supertest(app.server)
-        .post(`/${projectId.toString()}/contents`)
+        .post(`/${projectId}/contents`)
         .send(dataInFolder)
         .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(201)
 
       await supertest(app.server)
-        .get(`/${projectId.toString()}/contents/${dataInFolder.slug}`)
+        .get(`/${projectId}/contents/${dataInFolder.slug}`)
         .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(200)
 
       const response = await supertest(app.server)
-        .get(`/${projectId.toString()}/contents?folder=/posts`)
+        .get(`/${projectId}/contents?folder=/posts`)
         .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
         .expect(200)
 

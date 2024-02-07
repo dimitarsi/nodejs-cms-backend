@@ -16,11 +16,13 @@ export default function createContents(instance: FastifyInstance) {
     Params: { projectId: string }
   }>("/:projectId/contents", createContentPayload, async (request, reply) => {
     const body = request.body
+    const projectId = request.params.projectId
+
     const contents = await createContentCaseFrom(instance)
     const entity = await contents.createContent(body)
 
     if (entity && entity._id) {
-      reply.header("Location", `/contents/${entity._id}`)
+      reply.header("Location", `/${projectId}/contents/${entity._id}`)
       reply.code(201).send(entity)
     } else {
       reply.code(422).send()
