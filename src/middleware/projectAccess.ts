@@ -30,6 +30,11 @@ export default function projectAccess(
     const projectId = req.params["projectId"] || null
 
     if (!projectId || !userId) {
+      instance.log.error({
+        path: req.url,
+        userId: activeToken?.userId,
+      })
+
       return reply
         .code(500)
         .send({ message: "Resource does not have `projectId` assigned" })

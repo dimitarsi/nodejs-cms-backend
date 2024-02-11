@@ -31,10 +31,17 @@ export default function createProject(instance: FastifyInstance) {
       owner: ensureObjectId(token.userId),
     } as Project)
 
-    await instance.users.setProjectOwner(
-      token.userId.toString(),
-      project.insertedId.toString()
-    )
+    await Promise.all([
+      instance.users.setProjectOwner(
+        token.userId.toString(),
+        project.insertedId.toString()
+      ),
+      instance.permissions.setAdminUser(
+        token.userId,
+        project.insertedId,
+        "grant"
+      ),
+    ])
 
     reply.status(201).send(project)
   })

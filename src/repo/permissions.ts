@@ -90,7 +90,7 @@ export default function permissions(db: Db) {
     return await (
       await collection.find({
         userId: ensureObjectId(userId),
-        accessLevel,
+        ...accessLevel,
       })
     ).toArray()
   }

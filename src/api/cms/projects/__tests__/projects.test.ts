@@ -1,13 +1,12 @@
-import { PermissionsRepo } from "./../../../../repo/index"
+import { ensureObjectId } from "~/helpers/objectid"
+import app from "~/app"
 import { describe, test, afterAll, beforeAll, afterEach, expect } from "vitest"
 import request from "supertest"
 import { createProjectPayload } from "~/cli/seed/data/createProject"
-import app from "~/app"
-import { MongoClient, ObjectId, WithId } from "mongodb"
+import { MongoClient, ObjectId } from "mongodb"
 import accessTokens from "~/repo/accessTokens"
-import users from "~/repo/users"
-import { createUserPayload } from "~/cli/seed/data/createUser"
 import permissions from "~/repo/permissions"
+import projects from "~/repo/projects"
 
 describe("Projects", async () => {
   const slug = "slug"
@@ -18,16 +17,21 @@ describe("Projects", async () => {
   const db = await mongoClient.db(process.env.DB_NAME)
   const accessTokensRepo = accessTokens(db)
   const permissionsRepo = permissions(db)
+  const projectsRepo = projects(db)
 
   const PROJECTS_API_ADMIN_TOKEN = "projects-API-admin-token"
   const PROJECTS_API_NON_ADMIN_TOKEN = "projects-API-non-admin-token"
 
-  const projectId = new ObjectId()
+  let projectId: ObjectId
   const userId = new ObjectId()
   const otherUserId = new ObjectId()
 
   // Seed tokens
   beforeAll(async () => {
+    const result = await projectsRepo.create(createProjectPayload(userId))
+
+    projectId = ensureObjectId(result.insertedId)
+
     await Promise.all([
       permissionsRepo.setAdminUser(userId, projectId, "grant"),
       permissionsRepo.setAdminUser(otherUserId, projectId, "revoke"),
@@ -68,19 +72,25 @@ describe("Projects", async () => {
       await request(app.server).get("/projects").expect(403)
     })
 
-    test("GET /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("GET /projects/:projectId - user needs to be logged in", async () => {
       await app.ready()
-      await request(app.server).get(`/projects/${slug}`).expect(403)
+      await request(app.server)
+        .get(`/projects/${projectId.toString()}`)
+        .expect(403)
     })
 
-    test.skip("DELETE /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("DELETE /projects/:projectId - user needs to be logged in", async () => {
       await app.ready()
-      await request(app.server).delete(`/projects/${slug}`).expect(403)
+      await request(app.server)
+        .delete(`/projects/${projectId.toString()}`)
+        .expect(403)
     })
 
-    test.skip("PATCH /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("PATCH /projects/:idOrSlug - user needs to be logged in", async () => {
       await app.ready()
-      await request(app.server).delete(`/projects/${slug}`).expect(403)
+      await request(app.server)
+        .delete(`/projects/${projectId.toString()}`)
+        .expect(403)
     })
   })
 
@@ -110,23 +120,29 @@ describe("Projects", async () => {
         expect(resp.body[0].active).toBeTruthy()
       })
 
-      test.skip("PATCH /projects", async () => {
+      test("PATCH /projects", async () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload)
+          .send(createProjectPayload(userId))
           .expect(201)
 
         await request(app.server)
-          .patch(`/projects/${resp.body._id}`)
+          .patch(`/projects/${resp.body.insertedId}`)
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
           .send({
-            email: "foo@bar.com",
-            firstName: "Hello",
-            lastName: "World",
+            name: "Updated Project",
           })
           .expect(200)
+
+        await request(app.server)
+          .patch(`/projects/${resp.body.insertedId}`)
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send({
+            owner: userId.toString(),
+          })
+          .expect(422)
       })
     })
 

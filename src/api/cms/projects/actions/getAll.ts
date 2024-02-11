@@ -21,6 +21,8 @@ export default function createProject(instance: FastifyInstance) {
       instance.permissions
     )
 
+    instance.log.info({ token: accessTokenHeader })
+
     const projects = await userCase.getProjectsFromToken(accessTokenHeader)
 
     if (!projects.length) {
