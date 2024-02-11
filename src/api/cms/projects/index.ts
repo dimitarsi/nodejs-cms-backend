@@ -16,6 +16,7 @@ export default function projects(
 ) {
   instance.register((instance, _options, done) => {
     auth(instance)
+
     joinProject(instance)
     createProject(instance)
     getAll(instance)

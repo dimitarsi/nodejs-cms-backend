@@ -26,9 +26,7 @@ export default function createProject(instance: FastifyInstance) {
     const projects = await userCase.getProjectsFromToken(accessTokenHeader)
 
     if (!projects.length) {
-      reply
-        .code(404)
-        .send({ message: "Not Found or User is not assigned to any projects" })
+      reply.code(404).send({ message: "User is not assigned to any projects" })
       return
     }
 
