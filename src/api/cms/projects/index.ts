@@ -8,6 +8,8 @@ import joinProject from "./actions/join"
 import auth from "@middleware/auth"
 import projectAccess from "@middleware/projectAccess"
 import getById from "./actions/getById"
+import getProjectUsers from "./actions/users"
+import updatePermissions from "./actions/permissions"
 
 export default function projects(
   instance: FastifyInstance,
@@ -45,6 +47,8 @@ export default function projects(
 
     invite(instance)
     deleteProject(instance)
+    getProjectUsers(instance)
+    updatePermissions(instance)
 
     done()
   })

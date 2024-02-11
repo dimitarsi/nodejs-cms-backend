@@ -28,7 +28,13 @@ describe("Projects", async () => {
 
   // Seed tokens
   beforeAll(async () => {
+    await db.collection("projects").deleteMany({})
+
     const result = await projectsRepo.create(createProjectPayload(userId))
+
+    if (result === null) {
+      throw "Could not create project. Make sure the database is cleared between tests"
+    }
 
     projectId = ensureObjectId(result.insertedId)
 
@@ -106,6 +112,38 @@ describe("Projects", async () => {
           .expect(201)
       })
 
+      test("POST /projects - cannot create project with the same name and same owner", async () => {
+        await app.ready()
+
+        const resp = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project"))
+          .expect(201)
+
+        const resp2 = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project"))
+          .expect(422)
+      })
+
+      test("POST /projects - can create project with the same name but different owner", async () => {
+        await app.ready()
+
+        const resp = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project 2"))
+          .expect(201)
+
+        const resp2 = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_NON_ADMIN_TOKEN)
+          .send(createProjectPayload(otherUserId, "Another Project 2"))
+          .expect(201)
+      })
+
       test("GET /projects", async () => {
         await app.ready()
 
@@ -125,7 +163,7 @@ describe("Projects", async () => {
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload(userId))
+          .send(createProjectPayload(userId, "Patch Project Name"))
           .expect(201)
 
         await request(app.server)
@@ -147,6 +185,13 @@ describe("Projects", async () => {
     })
 
     describe("As Non-Admin", () => {
+      beforeAll(async () => {
+        await Promise.all([
+          projectsRepo.deleteForUser(otherUserId),
+          permissionsRepo.deleteForUser(otherUserId),
+        ])
+      })
+
       test("GET /projects - is Forbidden", async () => {
         await app.ready()
         await request(app.server)
@@ -161,7 +206,7 @@ describe("Projects", async () => {
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload(userId))
+          .send(createProjectPayload(userId, "Text non-admin Get request"))
           .expect(201)
 
         expect(resp.body).toHaveProperty("insertedId")
@@ -178,7 +223,7 @@ describe("Projects", async () => {
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload(userId))
+          .send(createProjectPayload(userId, "Test non-admin Patch request"))
           .expect(201)
 
         expect(resp.body).toHaveProperty("insertedId")
@@ -192,5 +237,11 @@ describe("Projects", async () => {
           .expect(403)
       })
     })
+  })
+
+  describe("Invite to project", () => {
+    test("User with manage permissions can invite another user to the same project with default read permissions", () => {})
+
+    test("User with manage permissions can invite another user to the same project with default read permissions", () => {})
   })
 })

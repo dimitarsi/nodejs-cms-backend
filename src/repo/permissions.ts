@@ -95,6 +95,10 @@ export default function permissions(db: Db) {
     ).toArray()
   }
 
+  const deleteForUser = (userId: ObjectId | string) => {
+    return collection.deleteMany({ userId: ensureObjectId(userId) })
+  }
+
   return {
     setAdminUser,
     setReadPermissions,
@@ -105,5 +109,6 @@ export default function permissions(db: Db) {
     hasManagePermission,
     deleteAll,
     gerPermissionsForUser,
+    deleteForUser,
   }
 }

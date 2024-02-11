@@ -31,6 +31,14 @@ export default function createProject(instance: FastifyInstance) {
       owner: ensureObjectId(token.userId),
     } as Project)
 
+    if (project == null) {
+      return reply
+        .code(422)
+        .send({
+          message: "Project with the same name already exists for this user.",
+        })
+    }
+
     await Promise.all([
       instance.users.setProjectOwner(
         token.userId.toString(),
