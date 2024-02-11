@@ -3,6 +3,8 @@ import type { FastifyInstance } from "fastify"
 import getAll from "./actions/getAll"
 import createProject from "./actions/create"
 import invite from "./actions/invite"
+import projectAccess from "@middleware/projectAccess"
+import deleteProject from "./actions/delete"
 
 export default function projects(
   instance: FastifyInstance,
@@ -10,16 +12,20 @@ export default function projects(
   done: Function
 ) {
   instance.register((instance, _options, done) => {
-    auth(instance, { isAdmin: false })
+    projectAccess(instance, { accessLevel: "readOrUp" })
+
     getAll(instance)
+    createProject(instance)
 
     done()
   })
 
   instance.register((instance, _options, done) => {
-    auth(instance, { isAdmin: true })
-    createProject(instance)
+    projectAccess(instance, { accessLevel: "writeOrUp" })
+
     invite(instance)
+
+    deleteProject(instance)
 
     done()
   })

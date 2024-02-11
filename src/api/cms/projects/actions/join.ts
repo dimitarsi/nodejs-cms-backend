@@ -18,29 +18,28 @@ const inviteOptions: RouteShorthandOptions = {
 
 export default function join(instance: FastifyInstance) {
   instance.post<{
-    Params: { privateInvitationToken: string }
+    Querystring: { invitationToken: string }
+    Params: { projectId: string }
     Body: {}
-  }>(
-    "/project/:privateInvitationToken/invite",
-    inviteOptions,
-    async (request, reply) => {
-      const usersCase = createUserCaseFrom(
-        instance.users,
-        instance.accessToken,
-        instance.projects,
-        instance.invitations
-      )
+  }>("/projects/:projectId/join", inviteOptions, async (request, reply) => {
+    const usersCase = createUserCaseFrom(
+      instance.users,
+      instance.accessToken,
+      instance.projects,
+      instance.invitations,
+      instance.permissions
+    )
 
-      const accessTokenHeader = request.headers["x-access-token"] as string
+    const accessTokenHeader = request.headers["x-access-token"] as string
 
-      await usersCase.acceptInvitation(
-        accessTokenHeader,
-        request.params.privateInvitationToken
-      )
+    await usersCase.acceptInvitation(
+      accessTokenHeader,
+      request.params.projectId,
+      request.query.invitationToken
+    )
 
-      reply.status(201).send({
-        success: true,
-      })
-    }
-  )
+    reply.status(201).send({
+      success: true,
+    })
+  })
 }

@@ -17,23 +17,11 @@ export default function createProject(instance: FastifyInstance) {
       instance.users,
       instance.accessToken,
       instance.projects,
-      instance.invitations
+      instance.invitations,
+      instance.permissions
     )
 
     const projects = await userCase.getProjectsFromToken(accessTokenHeader)
-
-    // const projects = await instance.projects.getAll(
-    //   request.query.page,
-    //   request.query.perPage
-    // )
-    // const token = await instance.accessToken.findToken(accessTokenHeader)
-
-    // if (!token || !token.userId) {
-    //   reply.code(404).send({ message: "Not Found or token has expired" })
-    //   return
-    // }
-
-    // const user = await instance.users.getById(token.userId)
 
     if (!projects.length) {
       reply
@@ -43,7 +31,5 @@ export default function createProject(instance: FastifyInstance) {
     }
 
     reply.send(projects)
-
-    // const projects = await instance.projects.getAllByIds(user.projects)
   })
 }

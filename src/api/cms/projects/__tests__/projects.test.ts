@@ -1,3 +1,4 @@
+import { PermissionsRepo } from "./../../../../repo/index"
 import { describe, test, afterAll, beforeAll, afterEach, expect } from "vitest"
 import request from "supertest"
 import { createProjectPayload } from "~/cli/seed/data/createProject"
@@ -6,6 +7,7 @@ import { MongoClient, ObjectId, WithId } from "mongodb"
 import accessTokens from "~/repo/accessTokens"
 import users from "~/repo/users"
 import { createUserPayload } from "~/cli/seed/data/createUser"
+import permissions from "~/repo/permissions"
 
 describe("Projects", async () => {
   const slug = "slug"
@@ -15,41 +17,26 @@ describe("Projects", async () => {
   )
   const db = await mongoClient.db(process.env.DB_NAME)
   const accessTokensRepo = accessTokens(db)
-  const usersRepo = users(db)
+  const permissionsRepo = permissions(db)
 
   const PROJECTS_API_ADMIN_TOKEN = "projects-API-admin-token"
   const PROJECTS_API_NON_ADMIN_TOKEN = "projects-API-non-admin-token"
 
-  let adminUserId: ObjectId, nonAdminUserId: ObjectId
+  const projectId = new ObjectId()
+  const userId = new ObjectId()
+  const otherUserId = new ObjectId()
 
   // Seed tokens
   beforeAll(async () => {
     await Promise.all([
-      usersRepo.create(createUserPayload("projects.admin@gmail.com")),
-      usersRepo.create(createUserPayload("projects.non-admin@gmail.com")),
-    ])
-
-    const [adminUser, nonAdminUser] = await Promise.all([
-      usersRepo.getByEmail("projects.admin@gmail.com"),
-      usersRepo.getByEmail("projects.non-admin@gmail.com"),
-    ])
-
-    adminUserId = adminUser?._id!
-    nonAdminUserId = nonAdminUser?._id!
-
-    await Promise.all([
+      permissionsRepo.setAdminUser(userId, projectId, "grant"),
+      permissionsRepo.setAdminUser(otherUserId, projectId, "revoke"),
       accessTokensRepo.findOrCreateAccessToken(
-        adminUserId,
-        {
-          isAdmin: true,
-        },
+        userId,
         PROJECTS_API_ADMIN_TOKEN
       ),
       accessTokensRepo.findOrCreateAccessToken(
-        nonAdminUserId,
-        {
-          isAdmin: false,
-        },
+        otherUserId,
         PROJECTS_API_NON_ADMIN_TOKEN
       ),
     ])
@@ -72,7 +59,7 @@ describe("Projects", async () => {
       await app.ready()
       await request(app.server)
         .post("/projects")
-        .send(createProjectPayload(adminUserId))
+        .send(createProjectPayload(userId))
         .expect(403)
     })
 
@@ -81,7 +68,7 @@ describe("Projects", async () => {
       await request(app.server).get("/projects").expect(403)
     })
 
-    test.skip("GET /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("GET /projects/:idOrSlug - user needs to be logged in", async () => {
       await app.ready()
       await request(app.server).get(`/projects/${slug}`).expect(403)
     })
@@ -99,17 +86,17 @@ describe("Projects", async () => {
 
   describe("Only Admins can create, delete, update and inspect projects", () => {
     describe("As Admin", () => {
-      test.only("POST /projects", async () => {
+      test("POST /projects", async () => {
         await app.ready()
 
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload(adminUserId))
+          .send(createProjectPayload(userId))
           .expect(201)
       })
 
-      test.only("GET /projects", async () => {
+      test("GET /projects", async () => {
         await app.ready()
 
         const resp = await request(app.server)

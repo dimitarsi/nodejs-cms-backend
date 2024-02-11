@@ -1,5 +1,4 @@
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
-import createUserCaseFrom from "~/cases/users"
 
 const inviteOptions: RouteShorthandOptions = {
   schema: {
@@ -25,24 +24,9 @@ const inviteOptions: RouteShorthandOptions = {
 
 export default function inviteUser(instance: FastifyInstance) {
   instance.post<{
-    Params: { id: string }
+    Params: { projectId: string }
     Body: { userEmail: string; projectId: string }
-  }>("/project/:id/invite", inviteOptions, async (request, reply) => {
-    // Verify Admin owns the project
-    // Create an invite - save invite token and expiration date
-    // User may or may not have a registered account!
-    // Sent Email?
-
-    // const usersCase = createUserCaseFrom(
-    //   instance.users,
-    //   instance.accessToken,
-    //   instance.projects
-    // )
-
-    // await usersCase.inviteUserToProject(
-    //   request.body.userEmail,
-    //   request.body.projectId
-    // )
+  }>("/projects/:projectId/invite", inviteOptions, async (request, reply) => {
     await instance.invitations.create({
       userEmail: request.body.userEmail,
       projectId: request.body.projectId,

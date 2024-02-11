@@ -79,6 +79,22 @@ export default function permissions(db: Db) {
     return collection.deleteMany({ projectId: ensureObjectId(projectId) })
   }
 
+  const gerPermissionsForUser = async (
+    userId: string | ObjectId,
+    accessLevel: {
+      read?: boolean
+      write?: boolean
+      manage?: boolean
+    }
+  ) => {
+    return await (
+      await collection.find({
+        userId: ensureObjectId(userId),
+        accessLevel,
+      })
+    ).toArray()
+  }
+
   return {
     setAdminUser,
     setReadPermissions,
@@ -88,5 +104,6 @@ export default function permissions(db: Db) {
     hasWritePermission,
     hasManagePermission,
     deleteAll,
+    gerPermissionsForUser,
   }
 }

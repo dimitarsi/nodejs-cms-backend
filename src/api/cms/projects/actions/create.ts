@@ -27,7 +27,7 @@ export default function createProject(instance: FastifyInstance) {
     const project = await instance.projects.create({
       name: request.body.name,
       active: true,
-      domains: [] as DomainSettings[], // edit project settings later
+      domains: [] as DomainSettings[], // User can edit project settings later
       owner: ensureObjectId(token.userId),
     } as Project)
 

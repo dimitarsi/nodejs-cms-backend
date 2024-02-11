@@ -1,6 +1,6 @@
 import { UserWithPermissions as User } from "~/models/user"
 import makeRepo from "~/core/lib/crud"
-import { Db, ObjectId, Document } from "mongodb"
+import { Db, ObjectId, Document, WithId } from "mongodb"
 import bcrypt from "bcrypt"
 import { rounds } from "@config"
 import { v4 } from "uuid"
@@ -22,8 +22,8 @@ export default function users(
 
   return {
     ...crud,
-    getById: (idOrSlug: string | number | ObjectId) => {
-      return crud.getById(idOrSlug, { password: 0 })
+    getById: async (idOrSlug: string | number | ObjectId) => {
+      return (await crud.getById(idOrSlug, { password: 0 })) as WithId<User>
     },
     getByEmail: (email: string) => {
       return collection.findOne({ email })
