@@ -7,6 +7,7 @@ import { MongoClient, ObjectId } from "mongodb"
 import accessTokens from "~/repo/accessTokens"
 import permissions from "~/repo/permissions"
 import projects from "~/repo/projects"
+import { createUserPayload } from "~/cli/seed/data/createUser"
 
 describe("Projects", async () => {
   const slug = "slug"
@@ -239,8 +240,77 @@ describe("Projects", async () => {
     })
   })
 
-  describe("Invite to project", () => {
-    test("User with manage permissions can invite another user to the same project with default read permissions", () => {})
+  describe.only("Invite to project", () => {
+    test("User with manage permissions can invite another user to the same project with default read permissions", async () => {
+      await app.ready()
+      const userDataOther = createUserPayload(`invitation@gmail.com`)
+
+      const createProject = await request(app.server)
+        .post("/projects")
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send(createProjectPayload(userId, "InvitationsOnly"))
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther.email })
+        .expect(201)
+
+      const invitation = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther.email })
+
+      expect(invitation).toBeTruthy()
+      expect(invitation).toHaveProperty("token")
+
+      await request(app.server).post(`/users`).send(userDataOther)
+
+      let rawUser2 = await db
+        .collection("users")
+        .findOne({ email: userDataOther.email })
+
+      await request(app.server)
+        .get(
+          `/users/${rawUser2?._id.toString()}/activate?hash=${
+            rawUser2!.activationHash
+          }`
+        )
+        .expect(204)
+
+      const loginResponse = await request(app.server).post("/login").send({
+        email: userDataOther.email,
+        password: userDataOther.password,
+      })
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation!.token
+          }`
+        )
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(200)
+
+      const userPermissions = await db.collection("permissions").findOne({
+        projectId: ensureObjectId(createProject.body.insertedId),
+        userId: rawUser2?._id,
+      })
+
+      expect(userPermissions).toBeTruthy()
+      expect(userPermissions).toHaveProperty("read")
+      expect(userPermissions).toHaveProperty("write")
+      expect(userPermissions).toHaveProperty("manage")
+
+      expect(userPermissions?.read).toBeTruthy()
+      expect(userPermissions?.write).toBeFalsy()
+      expect(userPermissions?.manage).toBeFalsy()
+
+      await request(app.server)
+        .get(`/projects`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(200)
+    })
 
     test("User with manage permissions can invite another user to the same project with default read permissions", () => {})
   })

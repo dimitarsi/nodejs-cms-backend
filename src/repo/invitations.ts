@@ -29,5 +29,14 @@ export default function invitations(db: Db) {
 
       return cursor.toArray()
     },
+    async deleteInvitationForUser(
+      userEmail: string,
+      projectId: string | ObjectId
+    ) {
+      return await collection.deleteMany({
+        userEmail,
+        projectId: ensureObjectId(projectId),
+      })
+    },
   }
 }

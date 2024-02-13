@@ -25,11 +25,16 @@ const inviteOptions: RouteShorthandOptions = {
 export default function inviteUser(instance: FastifyInstance) {
   instance.post<{
     Params: { projectId: string }
-    Body: { userEmail: string; projectId: string }
+    Body: { userEmail: string }
   }>("/projects/:projectId/invite", inviteOptions, async (request, reply) => {
+    await instance.invitations.deleteInvitationForUser(
+      request.body.userEmail,
+      request.params.projectId
+    )
+
     await instance.invitations.create({
       userEmail: request.body.userEmail,
-      projectId: request.body.projectId,
+      projectId: request.params.projectId,
     })
 
     reply.status(201).send({

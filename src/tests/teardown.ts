@@ -22,6 +22,10 @@ export default async function teardown() {
   console.log(">> delete contentTypes", { contentTypes })
   const contents = await db.collection("contents").deleteMany({})
   console.log(">> delete projects", { contents })
+  const permissions = await db.collection("permissions").deleteMany({})
+  console.log(">> delete permissions", { permissions })
+  const invitations = await db.collection("invitations").deleteMany({})
+  console.log(">> delete invitations", { invitations })
 
   conn.close()
 }

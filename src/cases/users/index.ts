@@ -1,6 +1,6 @@
 import { ensureObjectId } from "~/helpers/objectid"
 import { v4 } from "uuid"
-import { ObjectId } from "mongodb"
+import { ObjectId, WithId } from "mongodb"
 import type {
   UsersRepo,
   AccessTokenRepo,
@@ -8,6 +8,7 @@ import type {
   InvitationsRepo,
   PermissionsRepo,
 } from "~/repo"
+import type { UserWithPermissions } from "~/models/user"
 
 function createUserCaseFrom(
   users: UsersRepo,
@@ -47,39 +48,33 @@ function createUserCaseFrom(
       return
     }
 
-    const user = await users.getById(token?._id)
+    const user = await users.getById(token?.userId)
 
     const invitation = await invitations.getCollection().findOne({
-      invites: {
-        $elemMatch: {
-          token: invitationToken,
-          projectId: ensureObjectId(projectId),
-          userEmail: user?.email || "n/a",
-          expires: { $gt: new Date() },
-        },
-      },
+      token: invitationToken,
+      projectId: ensureObjectId(projectId),
+      userEmail: user?.email || "invalid",
+      expires: { $gt: new Date() },
     })
 
-    if (!invitation) {
+    if (!invitation || !isActive(user)) {
       return
     }
 
-    const invitedUser = await users.getByEmail(invitation.userEmail)
-
-    if (!invitedUser) {
-      return
-    }
-
-    await permissions.setReadPermissions(token.userId, projectId, "grant")
-
-    // remove the invitaiton
-    await invitations.deleteInvitation(invitation._id)
+    await Promise.all([
+      permissions.setReadPermissions(token.userId, projectId, "grant"),
+      invitations.deleteInvitation(invitation._id),
+    ])
   }
 
   return {
     getProjectsFromToken,
     acceptInvitation,
   }
+}
+
+const isActive = (user: null | WithId<UserWithPermissions>) => {
+  return user && user.isActive
 }
 
 export default createUserCaseFrom

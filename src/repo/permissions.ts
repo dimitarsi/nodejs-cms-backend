@@ -2,6 +2,15 @@ import { Db, ObjectId } from "mongodb"
 import { ensureObjectId } from "~/helpers/objectid"
 import { ProjectPermission } from "~/models/permissions"
 
+/**
+ * TODO:
+ *  Implement permission with numbered levels instead of strings
+ *
+ * Example:
+ *  accessLevel: 1 -> Read
+ *  accessLevel: 10 -> Write
+ *  accessLevel: 100 -> Manage
+ */
 export default function permissions(db: Db) {
   const collection = db.collection<ProjectPermission>("permissions", {})
 
@@ -12,15 +21,7 @@ export default function permissions(db: Db) {
       projectId: string | ObjectId,
       type: "grant" | "revoke"
     ) => {
-      const accessLevel = type === "grant"
-      const properties =
-        field === "all"
-          ? {
-              read: accessLevel,
-              write: accessLevel,
-              manage: accessLevel,
-            }
-          : { [field]: accessLevel }
+      const properties = getProperties(field, type)
 
       return await collection.findOneAndUpdate(
         {
@@ -111,4 +112,31 @@ export default function permissions(db: Db) {
     gerPermissionsForUser,
     deleteForUser,
   }
+}
+
+export const setAccessLevelForAll = (accessLevel: boolean) => ({
+  read: accessLevel,
+  write: accessLevel,
+  manage: accessLevel,
+})
+
+export const getAccessLevelOnly = (
+  accessLevel: boolean,
+  field: "read" | "write" | "manage"
+) => ({
+  ...setAccessLevelForAll(false),
+  [field]: accessLevel,
+})
+
+export const getProperties = (
+  field: "read" | "write" | "manage" | "all",
+  type: "grant" | "revoke"
+) => {
+  const accessLevel = type === "grant"
+  const properties =
+    field === "all"
+      ? setAccessLevelForAll(accessLevel)
+      : getAccessLevelOnly(accessLevel, field)
+
+  return properties
 }
