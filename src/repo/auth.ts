@@ -16,7 +16,7 @@ export default function auth(db: Db) {
     const user = await getUserByEmail(email)
     let isLoggedIn = false
 
-    if (user) {
+    if (user && user.isActive) {
       isLoggedIn = bcrypt.compareSync(password, user.password)
     }
 

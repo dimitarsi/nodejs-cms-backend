@@ -32,11 +32,15 @@ export default function join(instance: FastifyInstance) {
 
     const accessTokenHeader = request.headers["x-access-token"] as string
 
-    await usersCase.acceptInvitation(
+    const accepted = await usersCase.acceptInvitation(
       accessTokenHeader,
       request.params.projectId,
       request.query.invitationToken
     )
+
+    if (!accepted) {
+      return reply.status(404).send({ message: "No invitation" })
+    }
 
     reply.status(200).send({
       success: true,

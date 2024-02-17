@@ -240,7 +240,50 @@ describe("Projects", async () => {
     })
   })
 
-  describe.only("Invite to project", () => {
+  describe("Invite to project", () => {
+    test("User cannot accept an invite without activating his account first", async () => {
+      await app.ready()
+      const userDataOther = createUserPayload(`invitation.inactive@gmail.com`)
+
+      const createProject = await request(app.server)
+        .post("/projects")
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send(createProjectPayload(userId, "You shall not pass"))
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther.email })
+        .expect(201)
+
+      const invitation = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther.email })
+
+      expect(invitation).toBeTruthy()
+      expect(invitation).toHaveProperty("token")
+
+      await request(app.server).post(`/users`).send(userDataOther)
+
+      const loginResponse = await request(app.server)
+        .post("/login")
+        .send({
+          email: userDataOther.email,
+          password: userDataOther.password,
+        })
+        .expect(401)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation!.token
+          }`
+        )
+        // .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(403)
+    })
+
     test("User with manage permissions can invite another user to the same project with default read permissions", async () => {
       await app.ready()
       const userDataOther = createUserPayload(`invitation@gmail.com`)
@@ -310,8 +353,152 @@ describe("Projects", async () => {
         .get(`/projects`)
         .set("X-Access-Token", loginResponse.body.accessToken)
         .expect(200)
+
+      await request(app.server)
+        .get(`/projects/${createProject.body.insertedId}`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(200)
+
+      await request(app.server)
+        .patch(`/projects/${createProject.body.insertedId}`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .send({
+          name: "Change the Project Name",
+        })
+        .expect(403)
+
+      await request(app.server)
+        .delete(`/projects/${createProject.body.insertedId}`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(403)
     })
 
-    test("User with manage permissions can invite another user to the same project with default read permissions", () => {})
+    test("User cannot join the wrong project", async () => {
+      await app.ready()
+      const userDataOther2 = createUserPayload(`invitation2@gmail.com`)
+      const userDataOther3 = createUserPayload(`invitation3@gmail.com`)
+
+      const createProject = await request(app.server)
+        .post("/projects")
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send(createProjectPayload(userId, "Invitation check"))
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther2.email })
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther3.email })
+        .expect(201)
+
+      const invitation2 = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther2.email })
+
+      const invitation3 = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther3.email })
+
+      expect(invitation2).toBeTruthy()
+      expect(invitation3).toBeTruthy()
+      expect(invitation2).toHaveProperty("token")
+      expect(invitation3).toHaveProperty("token")
+
+      await request(app.server).post(`/users`).send(userDataOther2)
+      await request(app.server).post(`/users`).send(userDataOther3)
+
+      let rawUser2 = await db
+        .collection("users")
+        .findOne({ email: userDataOther2.email })
+
+      let rawUser3 = await db
+        .collection("users")
+        .findOne({ email: userDataOther3.email })
+
+      // Using the wrong activation token
+      await request(app.server)
+        .get(
+          `/users/${rawUser2?._id.toString()}/activate?hash=${
+            rawUser3!.activationHash
+          }`
+        )
+        .expect(404)
+
+      // Using the wrong activation token
+      await request(app.server)
+        .get(
+          `/users/${rawUser3?._id.toString()}/activate?hash=${
+            rawUser2!.activationHash
+          }`
+        )
+        .expect(404)
+
+      await request(app.server)
+        .get(
+          `/users/${rawUser2?._id.toString()}/activate?hash=${
+            rawUser2!.activationHash
+          }`
+        )
+        .expect(204)
+
+      await request(app.server)
+        .get(
+          `/users/${rawUser3?._id.toString()}/activate?hash=${
+            rawUser3!.activationHash
+          }`
+        )
+        .expect(204)
+
+      const loginResponse2 = await request(app.server).post("/login").send({
+        email: userDataOther2.email,
+        password: userDataOther2.password,
+      })
+
+      const loginResponse3 = await request(app.server).post("/login").send({
+        email: userDataOther3.email,
+        password: userDataOther3.password,
+      })
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation2!.token
+          }`
+        )
+        .set("x-access-token", loginResponse3.body.accessToken)
+        .expect(404)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation3!.token
+          }`
+        )
+        .set("x-access-token", loginResponse2.body.accessToken)
+        .expect(404)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation2!.token
+          }`
+        )
+        .set("x-access-token", loginResponse2.body.accessToken)
+        .expect(200)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation3!.token
+          }`
+        )
+        .set("x-access-token", loginResponse3.body.accessToken)
+        .expect(200)
+    })
   })
 })

@@ -58,13 +58,15 @@ function createUserCaseFrom(
     })
 
     if (!invitation || !isActive(user)) {
-      return
+      return false
     }
 
     await Promise.all([
       permissions.setReadPermissions(token.userId, projectId, "grant"),
       invitations.deleteInvitation(invitation._id),
     ])
+
+    return true
   }
 
   return {
