@@ -14,7 +14,10 @@ export default function deleteContentType(instance: FastifyInstance) {
     "/:projectId/content-types/:idOrSlug",
     idOrSlugOptions,
     async (request, replay) => {
-      await instance.contentTypes.deleteById(request.params.idOrSlug)
+      await instance.contentTypes.deleteByIdForProject(
+        request.params.idOrSlug,
+        request.params.projectId
+      )
 
       replay.code(200).send()
     }

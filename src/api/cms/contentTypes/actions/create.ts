@@ -5,6 +5,12 @@ import { schemaRef } from "~/schema/cmsAPISchema"
 const createOptions = {
   schema: {
     body: schemaRef("contentTypeCreatePayload"),
+    params: {
+      type: "object",
+      properties: {
+        projectId: { type: "string" },
+      },
+    },
   },
 }
 
@@ -14,7 +20,10 @@ export default function createContentType(instance: FastifyInstance) {
     Params: { projectId: string }
   }>("/:projectId/content-types", createOptions, async (request, reply) => {
     const projectId = request.params.projectId
-    const result = await instance.contentTypes.create(request.body)
+    const result = await instance.contentTypes.create({
+      ...request.body,
+      projectId,
+    })
 
     if (result.insertedId) {
       const entity = await instance.contentTypes.getById(result.insertedId)

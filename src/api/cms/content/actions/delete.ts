@@ -12,7 +12,10 @@ export default function deleteUser(instance: FastifyInstance) {
     "/:projectId/contents/:idOrSlug",
     deleteOpts,
     async (req, reply) => {
-      await instance.contents.deleteById(req.params.idOrSlug)
+      await instance.contents.deleteByIdForProject(
+        req.params.idOrSlug,
+        req.params.projectId
+      )
 
       reply.code(200)
     }

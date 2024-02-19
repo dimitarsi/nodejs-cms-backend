@@ -16,9 +16,9 @@ export const generateFromConfig = (config: ContentType): BaseContentData => {
 }
 
 export const validateContentWithConfig = (
-  data: BaseContentData<any, ContentType>,
-  config: ContentType
-): BaseContentData => {
+  data: Omit<BaseContentData<any, Omit<ContentType, "projectId">>, "projectId">,
+  config: Omit<ContentType, "projectId">
+): Omit<BaseContentData<Omit<ContentType, "projectId">>, "projectId"> => {
   let outdated = false
 
   const isSameSlug = data.config.slug === config.slug
@@ -37,6 +37,7 @@ export const validateContentWithConfig = (
     outdated = hasDifferentKeys
   }
 
+  // @ts-ignore
   return {
     ...data,
     outdated,

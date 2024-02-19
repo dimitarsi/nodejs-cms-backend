@@ -21,6 +21,7 @@ export default function update(instance: FastifyInstance) {
       const contents = await createContentCaseFrom(instance)
       const entity = await contents.updateContent(
         request.params.idOrSlug,
+        request.params.projectId,
         request.body
       )
 

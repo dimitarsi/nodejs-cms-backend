@@ -10,15 +10,19 @@ const getByIdOptions = {
 
 export default function (instance: FastifyInstance) {
   instance.get<{
-    Params: { idOrSlug: string }
+    Params: { idOrSlug: string; projectId: string }
   }>(
     "/:projectId/contents/:idOrSlug",
     getByIdOptions,
     async (request, reply) => {
       const useCase = getContentCaseFrom(instance)
-      const entity = await useCase.byId(request.params.idOrSlug, {
-        validateData: true,
-      })
+      const entity = await useCase.byId(
+        request.params.idOrSlug,
+        request.params.projectId,
+        {
+          validateData: true,
+        }
+      )
 
       if (entity) {
         reply.send(entity)

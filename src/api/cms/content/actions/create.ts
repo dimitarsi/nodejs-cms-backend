@@ -6,7 +6,7 @@ import type { CreateContentPayload } from "~/models/content"
 const createContentPayload = {
   schema: {
     body: schemaRef("contentCreatePayload"),
-    params: schemaRef("projectIdParamStrict"),
+    params: schemaRef("idOrSlugAndProjectIdParamStrict"),
   },
 }
 
@@ -19,7 +19,7 @@ export default function createContents(instance: FastifyInstance) {
     const projectId = request.params.projectId
 
     const contents = await createContentCaseFrom(instance)
-    const entity = await contents.createContent(body)
+    const entity = await contents.createContent(body, projectId)
 
     if (entity && entity._id) {
       reply.header("Location", `/${projectId}/contents/${entity._id}`)

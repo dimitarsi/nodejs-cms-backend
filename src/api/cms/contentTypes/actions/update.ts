@@ -4,7 +4,7 @@ import { schemaRef } from "~/schema/cmsAPISchema"
 
 const updateOptions = {
   schema: {
-    params: schemaRef("idOrSlugParamStrict"),
+    params: schemaRef("idOrSlugAndProjectIdParamStrict"),
     body: {
       type: "object",
       properties: {
@@ -22,13 +22,14 @@ const updateOptions = {
 export default function updateContentType(instance: FastifyInstance) {
   instance.patch<{
     Body: Record<string, any>
-    Params: { idOrSlug: string }
+    Params: { idOrSlug: string; projectId: string }
   }>(
     "/:projectId/content-types/:idOrSlug",
     updateOptions,
     async (request, reply) => {
       const result = await instance.contentTypes.update(
         request.params.idOrSlug,
+        request.params.projectId,
         request.body as ContentType
       )
 

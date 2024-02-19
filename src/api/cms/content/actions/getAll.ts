@@ -1,4 +1,5 @@
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
+import { ensureObjectId } from "~/helpers/objectid"
 import { schemaRef } from "~/schema/cmsAPISchema"
 
 const getAllOptions: RouteShorthandOptions = {
@@ -34,10 +35,15 @@ export default function getAll(instance: FastifyInstance) {
     Params: { projectId: string }
     Querystring: { page: number; perPage: number; folder?: string }
   }>("/:projectId/contents", getAllOptions, async (request, reply) => {
+    const byProjectId = {
+      projectId: ensureObjectId(request.params.projectId),
+    }
+
     const filter = {
       ...(request.query.folder
         ? { folderLocation: `${decodeURIComponent(request.query.folder)}` }
         : {}),
+      ...byProjectId,
     }
 
     const result = await instance.contents.searchAll(request.query.page, {

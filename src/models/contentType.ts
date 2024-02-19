@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb"
+import { ensureObjectId } from "~/helpers/objectid"
 import slugify from "~/helpers/slugify"
 
 export interface CreateContentType {
@@ -17,6 +18,7 @@ export interface CreateContentType {
   repeated: null | { min?: number; max?: number }
   children: ContentType[]
   defaultValue: any
+  projectId: ObjectId | string
 }
 
 export interface ContentType extends CreateContentType {
@@ -48,6 +50,7 @@ export const CT_TYPES: ContentTypesWithoutChildren[] = [
 
 export const createContentType = (
   name: string,
+  projectId: ObjectId | string,
   type: ContentTypesWithoutChildren = "text",
   repeated: ContentType["repeated"] = null
 ): ContentType => ({
@@ -57,6 +60,7 @@ export const createContentType = (
   repeated,
   children: [],
   defaultValue: undefined,
+  projectId: ensureObjectId(projectId),
 })
 
 export const freezeAllChildren = (
@@ -74,7 +78,11 @@ export const unfeezeAllChildren = (contentType: ContentType) => {
 /**
  * Helper method to easily compose contentTypes for tests and seeding
  */
-export const compositeContentType = (name: string, isRoot = false) => {
+export const compositeContentType = (
+  name: string,
+  projectId: ObjectId | string,
+  isRoot = false
+) => {
   const rootContentType: ContentType = {
     name,
     slug: slugify(name),
@@ -83,6 +91,7 @@ export const compositeContentType = (name: string, isRoot = false) => {
     freezed: false,
     repeated: null,
     defaultValue: undefined,
+    projectId: ensureObjectId(projectId),
   }
 
   const chainable = {
@@ -96,7 +105,7 @@ export const compositeContentType = (name: string, isRoot = false) => {
       return chainable
     },
     clone() {
-      const cloned = compositeContentType(name, isRoot)
+      const cloned = compositeContentType(name, projectId, isRoot)
       // TODO: add a proper cloning
       cloned.__rootContentType.children = JSON.parse(
         JSON.stringify(rootContentType.children)

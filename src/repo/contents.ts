@@ -1,5 +1,6 @@
 import { Db, ObjectId } from "mongodb"
 import makeRepo from "~/core/lib/crud"
+import { ensureObjectId } from "~/helpers/objectid"
 import { ContentWithConfig, UpdateContentPayload } from "~/models/content"
 import { ContentType } from "~/models/contentType"
 
@@ -43,7 +44,7 @@ export default function contents(db: Db) {
 
   return {
     ...crud,
-    create(data: UpdateContentPayload) {
+    create(data: UpdateContentPayload, projectId: ObjectId | string) {
       const normalized = withUpdateConfigId(data)
 
       return crud.create({
@@ -51,15 +52,20 @@ export default function contents(db: Db) {
         updatedOn: new Date(),
         active: true,
         ...normalized,
+        projectId: ensureObjectId(projectId),
       } as any)
     },
-    update(id: string, data: Partial<UpdateContentPayload>) {
-      return crud.update(id, {
+    update(
+      id: string,
+      projectId: ObjectId | string,
+      data: Partial<UpdateContentPayload>
+    ) {
+      return crud.updateForProject(id, ensureObjectId(projectId), {
         updatedOn: new Date(),
         ...withUpdateConfigId(data),
       })
     },
-    async getById(id: string) {
+    async getById(id: string, projectId: ObjectId | string) {
       let query: any = { _id: -1 }
 
       try {
@@ -74,9 +80,11 @@ export default function contents(db: Db) {
         {
           $match: {
             ...query,
+            projectId: ensureObjectId(projectId),
           },
         },
         {
+          // TODO: ensure configId belongs to the same project
           $lookup: {
             from: contentTypesDbName,
             localField: "configId",
