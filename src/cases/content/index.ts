@@ -86,8 +86,8 @@ export default function createContentCaseFrom(repo: {
     },
     async updateContent(
       idOrSlug: string,
-      payload: Partial<CreateContentPayload>,
-      projectId: string
+      projectId: string,
+      payload: Partial<CreateContentPayload>
     ) {
       if (typeof payload.folderLocation !== "undefined") {
         const path = payload.folderLocation.replace(/^\//, "")

@@ -14,6 +14,7 @@ const createContent = (): CreateContentPayload => ({
   folderTarget: "",
   children: [],
   data: null,
+  projectId: new ObjectId(),
 })
 
 describe("Content", async () => {
@@ -27,7 +28,7 @@ describe("Content", async () => {
   const adminUserId = new ObjectId()
   const nonAdminUserId = new ObjectId()
 
-  const CONENT_API_ADMIN_TOKEN = "content-API-admin-token"
+  const CONTENT_API_ADMIN_TOKEN = "content-API-admin-token"
   const CONENT_API_NON_ADMIN_TOKEN = "content-API-non-admin-token"
 
   // Seed tokens
@@ -35,7 +36,7 @@ describe("Content", async () => {
     await Promise.all([
       accessTokensRepo.findOrCreateAccessToken(
         adminUserId,
-        CONENT_API_ADMIN_TOKEN
+        CONTENT_API_ADMIN_TOKEN
       ),
       accessTokensRepo.findOrCreateAccessToken(
         nonAdminUserId,
@@ -47,7 +48,7 @@ describe("Content", async () => {
   })
 
   afterAll(async () => {
-    await accessTokensRepo.deactivateToken(CONENT_API_ADMIN_TOKEN)
+    await accessTokensRepo.deactivateToken(CONTENT_API_ADMIN_TOKEN)
     await accessTokensRepo.deactivateToken(CONENT_API_NON_ADMIN_TOKEN)
 
     await app.close()
@@ -109,7 +110,7 @@ describe("Content", async () => {
 
         supertest(app.server)
           .get(`/${projectId}/contents`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -123,7 +124,7 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -139,7 +140,10 @@ describe("Content", async () => {
         expect(resp.body).toHaveProperty("data")
 
         const { _id, createdOn, updatedOn, ...body } = resp.body
-        expect(body).toMatchSnapshot()
+        const { projectId: bodyProjectId, ...bodyNoProjectId } = body
+
+        expect(bodyProjectId).toBeTruthy()
+        expect(bodyNoProjectId).toMatchSnapshot()
 
         expect(resp.headers["location"]).toMatch(
           new RegExp(`^\/${projectId}\/contents\/(.+)$`)
@@ -153,19 +157,19 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         const resultFromSlug = await supertest(app.server)
           .get(`/${projectId}/contents/${resp.body.slug}`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(200)
 
         const resultFromId = await supertest(app.server)
           .get(`/${projectId}/contents/${resp.body._id}`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(200)
 
         expect(resultFromId.body._id).toBeDefined()
@@ -181,14 +185,14 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .patch(`/${projectId}/contents/${resp.body.slug}`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
           })
@@ -199,7 +203,7 @@ describe("Content", async () => {
           .send({
             name: "Hello World 2",
           })
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -212,7 +216,7 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(data)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -220,7 +224,7 @@ describe("Content", async () => {
 
         const response = await supertest(app.server)
           .patch(`/${projectId}/contents/${resp.body.slug}`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
             folderLocation: "/posts",
@@ -239,14 +243,14 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/${projectId}/contents/${resp.body._id}`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(200)
       })
 
@@ -257,14 +261,14 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
           .delete(`/${projectId}/contents/${resp.body.slug}`)
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(200)
       })
     })
@@ -296,7 +300,7 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -319,7 +323,7 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -348,7 +352,7 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -366,7 +370,7 @@ describe("Content", async () => {
         const resp = await supertest(app.server)
           .post(`/${projectId}/contents`)
           .send(createContent())
-          .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+          .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
@@ -389,7 +393,7 @@ describe("Content", async () => {
       await supertest(app.server)
         .post(`/${projectId}/contents`)
         .send(data)
-        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+        .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
         .expect(201)
 
       dataInFolder.slug = "test-folder-query"
@@ -399,17 +403,17 @@ describe("Content", async () => {
       await supertest(app.server)
         .post(`/${projectId}/contents`)
         .send(dataInFolder)
-        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+        .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
         .expect(201)
 
       await supertest(app.server)
         .get(`/${projectId}/contents/${dataInFolder.slug}`)
-        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+        .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
         .expect(200)
 
       const response = await supertest(app.server)
         .get(`/${projectId}/contents?folder=/posts`)
-        .set("X-Access-Token", CONENT_API_ADMIN_TOKEN)
+        .set("X-Access-Token", CONTENT_API_ADMIN_TOKEN)
         .expect(200)
 
       expect(response.body.items).toHaveLength(1)

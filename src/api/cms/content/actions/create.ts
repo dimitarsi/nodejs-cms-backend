@@ -6,7 +6,7 @@ import type { CreateContentPayload } from "~/models/content"
 const createContentPayload = {
   schema: {
     body: schemaRef("contentCreatePayload"),
-    params: schemaRef("idOrSlugAndProjectIdParamStrict"),
+    params: schemaRef("projectIdParamStrict"),
   },
 }
 
