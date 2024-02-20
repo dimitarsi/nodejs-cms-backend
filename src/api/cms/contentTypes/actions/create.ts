@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify"
+import { ensureObjectId } from "~/helpers/objectid"
 import { CreateContentType } from "~/models/contentType"
 import { schemaRef } from "~/schema/cmsAPISchema"
 
@@ -22,11 +23,14 @@ export default function createContentType(instance: FastifyInstance) {
     const projectId = request.params.projectId
     const result = await instance.contentTypes.create({
       ...request.body,
-      projectId,
+      projectId: ensureObjectId(projectId),
     })
 
     if (result.insertedId) {
-      const entity = await instance.contentTypes.getById(result.insertedId)
+      const entity = await instance.contentTypes.getById(
+        result.insertedId,
+        projectId
+      )
 
       reply
         .code(201)

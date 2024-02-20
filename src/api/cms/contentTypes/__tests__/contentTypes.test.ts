@@ -115,11 +115,11 @@ describe("ContentTypes", async () => {
 
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
-        expect(resp.body).toBeDefined()
+        expect(resp.body).not.toBeNull()
         expect(resp.body).toHaveProperty("_id")
         expect(resp.body).toHaveProperty("type")
         expect(resp.body).toHaveProperty("name")
@@ -127,7 +127,7 @@ describe("ContentTypes", async () => {
         expect(resp.body).toHaveProperty("children")
         expect(resp.body).toHaveProperty("repeated")
 
-        const { _id, ...body } = resp.body
+        const { _id, projectId: _projectId, ...body } = resp.body
         expect(body).toMatchSnapshot()
 
         expect(resp.headers["location"]).toMatch(
@@ -141,7 +141,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -168,7 +168,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -197,7 +197,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -215,7 +215,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -243,7 +243,7 @@ describe("ContentTypes", async () => {
 
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
@@ -254,7 +254,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -277,7 +277,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -306,7 +306,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
@@ -324,7 +324,7 @@ describe("ContentTypes", async () => {
         // Ensure entity exists
         const resp = await supertest(app.server)
           .post(`/${projectId}/content-types`)
-          .send(compositeContentType("test01").getType())
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
