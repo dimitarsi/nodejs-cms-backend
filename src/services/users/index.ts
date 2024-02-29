@@ -1,5 +1,4 @@
 import { ensureObjectId } from "~/helpers/objectid"
-import { v4 } from "uuid"
 import { ObjectId, WithId } from "mongodb"
 import type {
   UsersRepo,
@@ -10,13 +9,19 @@ import type {
 } from "~/repo"
 import type { UserWithPermissions } from "~/models/user"
 
-function createUserCaseFrom(
-  users: UsersRepo,
-  accessToken: AccessTokenRepo,
-  projects: ProjectsRepo,
-  invitations: InvitationsRepo,
+function createUserService({
+  users,
+  accessToken,
+  projects,
+  invitations,
+  permissions,
+}: {
+  users: UsersRepo
+  accessToken: AccessTokenRepo
+  projects: ProjectsRepo
+  invitations: InvitationsRepo
   permissions: PermissionsRepo
-) {
+}) {
   const getProjectsFromToken = async (tokenHeader: string) => {
     const token = await accessToken.findToken(tokenHeader)
 
@@ -30,7 +35,7 @@ function createUserCaseFrom(
       token.userId,
       { read: true }
     )
-    const allowedProjects = permissionForUser.map((permission) =>
+    const allowedProjects: string[] = permissionForUser.map((permission) =>
       permission.projectId.toString()
     )
 
@@ -79,4 +84,4 @@ const isActive = (user: null | WithId<UserWithPermissions>) => {
   return user && user.isActive
 }
 
-export default createUserCaseFrom
+export default createUserService

@@ -1,5 +1,4 @@
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
-import createUserCaseFrom from "~/services/users"
 
 const inviteOptions: RouteShorthandOptions = {
   schema: {
@@ -22,17 +21,11 @@ export default function join(instance: FastifyInstance) {
     Params: { projectId: string }
     // Body: {}
   }>("/projects/:projectId/join", inviteOptions, async (request, reply) => {
-    const usersCase = createUserCaseFrom(
-      instance.users,
-      instance.accessToken,
-      instance.projects,
-      instance.invitations,
-      instance.permissions
-    )
+    const { usersService } = instance.services
 
     const accessTokenHeader = request.headers["x-access-token"] as string
 
-    const accepted = await usersCase.acceptInvitation(
+    const accepted = await usersService.acceptInvitation(
       accessTokenHeader,
       request.params.projectId,
       request.query.invitationToken

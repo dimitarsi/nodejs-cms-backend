@@ -1,6 +1,5 @@
 import { ensureObjectId } from "~/helpers/objectid"
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
-import createUserCaseFrom from "~/services/users"
 import { DomainSettings, Project } from "~/models/project"
 
 const createProjectOptions: RouteShorthandOptions = {

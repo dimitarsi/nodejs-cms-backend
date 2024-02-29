@@ -12,7 +12,7 @@ import {
 import type { ContentType } from "~/models/contentType"
 import { ObjectId } from "mongodb"
 
-describe.skip("Content case helpers", () => {
+describe.skip("Content Service helpers", () => {
   test("Can diff keys - union", () => {
     const diffed = diff(["a", "b"], ["b", "c"])
 
@@ -364,9 +364,11 @@ describe.skip("Content case helpers", () => {
     (_descr, testCase) => {
       expect(
         validateContentWithConfig(
-          testCase.content as BaseContentData,
-          "projectId",
-          testCase.config
+          testCase.content as BaseContentData<
+            any,
+            Omit<ContentType, "projectId">
+          >,
+          testCase.config as Omit<ContentType, "projectId">
         )
       ).toEqual(testCase.expected)
     }

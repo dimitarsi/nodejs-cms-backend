@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify"
 import { schemaRef } from "~/schema/cmsAPISchema"
-import createContentCaseFrom from "~/services/content"
 import { CreateContentPayload } from "~/models/content"
 
 const updateOptions = {
@@ -18,8 +17,8 @@ export default function update(instance: FastifyInstance) {
     "/:projectId/contents/:idOrSlug",
     updateOptions,
     async (request, reply) => {
-      const contents = await createContentCaseFrom(instance)
-      const entity = await contents.updateContent(
+      const { contentService } = instance.services
+      const entity = await contentService.updateContent(
         request.params.idOrSlug,
         request.params.projectId,
         request.body

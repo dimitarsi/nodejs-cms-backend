@@ -13,7 +13,7 @@ const getDefaultPayload = (slug: string) => ({
   folderTarget: slug,
 })
 
-export default function createContentCaseFrom(repo: {
+export default function createContentService(repo: {
   contents: ContentsRepo
   contentTypes: ContentTypesRepo
 }) {
