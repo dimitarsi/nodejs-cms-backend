@@ -62,7 +62,7 @@ describe("Projects", async () => {
   })
 
   afterEach(async () => {
-    await db.collection("contents").deleteMany({})
+    await db.collection("projects").deleteMany({})
   })
 
   describe("Needs authentication", () => {
@@ -132,13 +132,13 @@ describe("Projects", async () => {
       test("POST /projects - can create project with the same name but different owner", async () => {
         await app.ready()
 
-        const resp = await request(app.server)
+        await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
           .send(createProjectPayload(userId, "Another Project 2"))
           .expect(201)
 
-        const resp2 = await request(app.server)
+        await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_NON_ADMIN_TOKEN)
           .send(createProjectPayload(otherUserId, "Another Project 2"))
@@ -147,6 +147,12 @@ describe("Projects", async () => {
 
       test("GET /projects", async () => {
         await app.ready()
+
+        await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project 2"))
+          .expect(201)
 
         const resp = await request(app.server)
           .get("/projects")

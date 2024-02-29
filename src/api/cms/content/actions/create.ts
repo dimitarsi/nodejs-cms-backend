@@ -18,7 +18,7 @@ export default function createContents(instance: FastifyInstance) {
     const body = request.body
     const projectId = request.params.projectId
 
-    const contents = await createContentCaseFrom(instance)
+    const contents = createContentCaseFrom(instance)
     const entity = await contents.createContent(body, projectId)
 
     if (entity && entity._id) {

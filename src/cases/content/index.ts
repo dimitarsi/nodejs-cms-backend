@@ -31,7 +31,7 @@ export default function createContentCaseFrom(repo: {
       }
 
       // No config found!
-      if (entity.configId === undefined) {
+      if (entity?.configId === undefined) {
         return entity
       }
 
