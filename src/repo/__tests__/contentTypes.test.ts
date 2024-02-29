@@ -8,6 +8,7 @@ import {
   compositeContentType,
   createContentType,
 } from "~/models/contentType"
+import { ObjectId } from "mongodb"
 
 describe("ContentTypes Repo", async () => {
   const db = await mongoClient.db(`${process.env.DB_NAME}-repo`)
@@ -22,9 +23,10 @@ describe("ContentTypes Repo", async () => {
   })
 
   test("Can create and find simple content Types", async () => {
-    await repo.create(createContentType("Title"))
+    const projectId = new ObjectId()
+    await repo.create(createContentType("Title", projectId))
 
-    const item = await repo.getById("title")
+    const item = await repo.getById("title", projectId)
 
     expect(item).toBeDefined()
 
@@ -34,18 +36,20 @@ describe("ContentTypes Repo", async () => {
   })
 
   describe("Nested references", () => {
-    const post = compositeContentType("Post", true)
-    const seo = compositeContentType("SEO", true)
+    const projectId = new ObjectId()
+
+    const post = compositeContentType("Post", projectId, true)
+    const seo = compositeContentType("SEO", projectId, true)
 
     seo
-      .add(createContentType("title"))
-      .add(createContentType("description"))
-      .add(createContentType("image"))
+      .add(createContentType("title", projectId))
+      .add(createContentType("description", projectId))
+      .add(createContentType("image", projectId))
 
     beforeEach(async () => {
       await repo.create(seo.getType())
 
-      const seoItem = await repo.getById("seo")
+      const seoItem = await repo.getById("seo", projectId)
 
       if (seoItem) {
         post.add(seoItem)
@@ -60,7 +64,7 @@ describe("ContentTypes Repo", async () => {
     })
 
     test("Can create and find root references", async () => {
-      const postItem = await repo.getById("post")
+      const postItem = await repo.getById("post", projectId)
 
       expect(postItem).not.toBeNull()
 
@@ -79,11 +83,11 @@ describe("ContentTypes Repo", async () => {
     })
 
     test("Updating a referred (root) field also updates the reference", async () => {
-      seo.add(createContentType("schemaType"))
+      seo.add(createContentType("schemaType", projectId))
 
-      await repo.update("seo", seo.getType())
+      await repo.update("seo", projectId, seo.getType())
 
-      const postItem = await repo.getById("post")
+      const postItem = await repo.getById("post", projectId)
 
       expect(postItem).toBeDefined()
       expect(postItem!.type).toBe("root")
@@ -101,12 +105,12 @@ describe("ContentTypes Repo", async () => {
     })
 
     test("Preserving original contentType name when root contentType", async () => {
-      const root = compositeContentType("root", true)
-      const innerRoot = compositeContentType("innerRoot", true)
+      const root = compositeContentType("root", projectId, true)
+      const innerRoot = compositeContentType("innerRoot", projectId, true)
 
       await repo.create(innerRoot.getType())
 
-      const innerRootInstance = await repo.getById("inner_root")
+      const innerRootInstance = await repo.getById("inner_root", projectId)
 
       expect(innerRootInstance).toBeDefined()
       expect(innerRootInstance!._id).toBeDefined()
@@ -119,13 +123,14 @@ describe("ContentTypes Repo", async () => {
         children: [],
         repeated: null,
         defaultValue: null,
+        projectId,
       }
 
       root.add(renamedInnerRoot)
 
       await repo.create(root.getType())
 
-      const rootInstance = await repo.getById("root")
+      const rootInstance = await repo.getById("root", projectId)
 
       expect(rootInstance).toBeDefined()
       expect(rootInstance!._id).toBeDefined()
