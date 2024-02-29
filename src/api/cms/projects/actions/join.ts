@@ -1,5 +1,5 @@
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
-import createUserCaseFrom from "~/cases/users"
+import createUserCaseFrom from "~/services/users"
 
 const inviteOptions: RouteShorthandOptions = {
   schema: {

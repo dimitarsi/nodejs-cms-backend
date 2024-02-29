@@ -1,6 +1,6 @@
 import { ensureObjectId } from "~/helpers/objectid"
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
-import createUserCaseFrom from "~/cases/users"
+import createUserCaseFrom from "~/services/users"
 import { DomainSettings, Project } from "~/models/project"
 
 const createProjectOptions: RouteShorthandOptions = {
@@ -32,11 +32,9 @@ export default function createProject(instance: FastifyInstance) {
     } as Project)
 
     if (project == null) {
-      return reply
-        .code(422)
-        .send({
-          message: "Project with the same name already exists for this user.",
-        })
+      return reply.code(422).send({
+        message: "Project with the same name already exists for this user.",
+      })
     }
 
     await Promise.all([

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import getContentCaseFrom from "~/cases/content"
+import getContentCaseFrom from "~/services/content"
 import { schemaRef } from "~/schema/cmsAPISchema"
 
 const getByIdOptions = {

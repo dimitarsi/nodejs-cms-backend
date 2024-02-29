@@ -2,7 +2,7 @@ import contentTypesRepo from "~/repo/contentTypes"
 import { type Db, type ObjectId } from "mongodb"
 import contentRepo from "~/repo/contents"
 import slugify from "~/helpers/slugify"
-import createContentCaseFrom from "~/cases/content"
+import createContentCaseFrom from "~/services/content"
 
 export const createContent =
   (db: Db) =>
