@@ -4,29 +4,29 @@ import { schemaRef } from "~/schema/cmsAPISchema"
 
 const getAllOptions: RouteShorthandOptions = {
   schema: {
-    // params: schemaRef("projectIdParamStrict"),
+    params: schemaRef("projectIdParamStrict"),
     querystring: schemaRef("filtersAndPageQuery"),
     // @ts-ignore
     tags: ["user"],
     description: "This is a description for the activate endpoint",
-    // response: {
-    //   "200": {
-    //     type: "object",
-    //     properties: {
-    //       items: { type: "array" },
-    //       pagination: {
-    //         type: "object",
-    //         properties: {
-    //           page: { type: "number" },
-    //           perPage: { type: "number" },
-    //           count: { type: "number" },
-    //           totalPage: { type: "number" },
-    //           nextPage: { type: "number" },
-    //         },
-    //       },
-    //     },
-    //   },
-    // },
+    response: {
+      "200": {
+        type: "object",
+        properties: {
+          items: { type: "array" },
+          pagination: {
+            type: "object",
+            properties: {
+              page: { type: "number" },
+              perPage: { type: "number" },
+              count: { type: "number" },
+              totalPage: { type: "number" },
+              nextPage: { type: "number" },
+            },
+          },
+        },
+      },
+    },
   },
 }
 
