@@ -15,8 +15,9 @@ export default function (instance: FastifyInstance) {
     "/:projectId/contents/:idOrSlug",
     getByIdOptions,
     async (request, reply) => {
-      const useCase = getContentCaseFrom(instance)
-      const entity = await useCase.byId(
+      const { contentService } = instance.services
+
+      const entity = await contentService.byId(
         request.params.idOrSlug,
         request.params.projectId,
         {
