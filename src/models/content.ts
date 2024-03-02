@@ -48,7 +48,8 @@ export interface TopLevelContentData {
   isFolder: boolean
   folderLocation: string
   folderTarget: string
-  configId?: string | ObjectId
+  configId?: ObjectId | string
+  projectId: ObjectId | string
 }
 
 export type CreateContentPayload = TopLevelContentData &
@@ -62,4 +63,6 @@ export type UpdateContentPayload = CreateContentPayload & ComputedContentFields
 
 export type Content = BaseModel & UpdateContentPayload
 
-export type ContentWithConfig = Content & { config: ContentType }
+export type ContentWithConfig<T = ContentType> = Content & {
+  config: T
+}

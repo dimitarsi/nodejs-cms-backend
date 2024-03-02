@@ -1,6 +1,6 @@
 import { UserWithPermissions as User } from "~/models/user"
 import makeRepo from "~/core/lib/crud"
-import { Db, ObjectId, Document } from "mongodb"
+import { Db, ObjectId, Document, WithId } from "mongodb"
 import bcrypt from "bcrypt"
 import { rounds } from "@config"
 import { v4 } from "uuid"
@@ -13,14 +13,17 @@ function shouldUpdatePassword(
   return data.password !== undefined
 }
 
-export default function users(db: Db) {
+export default function users(
+  db: Db,
+  options: Parameters<typeof makeRepo>[1] = { softDelete: false }
+) {
   const collection = db.collection<User>("users")
-  const crud = makeRepo(collection)
+  const crud = makeRepo(collection, options)
 
   return {
     ...crud,
-    getById: (idOrSlug: string | number | ObjectId) => {
-      return crud.getById(idOrSlug, { password: 0 })
+    getById: async (idOrSlug: string | number | ObjectId) => {
+      return (await crud.getById(idOrSlug, { password: 0 })) as WithId<User>
     },
     getByEmail: (email: string) => {
       return collection.findOne({ email })
@@ -41,20 +44,28 @@ export default function users(db: Db) {
       })
 
       if (user !== null) {
-        return null
+        return {
+          status: "duplicated",
+          userId: null,
+        }
       }
 
-      return crud.create({
+      const result = await crud.create({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         isActive: data.isActive,
-        isAdmin: data.isAdmin,
+        // isAdmin: data.isAdmin,
         password: bcrypt.hashSync(data.password, rounds),
         activationHash: v4(),
         hashExpiration: getActivationExpirationDate(),
         projects: data.projects,
       })
+
+      return {
+        status: result.acknowledged ? "ok" : "error",
+        userId: result.insertedId,
+      }
     },
     update: (
       id: string | number,
@@ -73,7 +84,7 @@ export default function users(db: Db) {
     selfActivate: async (id: string, hash: string) => {
       return await collection.findOneAndUpdate(
         {
-          _id: new ObjectId(id),
+          _id: ensureObjectId(id),
           activationHash: hash,
           hashExpiration: { $gt: new Date() },
         },

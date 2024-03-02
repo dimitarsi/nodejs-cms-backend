@@ -4,6 +4,7 @@ import { compositeContentType } from "~/models/contentType"
 import supertest from "supertest"
 import app from "~/app"
 import accessTokens from "~/repo/accessTokens"
+import permissions from "~/repo/permissions"
 
 describe("ContentTypes", async () => {
   const mongoClient = new MongoClient(
@@ -11,25 +12,26 @@ describe("ContentTypes", async () => {
   )
   const db = await mongoClient.db(process.env.DB_NAME)
   const accessTokensRepo = accessTokens(db)
+  const permissionsRepo = permissions(db)
 
   const CONENT_TYPES_API_ADMIN_TOKEN = "content-types-API-admin-token"
   const CONENT_TYPES_API_NON_ADMIN_TOKEN = "content-types-API-non-admin-token"
 
+  const projectId = new ObjectId().toString()
+  const userId = new ObjectId()
+  const nonAdminUserId = new ObjectId()
+
   // Seed tokens
   beforeAll(async () => {
     await Promise.all([
+      permissionsRepo.setAdminUser(userId, projectId, "grant"),
+      permissionsRepo.setAdminUser(nonAdminUserId, projectId, "revoke"),
       accessTokensRepo.findOrCreateAccessToken(
-        new ObjectId(),
-        {
-          isAdmin: true,
-        },
+        userId,
         CONENT_TYPES_API_ADMIN_TOKEN
       ),
       accessTokensRepo.findOrCreateAccessToken(
-        new ObjectId(),
-        {
-          isAdmin: false,
-        },
+        nonAdminUserId,
         CONENT_TYPES_API_NON_ADMIN_TOKEN
       ),
     ])
@@ -48,23 +50,25 @@ describe("ContentTypes", async () => {
   })
 
   describe("Needs Authentication", () => {
-    test("GET /content-types", async () => {
+    test("GET /:projectId/content-types", async () => {
       await app.ready()
 
-      await supertest(app.server).get("/content-types").expect(403)
+      await supertest(app.server).get(`/${projectId}/content-types`).expect(403)
     })
 
-    test("GET /content-types/:id", async () => {
-      await app.ready()
-
-      await supertest(app.server).get("/content-types/foobar").expect(403)
-    })
-
-    test("POST /content-types", async () => {
+    test("GET /:projectId/content-types/:id", async () => {
       await app.ready()
 
       await supertest(app.server)
-        .post("/content-types")
+        .get(`/${projectId}/content-types/foobar`)
+        .expect(403)
+    })
+
+    test("POST /:projectId/content-types", async () => {
+      await app.ready()
+
+      await supertest(app.server)
+        .post(`/${projectId}/content-types`)
         .send({
           name: "foo",
           slug: "foo",
@@ -75,45 +79,47 @@ describe("ContentTypes", async () => {
         .expect(403)
     })
 
-    test("PATCH /content-types/foobar", async () => {
+    test("PATCH /:projectId/content-types/foobar", async () => {
       await app.ready()
 
       await supertest(app.server)
-        .patch("/content-types/foobar")
+        .patch(`/${projectId}/content-types/foobar`)
         .send({
           hello: "world",
         })
         .expect(403)
     })
 
-    test("DELETE /content-types/foobar", async () => {
+    test("DELETE /:projectId/content-types/foobar", async () => {
       await app.ready()
 
-      await supertest(app.server).delete("/content-types/foobar").expect(403)
+      await supertest(app.server)
+        .delete(`/${projectId}/content-types/foobar`)
+        .expect(403)
     })
   })
 
   describe("Only Admin users can create, update, delete and inspect content types", () => {
     describe("As Admin user", () => {
-      test("GET /content-types", async () => {
+      test("GET /:projectId/content-types", async () => {
         await app.ready()
 
         supertest(app.server)
-          .get("/content-types")
+          .get(`/${projectId}/content-types`)
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
 
-      test("POST /content-types", async () => {
+      test("POST /:projectId/content-types", async () => {
         await app.ready()
 
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
-        expect(resp.body).toBeDefined()
+        expect(resp.body).not.toBeNull()
         expect(resp.body).toHaveProperty("_id")
         expect(resp.body).toHaveProperty("type")
         expect(resp.body).toHaveProperty("name")
@@ -121,31 +127,33 @@ describe("ContentTypes", async () => {
         expect(resp.body).toHaveProperty("children")
         expect(resp.body).toHaveProperty("repeated")
 
-        const { _id, ...body } = resp.body
+        const { _id, projectId: _projectId, ...body } = resp.body
         expect(body).toMatchSnapshot()
 
-        expect(resp.headers["location"]).toMatch(/^\/content-types\/(.+)$/)
+        expect(resp.headers["location"]).toMatch(
+          new RegExp(`^\/${projectId}\/content-types\/(.+)$`)
+        )
       })
 
-      test("GET /content-types/:idOrSlug", async () => {
+      test("GET /:projectId/content-types/:idOrSlug", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         const resultFromSlug = await supertest(app.server)
-          .get(`/content-types/${resp.body.slug}`)
+          .get(`/${projectId}/content-types/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
 
         const resultFromId = await supertest(app.server)
-          .get(`/content-types/${resp.body._id}`)
+          .get(`/${projectId}/content-types/${resp.body._id}`)
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
 
@@ -154,20 +162,20 @@ describe("ContentTypes", async () => {
         expect(resultFromId.body._id).toBe(resultFromSlug.body._id)
       })
 
-      test("PATCH /content-types/:idOrSlug", async () => {
+      test("PATCH /:projectId/content-types/:idOrSlug", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .patch(`/content-types/${resp.body.slug}`)
+          .patch(`/${projectId}/content-types/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .send({
             name: "Hello World",
@@ -175,7 +183,7 @@ describe("ContentTypes", async () => {
           .expect(200)
 
         await supertest(app.server)
-          .patch(`/content-types/${resp.body._id}`)
+          .patch(`/${projectId}/content-types/${resp.body._id}`)
           .send({
             name: "Hello World 2",
           })
@@ -183,100 +191,100 @@ describe("ContentTypes", async () => {
           .expect(200)
       })
 
-      test("DELETE /content-types/:id", async () => {
+      test("DELETE /:projectId/content-types/:id", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/content-types/${resp.body._id}`)
+          .delete(`/${projectId}/content-types/${resp.body._id}`)
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
 
-      test("DELETE /content-types/:slug", async () => {
+      test("DELETE /:projectId/content-types/:slug", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/content-types/${resp.body.slug}`)
+          .delete(`/${projectId}/content-types/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(200)
       })
     })
 
     describe("As non-Admin user", () => {
-      test("GET /content-types", async () => {
+      test("GET /:projectId/content-types", async () => {
         await app.ready()
 
         supertest(app.server)
-          .get("/content-types")
+          .get(`/${projectId}/content-types`)
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
-      test("POST /content-types", async () => {
+      test("POST /:projectId/content-types", async () => {
         await app.ready()
 
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
-      test("GET /content-types/:idOrSlug", async () => {
+      test("GET /:projectId/content-types/:idOrSlug", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .get(`/content-types/${resp.body.slug}`)
+          .get(`/${projectId}/content-types/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
 
         await supertest(app.server)
-          .get(`/content-types/${resp.body._id}`)
+          .get(`/${projectId}/content-types/${resp.body._id}`)
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
-      test("PATCH /content-types/:idOrSlug", async () => {
+      test("PATCH /:projectId/content-types/:idOrSlug", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .patch(`/content-types/${resp.body.slug}`)
+          .patch(`/${projectId}/content-types/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .send({
             name: "Hello World",
@@ -284,7 +292,7 @@ describe("ContentTypes", async () => {
           .expect(403)
 
         await supertest(app.server)
-          .patch(`/content-types/${resp.body._id}`)
+          .patch(`/${projectId}/content-types/${resp.body._id}`)
           .send({
             name: "Hello World 2",
           })
@@ -292,38 +300,38 @@ describe("ContentTypes", async () => {
           .expect(403)
       })
 
-      test("DELETE /content-types/:id", async () => {
+      test("DELETE /:projectId/content-types/:id", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/content-types/${resp.body._id}`)
+          .delete(`/${projectId}/content-types/${resp.body._id}`)
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })
 
-      test("DELETE /content-types/:slug", async () => {
+      test("DELETE /:projectId/content-types/:slug", async () => {
         await app.ready()
 
         // Ensure entity exists
         const resp = await supertest(app.server)
-          .post("/content-types")
-          .send(compositeContentType("test01").getType())
+          .post(`/${projectId}/content-types`)
+          .send(compositeContentType("test01", projectId).getType())
           .set("X-Access-Token", CONENT_TYPES_API_ADMIN_TOKEN)
           .expect(201)
 
         expect(resp.body).toBeDefined()
 
         await supertest(app.server)
-          .delete(`/content-types/${resp.body.slug}`)
+          .delete(`/${projectId}/content-types/${resp.body.slug}`)
           .set("X-Access-Token", CONENT_TYPES_API_NON_ADMIN_TOKEN)
           .expect(403)
       })

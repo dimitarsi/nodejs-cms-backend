@@ -1,10 +1,12 @@
+import { ensureObjectId } from "~/helpers/objectid"
+import app from "~/app"
 import { describe, test, afterAll, beforeAll, afterEach, expect } from "vitest"
 import request from "supertest"
 import { createProjectPayload } from "~/cli/seed/data/createProject"
-import app from "~/app"
-import { MongoClient, ObjectId, WithId } from "mongodb"
+import { MongoClient, ObjectId } from "mongodb"
 import accessTokens from "~/repo/accessTokens"
-import users from "~/repo/users"
+import permissions from "~/repo/permissions"
+import projects from "~/repo/projects"
 import { createUserPayload } from "~/cli/seed/data/createUser"
 
 describe("Projects", async () => {
@@ -15,41 +17,37 @@ describe("Projects", async () => {
   )
   const db = await mongoClient.db(process.env.DB_NAME)
   const accessTokensRepo = accessTokens(db)
-  const usersRepo = users(db)
+  const permissionsRepo = permissions(db)
+  const projectsRepo = projects(db)
 
   const PROJECTS_API_ADMIN_TOKEN = "projects-API-admin-token"
   const PROJECTS_API_NON_ADMIN_TOKEN = "projects-API-non-admin-token"
 
-  let adminUserId: ObjectId, nonAdminUserId: ObjectId
+  let projectId: ObjectId
+  const userId = new ObjectId()
+  const otherUserId = new ObjectId()
 
   // Seed tokens
   beforeAll(async () => {
-    await Promise.all([
-      usersRepo.create(createUserPayload("projects.admin@gmail.com")),
-      usersRepo.create(createUserPayload("projects.non-admin@gmail.com")),
-    ])
+    await db.collection("projects").deleteMany({})
 
-    const [adminUser, nonAdminUser] = await Promise.all([
-      usersRepo.getByEmail("projects.admin@gmail.com"),
-      usersRepo.getByEmail("projects.non-admin@gmail.com"),
-    ])
+    const result = await projectsRepo.create(createProjectPayload(userId))
 
-    adminUserId = adminUser?._id!
-    nonAdminUserId = nonAdminUser?._id!
+    if (result === null) {
+      throw "Could not create project. Make sure the database is cleared between tests"
+    }
+
+    projectId = ensureObjectId(result.insertedId)
 
     await Promise.all([
+      permissionsRepo.setAdminUser(userId, projectId, "grant"),
+      permissionsRepo.setAdminUser(otherUserId, projectId, "revoke"),
       accessTokensRepo.findOrCreateAccessToken(
-        adminUserId,
-        {
-          isAdmin: true,
-        },
+        userId,
         PROJECTS_API_ADMIN_TOKEN
       ),
       accessTokensRepo.findOrCreateAccessToken(
-        nonAdminUserId,
-        {
-          isAdmin: false,
-        },
+        otherUserId,
         PROJECTS_API_NON_ADMIN_TOKEN
       ),
     ])
@@ -64,7 +62,7 @@ describe("Projects", async () => {
   })
 
   afterEach(async () => {
-    await db.collection("contents").deleteMany({})
+    await db.collection("projects").deleteMany({})
   })
 
   describe("Needs authentication", () => {
@@ -72,7 +70,7 @@ describe("Projects", async () => {
       await app.ready()
       await request(app.server)
         .post("/projects")
-        .send(createProjectPayload(adminUserId))
+        .send(createProjectPayload(userId))
         .expect(403)
     })
 
@@ -81,36 +79,80 @@ describe("Projects", async () => {
       await request(app.server).get("/projects").expect(403)
     })
 
-    test.skip("GET /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("GET /projects/:projectId - user needs to be logged in", async () => {
       await app.ready()
-      await request(app.server).get(`/projects/${slug}`).expect(403)
+      await request(app.server)
+        .get(`/projects/${projectId.toString()}`)
+        .expect(403)
     })
 
-    test.skip("DELETE /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("DELETE /projects/:projectId - user needs to be logged in", async () => {
       await app.ready()
-      await request(app.server).delete(`/projects/${slug}`).expect(403)
+      await request(app.server)
+        .delete(`/projects/${projectId.toString()}`)
+        .expect(403)
     })
 
-    test.skip("PATCH /projects/:idOrSlug - user needs to be logged in", async () => {
+    test("PATCH /projects/:idOrSlug - user needs to be logged in", async () => {
       await app.ready()
-      await request(app.server).delete(`/projects/${slug}`).expect(403)
+      await request(app.server)
+        .delete(`/projects/${projectId.toString()}`)
+        .expect(403)
     })
   })
 
   describe("Only Admins can create, delete, update and inspect projects", () => {
     describe("As Admin", () => {
-      test.only("POST /projects", async () => {
+      test("POST /projects", async () => {
         await app.ready()
 
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload(adminUserId))
+          .send(createProjectPayload(userId))
           .expect(201)
       })
 
-      test.only("GET /projects", async () => {
+      test("POST /projects - cannot create project with the same name and same owner", async () => {
         await app.ready()
+
+        const resp = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project"))
+          .expect(201)
+
+        const resp2 = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project"))
+          .expect(422)
+      })
+
+      test("POST /projects - can create project with the same name but different owner", async () => {
+        await app.ready()
+
+        await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project 2"))
+          .expect(201)
+
+        await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_NON_ADMIN_TOKEN)
+          .send(createProjectPayload(otherUserId, "Another Project 2"))
+          .expect(201)
+      })
+
+      test("GET /projects", async () => {
+        await app.ready()
+
+        await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Another Project 2"))
+          .expect(201)
 
         const resp = await request(app.server)
           .get("/projects")
@@ -123,99 +165,346 @@ describe("Projects", async () => {
         expect(resp.body[0].active).toBeTruthy()
       })
 
-      test.skip("PATCH /projects", async () => {
+      test("PATCH /projects", async () => {
         await app.ready()
         const resp = await request(app.server)
           .post("/projects")
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
-          .send(createProjectPayload)
+          .send(createProjectPayload(userId, "Patch Project Name"))
           .expect(201)
 
         await request(app.server)
-          .patch(`/projects/${resp.body._id}`)
+          .patch(`/projects/${resp.body.insertedId}`)
           .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
           .send({
-            email: "foo@bar.com",
-            firstName: "Hello",
-            lastName: "World",
+            name: "Updated Project",
           })
           .expect(200)
+
+        await request(app.server)
+          .patch(`/projects/${resp.body.insertedId}`)
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send({
+            owner: userId.toString(),
+          })
+          .expect(422)
       })
     })
 
-    describe.skip("As Non-Admin", () => {
-      // test("GET /projects - is Forbidden", async () => {
-      //   await app.ready()
-      //   await request(app.server)
-      //     .get("/projects")
-      //     .set("X-Access-Token", nonAdminAccessToken)
-      //     .expect(403)
-      // })
-      // test("GET /projects/:id - is Forbidden", async () => {
-      //   const db = await mongoClient.db(process.env.DB_NAME)
-      //   const repo = projects(db)
-      //   await repo.deleteAll()
-      //   await app.ready()
-      //   const resp = await request(app.server)
-      //     .post("/projects")
-      //     .set("X-Access-Token", adminAccessToken)
-      //     .send(createProjectPayload)
-      //     .expect(201)
-      //   await request(app.server)
-      //     .get(`/projects/${resp.body._id}`)
-      //     .set("X-Access-Token", nonAdminAccessToken)
-      //     .expect(403)
-      // })
-      // test("POST /projects - is Forbidden", async () => {
-      //   const db = await mongoClient.db(process.env.DB_NAME)
-      //   const repo = projects(db)
-      //   await repo.deleteAll()
-      //   await app.ready()
-      //   await request(app.server)
-      //     .post("/projects")
-      //     .set("X-Access-Token", nonAdminAccessToken)
-      //     .send(createProjectPayload)
-      //     .expect(403)
-      // })
-      // test("POST /projects - can create only one user with the same email - is Forbidden", async () => {
-      //   const db = await mongoClient.db(process.env.DB_NAME)
-      //   const repo = projects(db)
-      //   await repo.deleteAll()
-      //   await app.ready()
-      //   const resp = await request(app.server)
-      //     .post("/projects")
-      //     .set("X-Access-Token", adminAccessToken)
-      //     .send(createProjectPayload)
-      //     .expect(201)
-      //   expect(resp.body).toHaveProperty("_id")
-      //   expect(resp.body).toHaveProperty("firstName")
-      //   expect(resp.body).toHaveProperty("email")
-      //   expect(resp.body).toHaveProperty("isActive")
-      //   expect(resp.body).not.toHaveProperty("password")
-      //   expect(resp.body.isActive).toBeFalsy()
-      //   expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
-      //   await request(app.server)
-      //     .post("/projects")
-      //     .set("X-Access-Token", nonAdminAccessToken)
-      //     .send(createProjectPayload)
-      //     .expect(403)
-      // })
-      // test("PATCH /projects - is Forbidden", async () => {
-      //   const db = await mongoClient.db(process.env.DB_NAME)
-      //   const repo = projects(db)
-      //   await repo.deleteAll()
-      //   await app.ready()
-      //   const resp = await request(app.server)
-      //     .post("/projects")
-      //     .set("X-Access-Token", adminAccessToken)
-      //     .send(createProjectPayload)
-      //     .expect(201)
-      //   await request(app.server)
-      //     .patch(`/projects/${resp.body._id}`)
-      //     .set("X-Access-Token", nonAdminAccessToken)
-      //     .send(createProjectPayload)
-      //     .expect(403)
-      // })
+    describe("As Non-Admin", () => {
+      beforeAll(async () => {
+        await Promise.all([
+          projectsRepo.deleteForUser(otherUserId),
+          permissionsRepo.deleteForUser(otherUserId),
+        ])
+      })
+
+      test("GET /projects - is Forbidden", async () => {
+        await app.ready()
+        await request(app.server)
+          .get("/projects")
+          .set("X-Access-Token", PROJECTS_API_NON_ADMIN_TOKEN)
+          .expect(404)
+      })
+
+      test("GET /projects/:projectId - is Forbidden", async () => {
+        await app.ready()
+
+        const resp = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Text non-admin Get request"))
+          .expect(201)
+
+        expect(resp.body).toHaveProperty("insertedId")
+
+        await request(app.server)
+          .get(`/projects/${resp.body.insertedId}`)
+          .set("X-Access-Token", PROJECTS_API_NON_ADMIN_TOKEN)
+          .expect(403)
+      })
+
+      test("PATCH /projects - is Forbidden", async () => {
+        await app.ready()
+
+        const resp = await request(app.server)
+          .post("/projects")
+          .set("X-Access-Token", PROJECTS_API_ADMIN_TOKEN)
+          .send(createProjectPayload(userId, "Test non-admin Patch request"))
+          .expect(201)
+
+        expect(resp.body).toHaveProperty("insertedId")
+
+        await request(app.server)
+          .patch(`/projects/${resp.body.insertedId}`)
+          .set("X-Access-Token", PROJECTS_API_NON_ADMIN_TOKEN)
+          .send({
+            name: "Changed by another User",
+          })
+          .expect(403)
+      })
+    })
+  })
+
+  describe("Invite to project", () => {
+    test("User cannot accept an invite without activating his account first", async () => {
+      await app.ready()
+      const userDataOther = createUserPayload(`invitation.inactive@gmail.com`)
+
+      const createProject = await request(app.server)
+        .post("/projects")
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send(createProjectPayload(userId, "You shall not pass"))
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther.email })
+        .expect(201)
+
+      const invitation = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther.email })
+
+      expect(invitation).toBeTruthy()
+      expect(invitation).toHaveProperty("token")
+
+      await request(app.server).post(`/users`).send(userDataOther)
+
+      const loginResponse = await request(app.server)
+        .post("/login")
+        .send({
+          email: userDataOther.email,
+          password: userDataOther.password,
+        })
+        .expect(401)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation!.token
+          }`
+        )
+        // .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(403)
+    })
+
+    test("User with manage permissions can invite another user to the same project with default read permissions", async () => {
+      await app.ready()
+      const userDataOther = createUserPayload(`invitation@gmail.com`)
+
+      const createProject = await request(app.server)
+        .post("/projects")
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send(createProjectPayload(userId, "InvitationsOnly"))
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther.email })
+        .expect(201)
+
+      const invitation = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther.email })
+
+      expect(invitation).toBeTruthy()
+      expect(invitation).toHaveProperty("token")
+
+      await request(app.server).post(`/users`).send(userDataOther)
+
+      let rawUser2 = await db
+        .collection("users")
+        .findOne({ email: userDataOther.email })
+
+      await request(app.server)
+        .get(
+          `/users/${rawUser2?._id.toString()}/activate?hash=${
+            rawUser2!.activationHash
+          }`
+        )
+        .expect(204)
+
+      const loginResponse = await request(app.server).post("/login").send({
+        email: userDataOther.email,
+        password: userDataOther.password,
+      })
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation!.token
+          }`
+        )
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(200)
+
+      const userPermissions = await db.collection("permissions").findOne({
+        projectId: ensureObjectId(createProject.body.insertedId),
+        userId: rawUser2?._id,
+      })
+
+      expect(userPermissions).toBeTruthy()
+      expect(userPermissions).toHaveProperty("read")
+      expect(userPermissions).toHaveProperty("write")
+      expect(userPermissions).toHaveProperty("manage")
+
+      expect(userPermissions?.read).toBeTruthy()
+      expect(userPermissions?.write).toBeFalsy()
+      expect(userPermissions?.manage).toBeFalsy()
+
+      await request(app.server)
+        .get(`/projects`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(200)
+
+      await request(app.server)
+        .get(`/projects/${createProject.body.insertedId}`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(200)
+
+      await request(app.server)
+        .patch(`/projects/${createProject.body.insertedId}`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .send({
+          name: "Change the Project Name",
+        })
+        .expect(403)
+
+      await request(app.server)
+        .delete(`/projects/${createProject.body.insertedId}`)
+        .set("X-Access-Token", loginResponse.body.accessToken)
+        .expect(403)
+    })
+
+    test("User cannot join the wrong project", async () => {
+      await app.ready()
+      const userDataOther2 = createUserPayload(`invitation2@gmail.com`)
+      const userDataOther3 = createUserPayload(`invitation3@gmail.com`)
+
+      const createProject = await request(app.server)
+        .post("/projects")
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send(createProjectPayload(userId, "Invitation check"))
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther2.email })
+        .expect(201)
+
+      await request(app.server)
+        .post(`/projects/${createProject.body.insertedId}/invite`)
+        .set("x-access-token", PROJECTS_API_ADMIN_TOKEN)
+        .send({ userEmail: userDataOther3.email })
+        .expect(201)
+
+      const invitation2 = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther2.email })
+
+      const invitation3 = await db
+        .collection("invitations")
+        .findOne({ userEmail: userDataOther3.email })
+
+      expect(invitation2).toBeTruthy()
+      expect(invitation3).toBeTruthy()
+      expect(invitation2).toHaveProperty("token")
+      expect(invitation3).toHaveProperty("token")
+
+      await request(app.server).post(`/users`).send(userDataOther2)
+      await request(app.server).post(`/users`).send(userDataOther3)
+
+      let rawUser2 = await db
+        .collection("users")
+        .findOne({ email: userDataOther2.email })
+
+      let rawUser3 = await db
+        .collection("users")
+        .findOne({ email: userDataOther3.email })
+
+      // Using the wrong activation token
+      await request(app.server)
+        .get(
+          `/users/${rawUser2?._id.toString()}/activate?hash=${
+            rawUser3!.activationHash
+          }`
+        )
+        .expect(404)
+
+      // Using the wrong activation token
+      await request(app.server)
+        .get(
+          `/users/${rawUser3?._id.toString()}/activate?hash=${
+            rawUser2!.activationHash
+          }`
+        )
+        .expect(404)
+
+      await request(app.server)
+        .get(
+          `/users/${rawUser2?._id.toString()}/activate?hash=${
+            rawUser2!.activationHash
+          }`
+        )
+        .expect(204)
+
+      await request(app.server)
+        .get(
+          `/users/${rawUser3?._id.toString()}/activate?hash=${
+            rawUser3!.activationHash
+          }`
+        )
+        .expect(204)
+
+      const loginResponse2 = await request(app.server).post("/login").send({
+        email: userDataOther2.email,
+        password: userDataOther2.password,
+      })
+
+      const loginResponse3 = await request(app.server).post("/login").send({
+        email: userDataOther3.email,
+        password: userDataOther3.password,
+      })
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation2!.token
+          }`
+        )
+        .set("x-access-token", loginResponse3.body.accessToken)
+        .expect(404)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation3!.token
+          }`
+        )
+        .set("x-access-token", loginResponse2.body.accessToken)
+        .expect(404)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation2!.token
+          }`
+        )
+        .set("x-access-token", loginResponse2.body.accessToken)
+        .expect(200)
+
+      await request(app.server)
+        .post(
+          `/projects/${createProject.body.insertedId}/join?invitationToken=${
+            invitation3!.token
+          }`
+        )
+        .set("x-access-token", loginResponse3.body.accessToken)
+        .expect(200)
     })
   })
 })

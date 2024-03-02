@@ -1,6 +1,5 @@
 import { ensureObjectId } from "~/helpers/objectid"
 import type { FastifyInstance, RouteShorthandOptions } from "fastify"
-import createUserCaseFrom from "~/cases/users"
 import { DomainSettings, Project } from "~/models/project"
 
 const createProjectOptions: RouteShorthandOptions = {
@@ -27,14 +26,27 @@ export default function createProject(instance: FastifyInstance) {
     const project = await instance.projects.create({
       name: request.body.name,
       active: true,
-      domains: [] as DomainSettings[], // edit project settings later
+      domains: [] as DomainSettings[], // User can edit project settings later
       owner: ensureObjectId(token.userId),
     } as Project)
 
-    await instance.users.setProjectOwner(
-      token.userId.toString(),
-      project.insertedId.toString()
-    )
+    if (project == null) {
+      return reply.code(422).send({
+        message: "Project with the same name already exists for this user.",
+      })
+    }
+
+    await Promise.all([
+      instance.users.setProjectOwner(
+        token.userId.toString(),
+        project.insertedId.toString()
+      ),
+      instance.permissions.setAdminUser(
+        token.userId,
+        project.insertedId,
+        "grant"
+      ),
+    ])
 
     reply.status(201).send(project)
   })

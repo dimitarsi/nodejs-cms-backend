@@ -114,6 +114,8 @@ export const contentTypeCreatePayload = {
 
 const idParamStrict = createStrict("id")
 const idOrSlugParamStrict = createStrict("idOrSlug")
+const idOrSlugAndProjectIdParamStrict = createStrict("idOrSlug", "projectId")
+const projectIdParamStrict = createStrict("projectId")
 const hashQueryStrict = createStrict("hash")
 
 const schemaDefinitions = {
@@ -128,6 +130,8 @@ const schemaDefinitions = {
     contentCreatePayload,
     contentTypeCreatePayload,
     contentUpdatePayload,
+    idOrSlugAndProjectIdParamStrict,
+    projectIdParamStrict,
   },
 }
 

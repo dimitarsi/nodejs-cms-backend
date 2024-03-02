@@ -1,6 +1,6 @@
 import { FastifyInstance, RouteShorthandOptions } from "fastify"
 import { User } from "~/models/user"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 const createUserOptions: RouteShorthandOptions = {
   schema: {
@@ -18,7 +18,6 @@ export default function createUser(instance: FastifyInstance) {
 
     const result = await instance.users.create({
       isActive: false,
-      isAdmin: false,
       firstName: body.firstName,
       lastName: body.lastName,
       email: body.email,
@@ -26,18 +25,20 @@ export default function createUser(instance: FastifyInstance) {
       projects: [],
     })
 
-    if (!result) {
+    const userId = result.userId
+
+    if (result.status !== "ok" || !userId) {
       return reply.code(422).send({
         error: "Cannot create",
-        message: "User already exists",
+        message: `User already exists - ${result.status}`,
       })
     }
 
-    const createdUser = await instance.users.getById(result.insertedId)
+    const createdUser = await instance.users.getById(userId)
 
     reply
       .code(201)
-      .header("location", `${usersRoute}/${result.insertedId}`)
+      .header("location", `${usersRoute}/${userId}`)
       .send(createdUser)
   })
 }

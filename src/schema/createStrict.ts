@@ -1,12 +1,15 @@
 import { JSONSchemaType } from "ajv"
 
-export default function createStrict<T>(key: string): JSONSchemaType<T> {
+export default function createStrict<T>(...keys: string[]): JSONSchemaType<T> {
   return {
     type: "object",
-    properties: {
-      [key]: { type: "string" },
-    },
-    required: [key],
+    properties: keys.reduce((acc, key) => {
+      return {
+        ...acc,
+        [key]: { type: "string" },
+      }
+    }, {}),
+    required: [...keys],
     additionalProperties: true,
   }
 }

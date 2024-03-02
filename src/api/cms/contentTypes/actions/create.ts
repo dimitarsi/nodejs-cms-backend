@@ -1,25 +1,40 @@
 import { FastifyInstance } from "fastify"
+import { ensureObjectId } from "~/helpers/objectid"
 import { CreateContentType } from "~/models/contentType"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 const createOptions = {
   schema: {
     body: schemaRef("contentTypeCreatePayload"),
+    params: {
+      type: "object",
+      properties: {
+        projectId: { type: "string" },
+      },
+    },
   },
 }
 
 export default function createContentType(instance: FastifyInstance) {
   instance.post<{
     Body: CreateContentType
-  }>("/content-types", createOptions, async (request, reply) => {
-    const result = await instance.contentTypes.create(request.body)
+    Params: { projectId: string }
+  }>("/:projectId/content-types", createOptions, async (request, reply) => {
+    const projectId = request.params.projectId
+    const result = await instance.contentTypes.create({
+      ...request.body,
+      projectId: ensureObjectId(projectId),
+    })
 
     if (result.insertedId) {
-      const entity = await instance.contentTypes.getById(result.insertedId)
+      const entity = await instance.contentTypes.getById(
+        result.insertedId,
+        projectId
+      )
 
       reply
         .code(201)
-        .header("Location", `/content-types/${result.insertedId}`)
+        .header("Location", `/${projectId}/content-types/${result.insertedId}`)
         .send(entity)
     } else {
       reply.code(422).send({

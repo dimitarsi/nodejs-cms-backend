@@ -1,6 +1,7 @@
 import { ContentType, freezeAllChildren } from "~/models/contentType"
 import makeRepo from "~/core/lib/crud"
 import { Db, ObjectId, OptionalId } from "mongodb"
+import { ensureObjectId } from "~/helpers/objectid"
 
 export type ContentTypesRepo = ReturnType<typeof contentTypes>
 
@@ -9,12 +10,15 @@ export default function contentTypes(db: Db) {
     softDelete: true,
   })
 
-  async function getById(idOrSlug: ObjectId | string) {
+  async function getById(
+    idOrSlug: ObjectId | string,
+    projectId: ObjectId | string
+  ) {
     const waitList: Array<Promise<any>> = []
     let entity: ContentType | null = null
 
     try {
-      entity = await crud.getById(idOrSlug)
+      entity = await crud.getByIdForProject(idOrSlug, projectId)
       if (!entity) {
         throw new Error(`Enitity not found - ${idOrSlug}`)
       }
@@ -25,7 +29,7 @@ export default function contentTypes(db: Db) {
     entity.children?.forEach((entityChild, ind) => {
       if (entityChild.type === "root") {
         waitList.push(
-          getById(entityChild._id!.toString()).then((result) => {
+          getById(entityChild._id!.toString(), projectId).then((result) => {
             if (!result) {
               return
             }
@@ -66,9 +70,17 @@ export default function contentTypes(db: Db) {
         type: "root",
       })
     },
-    async update(idOrSlug: string, data: ContentType) {
+    async update(
+      idOrSlug: string,
+      projectId: ObjectId | string,
+      data: ContentType
+    ) {
       const { _id, ...updated } = data
-      return await crud.update(idOrSlug, updated)
+      return await crud.updateForProject(
+        idOrSlug,
+        ensureObjectId(projectId),
+        updated
+      )
     },
   }
 }

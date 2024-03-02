@@ -5,5 +5,4 @@ export interface AccessToken {
   expire: Date
   userId: ObjectId
   isActive: boolean
-  isAdmin: boolean
 }

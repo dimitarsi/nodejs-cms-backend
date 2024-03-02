@@ -2,6 +2,7 @@ import { UserWithPermissions } from "~/models/user"
 import bcrypt from "bcrypt"
 import { Db } from "mongodb"
 
+// TODO: move to ~/cases
 export default function auth(db: Db) {
   const getUserByEmail = async (email: string) => {
     return await db.collection<UserWithPermissions>("users").findOne({
@@ -15,13 +16,12 @@ export default function auth(db: Db) {
     const user = await getUserByEmail(email)
     let isLoggedIn = false
 
-    if (user) {
+    if (user && user.isActive) {
       isLoggedIn = bcrypt.compareSync(password, user.password)
     }
 
     return {
       isLoggedIn,
-      isAdmin: user?.isAdmin,
       userId: user?._id.toString(),
     }
   }

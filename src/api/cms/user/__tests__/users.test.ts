@@ -3,229 +3,186 @@ import app from "~/app"
 import request from "supertest"
 import { createUserPayload } from "~/cli/seed/data/createUser"
 import { MongoClient, ObjectId } from "mongodb"
-import accessTokens from "~/repo/accessTokens"
+import users from "~/repo/users"
 
-describe("Authentication", () => {
+describe("Authentication", async () => {
   const slug = "slug"
+  const testUserEmail = "users_test_email@gmail.com"
+  const mongoClient = new MongoClient(
+    process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
+  )
+  const db = await mongoClient.db(process.env.DB_NAME)
+  const usersRepo = users(db)
+
+  beforeAll(async () => {
+    const testUser = await usersRepo.getByEmail(testUserEmail)
+    const testUser2 = await usersRepo.getByEmail(`other_${testUserEmail}`)
+    if (testUser) {
+      await usersRepo.deleteById(testUser._id.toString())
+    }
+    if (testUser2) {
+      await usersRepo.deleteById(testUser2._id.toString())
+    }
+  })
 
   afterAll(async () => {
     await app.close()
   })
 
-  describe("Needs authentication", () => {
-    test("POST /users - cannot create user is not logged in first", async () => {
-      await app.ready()
-      await request(app.server)
-        .post("/users")
-        .send(createUserPayload("plenty.test.006@gmail.com"))
-        .expect(403)
-    })
+  test("GET, POST, PATCH, DELETE - /users - Users can register, login, modify and delete accounts", async () => {
+    await app.ready()
 
-    test("GET /users - user needs to be logged in", async () => {
-      await app.ready()
-      await request(app.server).get("/users").expect(403)
-    })
+    const userData = createUserPayload(testUserEmail)
 
-    test("GET /users/:idOrSlug - user needs to be logged in", async () => {
-      await app.ready()
-      await request(app.server).get(`/users/${slug}`).expect(403)
-    })
+    await request(app.server).post("/users").send(userData).expect(201)
 
-    test("DELETE /users/:idOrSlug - user needs to be logged in", async () => {
-      await app.ready()
-      await request(app.server).delete(`/users/${slug}`).expect(403)
-    })
+    let rawUser = await db.collection("users").findOne({ email: testUserEmail })
+    const userId = rawUser?._id.toString()
 
-    test("PATCH /users/:idOrSlug - user needs to be logged in", async () => {
-      await app.ready()
-      await request(app.server).delete(`/users/${slug}`).expect(403)
-    })
+    expect(rawUser).toBeTruthy()
+
+    expect(() => {
+      new ObjectId(userId)
+    }).not.toThrow()
+
+    // Activate the user before login
+    await request(app.server)
+      .get(`/users/${userId}/activate?hash=${rawUser!.activationHash}`)
+      .expect(204)
+
+    const loginResponse = await request(app.server)
+      .post("/login")
+      .send({
+        email: userData.email,
+        password: userData.password,
+      })
+      .expect(200)
+
+    await request(app.server)
+      .patch(`/users/${userId}`)
+      .set("X-Access-Token", loginResponse.body.accessToken)
+      .send({
+        firstName: "Test",
+        lastName: "Acc",
+      })
+      .expect(200)
+
+    rawUser = await db.collection("users").findOne({ email: testUserEmail })
+
+    expect(rawUser).toBeTruthy()
+    expect(rawUser).toHaveProperty("firstName")
+    expect(rawUser).toHaveProperty("lastName")
+    expect(rawUser!.firstName).toBe("Test")
+    expect(rawUser!.lastName).toBe("Acc")
+
+    await request(app.server)
+      .delete(`/users/${userId}`)
+      .set("X-Access-Token", loginResponse.body.accessToken)
+      .expect(200)
+
+    rawUser = await db.collection("users").findOne({ email: testUserEmail })
+
+    expect(rawUser).toBeFalsy()
+
+    await request(app.server)
+      .get(`/users/${userId}`)
+      .set("X-Access-Token", loginResponse.body.accessToken)
+      .expect(403)
   })
 
-  describe("Only Admins can create, delete, update and inspect users", async () => {
-    const mongoClient = new MongoClient(
-      process.env.MONGO_URL || "mongodb://root:example@localhost:27017"
-    )
-    const db = await mongoClient.db(process.env.DB_NAME)
-    const accessTokensRepo = accessTokens(db)
+  test("GET, POST, PATCH, DELETE - /users - Registered users cannot modify, delete other registered users", async () => {
+    await app.ready()
 
-    const USER_API_ADMIN_TOKEN = "user-api-admin-token"
-    const USER_API_NON_ADMIN_TOKEN = "user-api-non-admin-token"
+    const userDataOther = createUserPayload(`other_${testUserEmail}`)
+    const userData = createUserPayload(testUserEmail)
 
-    // Seed tokens
-    beforeAll(async () => {
-      await Promise.all([
-        accessTokensRepo.findOrCreateAccessToken(
-          new ObjectId(),
-          {
-            isAdmin: true,
-          },
-          USER_API_ADMIN_TOKEN
-        ),
-        accessTokensRepo.findOrCreateAccessToken(
-          new ObjectId(),
-          {
-            isAdmin: false,
-          },
-          USER_API_NON_ADMIN_TOKEN
-        ),
-      ])
-    })
+    await request(app.server).post("/users").send(userData).expect(201)
+    await request(app.server).post("/users").send(userDataOther).expect(201)
 
-    afterAll(async () => {
-      await accessTokensRepo.deactivateToken(USER_API_ADMIN_TOKEN)
-      await accessTokensRepo.deactivateToken(USER_API_NON_ADMIN_TOKEN)
+    let rawUser = await db.collection("users").findOne({ email: testUserEmail })
+    let rawUser2 = await db
+      .collection("users")
+      .findOne({ email: userDataOther.email })
+    const userId = rawUser?._id.toString()
+    const userId2 = rawUser2?._id.toString()
 
-      await app.close()
-      await mongoClient.close()
-    })
+    expect(rawUser).toBeTruthy()
+    expect(userId2).toBeTruthy()
 
-    describe("As Admin", () => {
-      test("GET /users", async () => {
-        await app.ready()
-        const resp = await request(app.server)
-          .get("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .expect(200)
+    expect(() => {
+      new ObjectId(userId)
+      new ObjectId(userId2)
+    }).not.toThrow()
 
-        expect(resp.body).toHaveProperty("pagination")
-        expect(resp.body).toHaveProperty("items")
+    // Cannot activate user with a foreign token
+    await request(app.server)
+      .get(`/users/${userId}/activate?hash=${rawUser2!.activationHash}`)
+      .expect(404)
+
+    // Cannot activate user with a foreign token
+    await request(app.server)
+      .get(`/users/${userId2}/activate?hash=${rawUser!.activationHash}`)
+      .expect(404)
+
+    // Activate the user before login
+    await request(app.server)
+      .get(`/users/${userId}/activate?hash=${rawUser!.activationHash}`)
+      .expect(204)
+
+    // Activate the user before login
+    await request(app.server)
+      .get(`/users/${userId2}/activate?hash=${rawUser2!.activationHash}`)
+      .expect(204)
+
+    // Cannot login with the wrong credentials
+    await request(app.server)
+      .post("/login")
+      .send({
+        email: `bad_${userData.email}`,
+        password: userData.password,
       })
+      .expect(401)
 
-      test("POST /users", async () => {
-        await app.ready()
-        const resp = await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.000@gmail.com"))
-          .expect(201)
-
-        expect(resp.body).toHaveProperty("_id")
-        expect(resp.body).toHaveProperty("firstName")
-        expect(resp.body).toHaveProperty("email")
-        expect(resp.body).toHaveProperty("isActive")
-        expect(resp.body).not.toHaveProperty("password")
-        expect(resp.body.isActive).toBeFalsy()
-        expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
+    const loginResponse = await request(app.server)
+      .post("/login")
+      .send({
+        email: userData.email,
+        password: userData.password,
       })
+      .expect(200)
 
-      test("POST /users - can create only one user with the same email", async () => {
-        await app.ready()
-        const resp = await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test@gmail.com"))
-          .expect(201)
-
-        expect(resp.body).toHaveProperty("_id")
-        expect(resp.body).toHaveProperty("firstName")
-        expect(resp.body).toHaveProperty("email")
-        expect(resp.body).toHaveProperty("isActive")
-        expect(resp.body).not.toHaveProperty("password")
-        expect(resp.body.isActive).toBeFalsy()
-        expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
-
-        await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test@gmail.com"))
-          .expect(422)
+    const loginResponse2 = await request(app.server)
+      .post("/login")
+      .send({
+        email: `other_${testUserEmail}`,
+        password: userData.password,
       })
+      .expect(200)
 
-      test("PATCH /users", async () => {
-        await app.ready()
-        const resp = await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.004@gmail.com"))
-          .expect(201)
-
-        await request(app.server)
-          .patch(`/users/${resp.body._id}`)
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send({
-            email: "foo@bar.com",
-            firstName: "Hello",
-            lastName: "World",
-          })
-          .expect(200)
+    await request(app.server)
+      .patch(`/users/${userId2}`)
+      .set("X-Access-Token", loginResponse.body.accessToken)
+      .send({
+        firstName: "Test",
+        lastName: "Acc",
       })
-    })
+      .expect(403)
 
-    describe("As Non-Admin", () => {
-      test("GET /users - is Forbidden", async () => {
-        await app.ready()
-        await request(app.server)
-          .get("/users")
-          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
-          .expect(403)
-      })
+    rawUser = await db
+      .collection("users")
+      .findOne({ email: `other_${testUserEmail}` })
 
-      test("GET /users/:id - is Forbidden", async () => {
-        await app.ready()
-        const resp = await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.003@gmail.com"))
-          .expect(201)
+    // No changes to the stored data
+    expect(rawUser).toBeTruthy()
+    expect(rawUser).toHaveProperty("firstName")
+    expect(rawUser).toHaveProperty("lastName")
+    expect(rawUser!.email).toBe(`other_${testUserEmail}`)
+    expect(rawUser!.firstName).toBe(userData.firstName)
+    expect(rawUser!.lastName).toBe(userData.lastName)
 
-        await request(app.server)
-          .get(`/users/${resp.body._id}`)
-          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
-          .expect(403)
-      })
-
-      test("POST /users - is Forbidden", async () => {
-        await app.ready()
-        await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.005@gmail.com"))
-          .expect(403)
-      })
-
-      test("POST /users - can create only one user with the same email - is Forbidden", async () => {
-        await app.ready()
-
-        const resp = await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.002@gmail.com"))
-          .expect(201)
-
-        expect(resp.body).toHaveProperty("_id")
-        expect(resp.body).toHaveProperty("firstName")
-        expect(resp.body).toHaveProperty("email")
-        expect(resp.body).toHaveProperty("isActive")
-        expect(resp.body).not.toHaveProperty("password")
-        expect(resp.body.isActive).toBeFalsy()
-        expect(resp.header["location"]).toMatch(/^\/users\/([^/]+)$/)
-
-        await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.002@gmail.com"))
-          .expect(403)
-      })
-
-      test("PATCH /users - is Forbidden", async () => {
-        await app.ready()
-        const resp = await request(app.server)
-          .post("/users")
-          .set("X-Access-Token", USER_API_ADMIN_TOKEN)
-          .send(createUserPayload("plenty.test.001@gmail.com"))
-          .expect(201)
-
-        await request(app.server)
-          .patch(`/users/${resp.body._id}`)
-          .set("X-Access-Token", USER_API_NON_ADMIN_TOKEN)
-          .send({
-            email: "foo@bar.com",
-            firstName: "Hello",
-            lastName: "World",
-          })
-          .expect(403)
-      })
-    })
+    await request(app.server)
+      .delete(`/users/${userId2}`)
+      .set("X-Access-Token", loginResponse.body.accessToken)
+      .expect(403)
   })
 })

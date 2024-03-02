@@ -14,9 +14,10 @@ const defaultCreateProjectPayload = {
   // owner: "", // Ref to use
 }
 
-export const createProjectPayload = (userId: ObjectId) => {
+export const createProjectPayload = (userId: ObjectId, name?: string) => {
   return {
     ...defaultCreateProjectPayload,
+    ...(name ? { name } : {}),
     owner: userId.toString(),
   }
 }

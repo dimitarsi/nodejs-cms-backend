@@ -5,7 +5,8 @@ import fastify from "fastify"
 import repo from "~/repo"
 import publicApiAuth from "~/api/public"
 import fastifyPlugin from "fastify-plugin"
-import cmsApiSchema from "~/schema/cms-api"
+import cmsApiSchema from "~/schema/cmsAPISchema"
+import services from "~/services/register"
 
 const app = fastify({
   logger: {
@@ -16,9 +17,13 @@ const app = fastify({
 
 app.register(fastifyPlugin(cmsApiSchema))
 
-app.register(fastifyPlugin(repo), {
-  dbName: process.env.DB_NAME || "plenty_cms",
-})
+app
+  .register(fastifyPlugin(repo), {
+    dbName: process.env.DB_NAME || "plenty_cms",
+  })
+  .then(() => {
+    app.register(fastifyPlugin(services))
+  })
 
 app.get("/health", (_r, reply) => {
   reply.code(200).send({})

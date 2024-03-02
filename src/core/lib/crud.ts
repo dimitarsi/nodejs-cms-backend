@@ -5,6 +5,7 @@ import {
   OptionalUnlessRequiredId,
   Document,
 } from "mongodb"
+import { ensureObjectId } from "~/helpers/objectid"
 
 export const baseCrudMethods = <T extends Record<string, any>>(
   collection: Collection<T>,
@@ -94,6 +95,23 @@ export const baseCrudMethods = <T extends Record<string, any>>(
     async create(data: Omit<T, "_id">) {
       return await collection.insertOne(data as OptionalUnlessRequiredId<T>)
     },
+    async updateForProject(
+      id: ObjectId | string | number,
+      projectId: ObjectId,
+      data: Partial<T>
+    ) {
+      let query: any = { _id: -1 }
+      try {
+        query = { $or: [{ _id: new ObjectId(id) }, { slug: id }] }
+      } catch (_e) {
+        query = { slug: id }
+      }
+
+      return await collection.updateOne(
+        { ...query, ...notDeleted, projectId },
+        { $set: data }
+      )
+    },
     async update(id: ObjectId | string | number, data: Partial<T>) {
       let query: any = { _id: -1 }
       try {
@@ -134,6 +152,42 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         result: await collection.deleteOne(query),
       }
     },
+    async deleteByIdForProject(
+      id: string | number,
+      projectId: ObjectId | string
+    ): Promise<DeleteResult | null> {
+      let query: any = { _id: -1 }
+      try {
+        if (typeof id === "string" || typeof id === "number") {
+          query = { _id: new ObjectId(id) }
+        } else {
+          query = { _id: id }
+        }
+      } catch (_e) {
+        query = { slug: id }
+      }
+
+      if (options.softDelete) {
+        const updateFilter: any = {
+          $set: { deletedOn: new Date() },
+        }
+
+        return {
+          type: "softDelete",
+          result: await collection.updateOne(
+            {
+              ...query,
+              projectId: ensureObjectId(projectId),
+            },
+            updateFilter
+          ),
+        }
+      }
+      return {
+        type: "hardDelete",
+        result: await collection.deleteOne(query),
+      }
+    },
     deleteAll() {
       return collection.deleteMany({})
     },
@@ -153,6 +207,31 @@ export const baseCrudMethods = <T extends Record<string, any>>(
         {
           ...query,
           ...notDeleted,
+        },
+        projection ? { projection } : undefined
+      )
+    },
+    getByIdForProject(
+      id: ObjectId | string | number,
+      projectId: ObjectId | string,
+      projection?: Document | undefined
+    ) {
+      let query: any = { _id: -1 }
+      try {
+        if (typeof id === "string" || typeof id === "number") {
+          query = { _id: new ObjectId(id) }
+        } else {
+          query = { _id: id }
+        }
+      } catch (_e) {
+        query = { slug: id }
+      }
+
+      return collection.findOne<T>(
+        {
+          ...query,
+          ...notDeleted,
+          projectId: ensureObjectId(projectId),
         },
         projection ? { projection } : undefined
       )

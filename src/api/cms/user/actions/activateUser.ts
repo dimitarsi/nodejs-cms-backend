@@ -1,5 +1,5 @@
 import { FastifyInstance, RouteShorthandOptions } from "fastify"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 export default function activateUser(instance: FastifyInstance) {
   instance.get<{
@@ -11,10 +11,10 @@ export default function activateUser(instance: FastifyInstance) {
     const result = await instance.users.selfActivate(id, req.query.hash)
 
     if (!result) {
-      reply.code(404)
+      return reply.code(404).send()
     }
 
-    reply.send()
+    reply.code(204).send()
   })
 }
 

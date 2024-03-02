@@ -1,18 +1,21 @@
 import { FastifyInstance } from "fastify"
-import { schemaRef } from "~/schema/cms-api"
+import { schemaRef } from "~/schema/cmsAPISchema"
 
 const deleteOpts = {
   schema: {
-    params: schemaRef("idOrSlugParamStrict"),
+    params: schemaRef("idOrSlugAndProjectIdParamStrict"),
   },
 }
 
 export default function deleteUser(instance: FastifyInstance) {
-  instance.delete<{ Params: { idOrSlug: string | number } }>(
-    "/contents/:idOrSlug",
+  instance.delete<{ Params: { idOrSlug: string | number; projectId: string } }>(
+    "/:projectId/contents/:idOrSlug",
     deleteOpts,
     async (req, reply) => {
-      await instance.contents.deleteById(req.params.idOrSlug)
+      await instance.contents.deleteByIdForProject(
+        req.params.idOrSlug,
+        req.params.projectId
+      )
 
       reply.code(200)
     }
