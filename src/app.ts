@@ -16,20 +16,15 @@ const app = fastify({
 })
 
 app.register(fastifyPlugin(cmsApiSchema))
-
-app
-  .register(fastifyPlugin(repo), {
-    dbName: process.env.DB_NAME || "plenty_cms",
-  })
-  .then(() => {
-    app.register(fastifyPlugin(services))
-  })
-
-app.get("/health", (_r, reply) => {
-  reply.code(200).send({})
+app.register(fastifyPlugin(repo), {
+  dbName: process.env.DB_NAME || "plenty_cms",
 })
+
+app.register(fastifyPlugin(services))
 
 app.register(cmsAPI)
 app.register(publicApiAuth)
+
+app.get('/health', (_r, reply) => reply.status(200).send('OK'))
 
 export default app
