@@ -1,0 +1,16 @@
+{
+  "name": "build-tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/plb.mjs",
+  "type": "module",
+  "bin": {
+    "plb": "bin/plb.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.20.1"
+  }
+}
