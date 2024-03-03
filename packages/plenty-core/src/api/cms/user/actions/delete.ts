@@ -15,7 +15,7 @@ export default function deleteUser(instance: FastifyInstance) {
     const result = await instance.users.deleteById(id)
 
     if (!result?.result.acknowledged) {
-      reply.code(404)
+      return reply.notFound()
     }
 
     reply.send()

@@ -32,11 +32,9 @@ export default function join(instance: FastifyInstance) {
     )
 
     if (!accepted) {
-      return reply.status(404).send({ message: "No invitation" })
+      return reply.notFound()
     }
 
-    reply.status(200).send({
-      success: true,
-    })
+    reply.success()
   })
 }

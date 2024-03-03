@@ -31,7 +31,7 @@ export default function updateUser(instance: FastifyInstance) {
     }
 
     if (!result || result.matchedCount === 0) {
-      reply.code(404)
+      return reply.notFound()
     }
 
     reply.send()

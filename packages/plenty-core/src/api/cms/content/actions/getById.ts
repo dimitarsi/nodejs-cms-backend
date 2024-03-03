@@ -25,13 +25,11 @@ export default function (instance: FastifyInstance) {
         }
       )
 
-      if (entity) {
-        reply.send(entity)
-      } else {
-        reply.code(404).send({
-          message: "Not found",
-        })
+      if (!entity) {
+        return reply.notFound()
       }
+
+      reply.send(entity)
     }
   )
 }

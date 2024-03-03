@@ -13,7 +13,8 @@
     "re:seed": "pnpm cli --reseed",
     "test:teardown": "DB_NAME=plenty_cms_test node -r ts-node/register ./src/tests/teardown.cli.ts",
     "build:old": "node -r ts-node/register ./scripts/build.ts",
-    "dev:old": "nodemon --inspect=localhost:9222 --exec node -r ts-node/register ./src/server.ts"
+    "dev:old": "nodemon --inspect=localhost:9222 --exec node -r ts-node/register ./src/server.ts",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,7 @@
   "dependencies": {
     "@fastify/mongodb": "^8.0.0",
     "@fastify/multipart": "^8.0.0",
+    "@fastify/sensible": "^5.5.0",
     "@fastify/swagger": "^8.12.0",
     "@fastify/swagger-ui": "^1.10.1",
     "ajv": "^8.12.0",
@@ -48,6 +50,7 @@
     "@types/superagent": "^4.1.21",
     "@types/supertest": "^2.0.15",
     "@types/uuid": "^9.0.6",
+    "build-tools": "workspace:*",
     "esbuild": "^0.19.5",
     "nodemon": "^3.0.3",
     "prettier": "^2.8.7",
@@ -56,7 +59,6 @@
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1.6",
-    "vitest": "^1.2.2",
-    "build-tools": "workspace:*"
+    "vitest": "^1.2.2"
   }
 }

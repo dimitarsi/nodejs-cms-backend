@@ -14,8 +14,7 @@ export default function deleteMedia(instance: FastifyInstance) {
     const res = await instance.media.deleteById(req.params.idOrSlug)
 
     if (!res) {
-      reply.code(404).send()
-      return
+      return reply.notFound()
     }
 
     reply.code(200).send(res)

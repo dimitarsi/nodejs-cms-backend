@@ -9,13 +9,9 @@ const mediaPlugin: FastifyPluginCallback = (instance, _options, done) => {
     const { path, filetype } = await instance.media.getPath(req.params.id)
 
     if (!path || fs.existsSync(path) === false) {
-      reply.status(404)
-      reply.send({
-        error: "Not found",
-        message: "No such file in DB",
-      })
-      return
+      return reply.notFound()
     }
+
     if (filetype) {
       reply.header("content-type", filetype)
     }

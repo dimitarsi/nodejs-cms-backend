@@ -19,8 +19,7 @@ export default function createProject(instance: FastifyInstance) {
     const token = await instance.accessToken.findToken(tokenHeader)
 
     if (!token?.userId) {
-      reply.status(500).send({ message: "Something went wrong" })
-      return
+      return reply.internalServerError()
     }
 
     const project = await instance.projects.create({
@@ -31,9 +30,9 @@ export default function createProject(instance: FastifyInstance) {
     } as Project)
 
     if (project == null) {
-      return reply.code(422).send({
-        message: "Project with the same name already exists for this user.",
-      })
+      return reply.unprocessableEntity(
+        "Project with the same name already exists for this user."
+      )
     }
 
     await Promise.all([
@@ -48,6 +47,6 @@ export default function createProject(instance: FastifyInstance) {
       ),
     ])
 
-    reply.status(201).send(project)
+    reply.code(201).send(project)
   })
 }

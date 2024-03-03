@@ -11,7 +11,7 @@ export default function activateUser(instance: FastifyInstance) {
     const result = await instance.users.selfActivate(id, req.query.hash)
 
     if (!result) {
-      return reply.code(404).send()
+      return reply.notFound()
     }
 
     reply.code(204).send()

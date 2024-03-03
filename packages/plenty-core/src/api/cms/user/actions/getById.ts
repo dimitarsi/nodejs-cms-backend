@@ -14,8 +14,7 @@ export default function getById(instance: FastifyInstance) {
     const result = await instance.users.getById(req.params.idOrSlug)
 
     if (!result) {
-      reply.code(404).send()
-      return
+      return reply.notFound()
     }
 
     reply.send(result)

@@ -28,10 +28,7 @@ export default function createUser(instance: FastifyInstance) {
     const userId = result.userId
 
     if (result.status !== "ok" || !userId) {
-      return reply.code(422).send({
-        error: "Cannot create",
-        message: `User already exists - ${result.status}`,
-      })
+      return reply.unprocessableEntity(`User already exists`)
     }
 
     const createdUser = await instance.users.getById(userId)
