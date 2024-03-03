@@ -24,14 +24,11 @@ export default function update(instance: FastifyInstance) {
         request.body
       )
 
-      if (entity) {
-        return reply.code(200).send(entity)
+      if (!entity) {
+        return reply.unprocessableEntity()
       }
 
-      return reply.code(422).send({
-        error: "Unable to update",
-        message: "Could not update the entry",
-      })
+      reply.code(200).send(entity)
     }
   )
 }

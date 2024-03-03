@@ -48,6 +48,6 @@ export default function updateProject(instance: FastifyInstance) {
       })
     }
 
-    reply.code(422).send({ message: "Error updating project" })
+    reply.unprocessableEntity()
   })
 }

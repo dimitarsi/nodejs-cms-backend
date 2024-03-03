@@ -37,10 +37,7 @@ export default function updateContentType(instance: FastifyInstance) {
         return reply.code(200).send()
       }
 
-      return reply.code(422).send({
-        error: "Entry to updated",
-        message: "Could not update the entry",
-      })
+      return reply.unprocessableEntity()
     }
   )
 }

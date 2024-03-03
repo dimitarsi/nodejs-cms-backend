@@ -7,5 +7,7 @@ export default function getProjectUsers(instance: FastifyInstance) {
     Params: {
       projectId: string
     }
-  }>("/projects/:projectId/users", routeOptions, async (request, reply) => {})
+  }>("/projects/:projectId/users", routeOptions, async (_request, reply) => {
+    reply.notImplemented()
+  })
 }

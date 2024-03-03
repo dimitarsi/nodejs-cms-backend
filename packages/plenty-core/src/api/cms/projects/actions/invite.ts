@@ -37,8 +37,6 @@ export default function inviteUser(instance: FastifyInstance) {
       projectId: request.params.projectId,
     })
 
-    reply.status(201).send({
-      success: true,
-    })
+    reply.code(201)
   })
 }

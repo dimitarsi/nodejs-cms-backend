@@ -11,16 +11,13 @@ export default function createProject(instance: FastifyInstance) {
   instance.get<{
     Querystring: { page: number; perPage: number }
   }>("/projects", getAllOptions, async (request, reply) => {
-    const accessTokenHeader = request.headers["x-access-token"] as string
     const { usersService } = instance.services
-
-    instance.log.info({ token: accessTokenHeader })
+    const accessTokenHeader = request.headers["x-access-token"] as string
 
     const projects = await usersService.getProjectsFromToken(accessTokenHeader)
 
     if (!projects.length) {
-      reply.code(404).send({ message: "User is not assigned to any projects" })
-      return
+      return reply.notFound("User is not assigned to any projects")
     }
 
     reply.send(projects)

@@ -24,7 +24,7 @@ export default function createContents(instance: FastifyInstance) {
       reply.header("Location", `/${projectId}/contents/${entity._id}`)
       reply.code(201).send(entity)
     } else {
-      reply.code(422).send()
+      reply.unprocessableEntity()
     }
   })
 }

@@ -29,6 +29,9 @@ importers:
       '@fastify/multipart':
         specifier: ^8.0.0
         version: 8.1.0
+      '@fastify/sensible':
+        specifier: ^5.5.0
+        version: 5.5.0
       '@fastify/swagger':
         specifier: ^8.12.0
         version: 8.14.0
@@ -633,6 +636,18 @@ packages:
       fast-decode-uri-component: 1.0.1
       http-errors: 2.0.0
       mime: 3.0.0
+    dev: false
+
+  /@fastify/sensible@5.5.0:
+    resolution: {integrity: sha512-D0zpl+nocsRXLceSbc4gasQaO3ZNQR4dy9Uu8Ym0mh8VUdrjpZ4g8Ca9O3pGXbBVOnPIGHUJNTV7Yf9dg/OYdg==}
+    dependencies:
+      '@lukeed/ms': 2.0.2
+      fast-deep-equal: 3.1.3
+      fastify-plugin: 4.5.1
+      forwarded: 0.2.0
+      http-errors: 2.0.0
+      type-is: 1.6.18
+      vary: 1.1.2
     dev: false
 
   /@fastify/static@6.12.0:

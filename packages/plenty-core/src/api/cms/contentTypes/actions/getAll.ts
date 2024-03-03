@@ -20,8 +20,7 @@ export default function getAll(instance: FastifyInstance) {
     })
 
     if (!result) {
-      reply.code(404).send()
-      return
+      return reply.notFound()
     }
 
     reply.code(200).send(result)

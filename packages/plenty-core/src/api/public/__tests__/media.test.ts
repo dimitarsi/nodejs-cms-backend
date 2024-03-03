@@ -11,6 +11,6 @@ describe("Media", () => {
     await app.ready()
     const result = await supertest(app.server).get("/media/fakeid").expect(404)
 
-    expect(result.body.message).toBe("No such file in DB")
+    expect(result.body.message).toBe("Not Found")
   })
 })

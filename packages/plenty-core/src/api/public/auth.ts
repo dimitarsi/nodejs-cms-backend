@@ -49,9 +49,7 @@ export default function auth(
         accessToken,
       })
     } else {
-      res.code(401).send({
-        error: "Unrecognized user",
-      })
+      res.unauthorized()
     }
   })
 
@@ -62,15 +60,11 @@ export default function auth(
 
     const success = await instance.accessToken.deactivateToken(accessToken)
 
-    if (success) {
-      res.code(200).send({
-        success: true,
-      })
-    } else {
-      res.code(400).send({
-        success: false,
-      })
+    if (!success) {
+      return res.badRequest()
     }
+
+    res.success()
   })
 
   done()

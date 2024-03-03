@@ -37,9 +37,7 @@ export default function createContentType(instance: FastifyInstance) {
         .header("Location", `/${projectId}/content-types/${result.insertedId}`)
         .send(entity)
     } else {
-      reply.code(422).send({
-        message: "Cannot create contentType",
-      })
+      reply.unprocessableEntity()
     }
   })
 }

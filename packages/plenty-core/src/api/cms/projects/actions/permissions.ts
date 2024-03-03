@@ -11,6 +11,8 @@ export default function updatePermissions(instance: FastifyInstance) {
   }>(
     "/projects/:projectId/permissions/:userId",
     routeOptions,
-    async (request, reply) => {}
+    async (_req, reply) => {
+      reply.notImplemented()
+    }
   )
 }

@@ -7,6 +7,8 @@ import publicApiAuth from "~/api/public"
 import fastifyPlugin from "fastify-plugin"
 import cmsApiSchema from "~/schema/cmsAPISchema"
 import services from "~/services/register"
+import fastifySensible from "@fastify/sensible"
+import successResponses from "./plugins/successResponses"
 
 const app = fastify({
   logger: {
@@ -15,6 +17,8 @@ const app = fastify({
   },
 })
 
+app.register(fastifyPlugin(successResponses))
+app.register(fastifyPlugin(fastifySensible))
 app.register(fastifyPlugin(cmsApiSchema))
 app.register(fastifyPlugin(repo), {
   dbName: process.env.DB_NAME || "plenty_cms",

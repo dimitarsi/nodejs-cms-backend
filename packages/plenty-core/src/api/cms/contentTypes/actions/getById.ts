@@ -22,9 +22,7 @@ export default function getById(instance: FastifyInstance) {
       if (contentsByid) {
         reply.send(contentsByid)
       } else {
-        reply.code(404).send({
-          message: "Not found",
-        })
+        reply.notFound()
       }
     }
   )
