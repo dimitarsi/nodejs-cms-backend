@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --inspect=localhost:9222 --exec node -r ts-node/register ./src/server.ts",
-    "build": "node -r ts-node/register ./scripts/build.ts",
-    "build:new": "plb src/server.ts",
+    "dev": "pcb dev ./src/server.ts",
+    "build": "pcb src/server.ts",
     "start": "node ./dist/server.js",
     "format": "prettier -w ./src/**/*.ts ./src/*.ts",
     "cli": "node -r ts-node/register ./src/cli/index.ts",
     "seed": "pnpm cli --seed",
     "re:seed": "pnpm cli --reseed",
-    "test:teardown": "DB_NAME=plenty_cms_test node -r ts-node/register ./src/tests/teardown.cli.ts"
+    "test:teardown": "DB_NAME=plenty_cms_test node -r ts-node/register ./src/tests/teardown.cli.ts",
+    "build:old": "node -r ts-node/register ./scripts/build.ts",
+    "dev:old": "nodemon --inspect=localhost:9222 --exec node -r ts-node/register ./src/server.ts"
   },
   "keywords": [],
   "author": "",

@@ -25,6 +25,6 @@ app.register(fastifyPlugin(services))
 app.register(cmsAPI)
 app.register(publicApiAuth)
 
-app.get('/health', (_r, reply) => reply.status(200).send('OK'))
+app.get("/health", (_r, reply) => reply.status(200).send("OK"))
 
 export default app
