@@ -2,15 +2,19 @@
   "name": "build-tools",
   "version": "1.0.0",
   "description": "",
-  "main": "bin/plb.mjs",
+  "main": "bin/pcb.mjs",
   "type": "module",
   "bin": {
-    "plb": "bin/plb.mjs"
+    "pcb": "bin/pcb.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "esbuild": "^0.20.1"
+    "esbuild": "^0.20.1",
+    "nodemon": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/nodemon": "^1.19.6"
   }
 }
